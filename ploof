@@ -72,11 +72,25 @@ function generate_models()
         } // end if !habtm
     } // end foreach table
     
-    print_r($classes);
-    
-    foreach($classes as $class=>$relation)
+    foreach($classes as $class=>$relations)
     {
-        
+        $file = "model/".$class.".php";
+        if (file_exists($file) == false)
+        {
+            $f= fopen($file, "w+");
+            fwrite($f,"<?\n");
+            fwrite($f,"class $class extends core\\Model\n");
+            fwrite($f,"{\n");
+            foreach ($relations as $k=>$r)
+                fwrite($f,"    protected $k= array('".implode("', '", $r)."');\n");
+            fwrite($f,"    static function classname()\n");
+            fwrite($f,"    {\n");
+            fwrite($f,"        return __CLASS__;\n");
+            fwrite($f,"    }\n");
+            fwrite($f,"}\n");
+            fwrite($f,"?>");
+            fclose($f);
+        }
     }
     
 } // end generate models
