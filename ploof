@@ -74,6 +74,11 @@ function generate_models()
     
     print_r($classes);
     
+    foreach($classes as $class=>$relation)
+    {
+        
+    }
+    
 } // end generate models
 
 

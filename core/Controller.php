@@ -9,11 +9,7 @@ class Controller
     
     function sanitize_inputs()
     {
-        $this->data= $_REQUEST["data"];
-        foreach($this->data as $k=>$v)
-        {
-            $this->data[$k]= $v;
-        }
+        // TODO
     }
     
     function assign($name, $value)
@@ -23,13 +19,16 @@ class Controller
     
     function call($action)
     {
+        $this->data= $_REQUEST["data"];
+
+        if (SANITIZE_INPUT)
+                $this->sanitize_inputs();
+                
         $this->$action();
+        
         foreach($this->assigns as $name=>$value)
         {
-            if (is_array($value) or is_object($value))
-                $$name = $value;
-            else
-                eval("$".$name."='".$value."';");
+            $$name = $value;
         }
             
         include("../view/".static::classname()."/".$action.VIEW_EXTENSION);

@@ -1,0 +1,108 @@
+//--------------------------------------------------
+//          BLOCKS
+//--------------------------------------------------
+
+.center {
+    text-align: center;
+}
+
+.width_one_third {
+    width: 33%;
+}
+
+.width_two_thirds {
+    width: 66%;
+}
+
+.width_full {
+    width: 100%;
+}
+
+.float_right {
+    float: right;
+}
+
+.float_left {
+    float: left;
+}
+
+.margin_top {
+	margin-top:50px;
+}
+
+.margin_top_small {
+	margin-top: 25px;
+}
+
+.margin_side_small {
+	margin-left: 25px;
+	margin-right: 25px;
+}
+
+.scroll_y {
+	overflow-y: auto; 
+	overflow-x: hidden;
+}
+
+.box {
+	border: 1px solid #666;
+}
+
+.box_top_bottom {
+	border-width: 1px 0px; 
+	border-style: solid; 
+	border-color: #666;
+}
+
+
+
+//--------------------------------------------------
+//          NAV
+//--------------------------------------------------
+ul.nav {
+    display: inline;
+}
+
+ul.nav li {
+    
+}
+
+//--------------------------------------------------
+//          DATA TABLE
+//--------------------------------------------------
+
+//--------------------------------------------------
+//          MINI TABLE
+//--------------------------------------------------
+
+
+//--------------------------------------------------
+//          TREE
+//--------------------------------------------------
+.tree {
+}
+
+.tree * .gutter {
+	width: 50px;
+	padding-top: 10px;
+	float: right;
+}
+
+.tree .trunk {
+	border:1px solid black;
+}
+
+.tree .header {
+	font-weight: bold;
+	background-color: #A0d5f7;
+	padding: 10px;
+	height: 50px;
+
+}
+
+.tree .trunk .branch {
+	padding: 0px 0px 10px 80px;
+	font-weight: normal;
+}
+
+
