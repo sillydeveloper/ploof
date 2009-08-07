@@ -158,7 +158,7 @@ class Joiner
             {
                 foreach($this->objects as $k=>$o)
                 {
-                    if ($o->$search_field == $search_value)
+                    if (strstr($search_value,$o->$search_field) !== false)
                     {
                         $results[]= $o;
                     }
@@ -182,7 +182,7 @@ class Joiner
                 {
                     foreach($this->objects as $k=>$o)
                     {
-                        if ($o->$search_field == $search_value)
+                        if (strstr($search_value,$o->$search_field) !== false)
                         {
                             return $o;
                         }

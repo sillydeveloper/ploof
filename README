@@ -1,14 +1,81 @@
-Welcome to ploof.
+//--------------------------------------------------
+//			WELCOME TO PLOOF
+//--------------------------------------------------
 
-1). Edit config/config.php.
+1). Make a copy of config/config.default.php -> config/config.php
 2). Point your webserver to the public folder.
 3). Add your models, controllers, and views in the directories named for them. 
 4). Profit!
 
-
-You'll need something like this in your httpd.conf:
+Oh yeah, you'll need something like this in your httpd.conf:
 
 RewriteEngine On                                                                                                                
 RewriteRule   ^/internal/crm/?(.*)$ http://dev.airadvice.net/internal/crm/$1 [R,NC,L]                                           
 RewriteRule   ^/([\_A-Za-z0-9-]+)/([\_A-Za-z0-9-]+)/?$ /index.php?controller=$1&action=$2 [L,QSA]                          
 RewriteRule   ^/([\_A-Za-z0-9-]+)/?$ /index.php?controller=$1 [L,QSA]                                                      
+
+(At least until I get an htaccess conf in the root...)
+
+//--------------------------------------------------
+//			BASICS
+//--------------------------------------------------
+
+==== MODELS ====
+Load this into your ploof database:
+
+create table comment(id int auto_increment, user_id int, value text);
+create table user(id int auto_increment, name varchar(255), email varchar(255));
+
+Then cd to your web root and run:
+
+./ploof generate_models
+
+This will generate two classes in model. You can now traverse and add comments from user and access user from comments. Example:
+
+<?
+	$c= new Customer();
+	$c->name= "Andrew";
+	$c->store();
+
+	// now let's add comments. add_array takes an array of the form $field=>$value
+	$c->comment->add_array(array("value"=>"I'm the first comment"));
+
+	// or we can add as an object. the link back to this customer is automatic, you don't have to include it:
+	$com= new Comment();
+	$com->value= "I'm the second comment";
+	$c->comment->add_object($com);
+
+	// let's find a comment; find methods always return arrays.
+	$return_array= $c->comment->find(array("value"=>"second"));
+
+	// let's find the other comment; find_object always returns a single object:
+	$return_obj= $c->comment->find_object(array("id"=>2));
+
+	// let's get everything back:
+	$return_array= $c->comment->find();
+
+	// ok, let's go the other way.
+	// for belongs_to, you can just use get to access the relationship:
+	print_r($com->customer->get()->name);
+	
+	// now let's populate another customer from an array:
+	$arr= array("name"=>"Brian");
+	
+	$c2= new Customer();
+	$c2->populate_from($arr);
+	$c2->store();
+	
+?>
+
+Note that this is lazy and caching, so if you change the associated set you need to refresh the value like this:
+
+<?
+	$c= new Comment();
+	$c->refresh("customer");
+?>
+
+This will force-reload the data for the customer relationship.
+
+
+
+
