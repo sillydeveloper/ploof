@@ -27,7 +27,7 @@ class Controller
         foreach($this->assigns as $name=>$value)
         {
             if (is_array($value) or is_object($value))
-                eval("$".$name."=".$value);
+                $$name = $value;
             else
                 eval("$".$name."='".$value."';");
         }
