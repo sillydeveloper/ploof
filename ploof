@@ -1,0 +1,96 @@
+#!/usr/bin/php
+<?
+namespace core;
+
+include_once 'config/config.php';
+
+//--------------------------------------------------
+//          INITIALIZE
+//--------------------------------------------------
+function initialize()
+{
+    DB::query(file_get_contents("resource/schemas/init.sql"));
+}
+
+//--------------------------------------------------
+//          GENERATE MODELS
+//--------------------------------------------------
+function generate_models()
+{
+    $qry= DB::query("show tables");
+    $classes= array();
+    
+    while($table= mysql_fetch_array($qry))
+    {    
+        $table= $table[0];
+                
+        // check for habtm:
+        $split= split(TABLE_SEPARATOR, $table);
+        $habtm = true;
+        
+        if (count($split) < 2)
+            $habtm= false; // no habtm
+        else
+        {   
+            // we may have a habtm; check to make sure that the joined tables match:
+            //foreach($split as $s=>$search_for_tablename)
+            //{
+            //    if (array_search($split[0], $search_for_tablename) === false)
+            //        $habtm = false;
+            //}
+            
+            //if ($habtm)
+            //{
+                // link them all together:
+                foreach($split as $s=>$search_for_tablename)
+                {
+                    foreach($split as $s2=>$search_for_tablename2)
+                    {
+                        if ($search_for_tablename != $search_for_tablename2)
+                            $classes[$search_for_tablename]['habtm'][]= $search_for_tablename2;
+                    }
+                }
+            //}
+        }
+            
+        if ($habtm == false)
+        {
+            $qry2= DB::query("show columns from ".$table);
+            
+            while($column= mysql_fetch_array($qry2))
+            {
+                $column= $column["Field"];
+                
+                if (preg_match('/[_'.PRIMARY_KEY.']/', $column) and $column != PRIMARY_KEY)
+                {
+                    $foreign_table= str_replace("_id","",$column);
+                    print_r($foreign_table);
+                    $classes[$table]['belongs_to'][]= $foreign_table;
+                    $classes[$foreign_table]['has_many'][]= $table;
+                }
+            } // end foreach show columns
+        } // end if !habtm
+    } // end foreach table
+    
+    print_r($classes);
+    
+} // end generate models
+
+
+
+if ($argc < 2)
+{
+    print "usage: ploof [command]\n\n";
+    print "Commands: \n";
+    print "initialize.............. initialize your database\n";
+    print "generate_models......... generate classfiles from your database\n";
+    print "migrate................. migrate your database to the current migration\n";
+    print "migration............... create a new migration in resource/migrations\n";
+    exit;
+}
+
+print "Running ".$argv[1]."... \n";
+
+eval("core\\".$argv[1]."();");
+
+?>

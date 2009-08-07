@@ -1,0 +1,14 @@
+Welcome to ploof.
+
+1). Edit config/config.php.
+2). Point your webserver to the public folder.
+3). Add your models, controllers, and views in the directories named for them. 
+4). Profit!
+
+
+You'll need something like this in your httpd.conf:
+
+RewriteEngine On                                                                                                                
+RewriteRule   ^/internal/crm/?(.*)$ http://dev.airadvice.net/internal/crm/$1 [R,NC,L]                                           
+RewriteRule   ^/([\_A-Za-z0-9-]+)/([\_A-Za-z0-9-]+)/?$ /index.php?controller=$1&action=$2 [L,QSA]                          
+RewriteRule   ^/([\_A-Za-z0-9-]+)/?$ /index.php?controller=$1 [L,QSA]                                                      
