@@ -193,5 +193,13 @@ class Joiner
         return false; // not found
     }
     
+    /**
+     * Shorthand for belongs to
+     */
+    function get()
+    {
+        return $this->objects[0];
+    }
+    
 }
 ?>

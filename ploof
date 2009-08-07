@@ -82,7 +82,7 @@ function generate_models()
             fwrite($f,"class $class extends core\\Model\n");
             fwrite($f,"{\n");
             foreach ($relations as $k=>$r)
-                fwrite($f,"    protected $k= array('".implode("', '", $r)."');\n");
+                fwrite($f,"    protected \$$k= array('".implode("', '", $r)."');\n");
             fwrite($f,"    static function classname()\n");
             fwrite($f,"    {\n");
             fwrite($f,"        return __CLASS__;\n");

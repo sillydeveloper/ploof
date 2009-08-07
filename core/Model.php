@@ -96,11 +96,8 @@ class Model
     {   
         if ($this->is_belongs_to($field_name))
         {
-            $lookup_id= $this->$field_name;
+            $lookup_id= $this->fields[$field_name."_".PRIMARY_KEY];
             $lookup_field= PRIMARY_KEY;
-            
-            // just get the classname for the find:
-            $field_name = str_replace("_".PRIMARY_KEY, "", $field_name);
             
             $results= $field_name::find($lookup_field."='".$lookup_id."'");
         }
@@ -143,9 +140,10 @@ class Model
      */
     function __get($field_name)
     {
+        // lazy loading part.
         if ($this->is_foreign($field_name))
         {
-            if (is_array($this->fields[$field_name]) == false)
+            if (is_object($this->fields[$field_name]) == false)
                 $this->refresh($field_name);
         }
         return $this->fields[$field_name];
