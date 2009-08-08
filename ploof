@@ -61,7 +61,7 @@ function generate_models()
             {
                 $column= $column["Field"];
                 
-                if (preg_match('/[_'.PRIMARY_KEY.']/', $column) and $column != PRIMARY_KEY)
+                if (preg_match('/_'.PRIMARY_KEY.'/', $column))
                 {
                     $foreign_table= str_replace("_id","",$column);
                     print_r($foreign_table);
