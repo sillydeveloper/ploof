@@ -182,9 +182,15 @@ class Model
     /**
      * Find and return an array of objects. Anything after "select * from Foo where" can be in your query.
      */
-    static function find($query)
+    static function find($query=null)
     {
         $classname= static::classname();
+        if ($query === null or strlen($query) < 1)
+        {
+            $query= "select ".PRIMARY_KEY." from ".$classname   
+            return DB::query($query);
+        }
+        
         $query= "select ".PRIMARY_KEY." from ".$classname." where ".$query;
         $result= DB::query($query);
         $results= array();
