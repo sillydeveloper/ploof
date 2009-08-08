@@ -187,7 +187,7 @@ class Model
         $classname= static::classname();
         if ($query === null or strlen($query) < 1)
         {
-            $query= "select ".PRIMARY_KEY." from ".$classname   
+            $query= "select ".PRIMARY_KEY." from ".$classname;  
             return DB::query($query);
         }
         
