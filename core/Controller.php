@@ -4,7 +4,7 @@ namespace core;
 class Controller
 {
     protected $data= array();
-    public $layout= "default";
+    public $layout= null;
     private $assigns= array();
     
     function sanitize_inputs()

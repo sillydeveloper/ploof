@@ -1,12 +1,23 @@
+// HSS Attributes:
 var background_color = #B3D5FA;
-var font = "Trebuchet MS", Arial, sans-serif;
+var box_background_color = white;
+var font = Arial, sans-serif;
+
 var border_color = black;
+var border_width = 1px;
+
 var small_margin = 25px;
 var big_margin = 50px;
 
+var a_color = red;
+
+var nav_background_color = yellow;
+
+
+
 body {
 	background-color: $background_color;
-	font: $font;
+	font-family: $font;
 }
 
 //--------------------------------------------------
@@ -16,6 +27,15 @@ body {
 .center {
     text-align: center;
 }
+
+.right {
+    text-align: center;
+}
+
+.left {
+	text-align: left;
+}
+
 
 .width_one_third {
     width: 30%;
@@ -56,17 +76,23 @@ body {
 }
 
 .box {
-	border: 1px solid $border_color;
+	border: $border_width solid $border_color;
 	padding: $small_margin;
 }
 
 .box_top_bottom {
-	border-width: CSS("1px 0px solid $border_color");
+	border-width: CSS("$border_width 0px solid $border_color");
 	border-style: CSS("solid"); 
 	border-color: $border_color;
 }
 
 
+//--------------------------------------------------
+//			ANCHORS
+//--------------------------------------------------
+a,a.visited {
+	color: $a_color;
+}
 
 //--------------------------------------------------
 //          NAV
@@ -76,7 +102,7 @@ ul.nav {
 }
 
 ul.nav li {
-    
+    background-color: $nav_background_color;
 }
 
 //--------------------------------------------------

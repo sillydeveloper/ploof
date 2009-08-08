@@ -95,16 +95,32 @@ function generate_models()
     
 } // end generate models
 
+//--------------------------------------------------
+//          HSS
+//--------------------------------------------------
+function hss()
+{
+    exec("./resource/bin/hss public/css/ploof.hss");
+}
 
+//--------------------------------------------------
+//          UPDATE
+//--------------------------------------------------
+function update()
+{
+    
+}
 
 if ($argc < 2)
 {
     print "usage: ploof [command]\n\n";
     print "Commands: \n";
-    print "initialize.............. initialize your database\n";
-    print "generate_models......... generate classfiles from your database\n";
+    print "hss..................... recreate css from hss file\n";
     print "migrate................. migrate your database to the current migration\n";
     print "migration............... create a new migration in resource/migrations\n";
+    print "generate_models......... generate classfiles from your database\n";
+    print "initialize.............. initialize your database\n";
+    print "update.................. update via diff\n";
     exit;
 }
 
