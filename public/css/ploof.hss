@@ -13,6 +13,7 @@ var a_color = red;
 
 var nav_background_color = yellow;
 
+var corner_round_radius = 20px;
 
 
 body {
@@ -78,6 +79,10 @@ body {
 .box {
 	border: $border_width solid $border_color;
 	padding: $small_margin;
+	
+	-webkit-border-radius: CSS($corner_round_radius);
+	-moz-border-radius: CSS($corner_round_radius);
+	
 }
 
 .box_top_bottom {
