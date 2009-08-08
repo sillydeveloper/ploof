@@ -188,11 +188,14 @@ class Model
         if ($query === null or strlen($query) < 1)
         {
             $query= "select ".PRIMARY_KEY." from ".$classname;  
-            return DB::query($query);
+            DB::query($query);
+        }
+        else
+        {
+            $query= "select ".PRIMARY_KEY." from ".$classname." where ".$query;
+            $result= DB::query($query);
         }
         
-        $query= "select ".PRIMARY_KEY." from ".$classname." where ".$query;
-        $result= DB::query($query);
         $results= array();
         
         if (!$result)
