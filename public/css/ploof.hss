@@ -79,6 +79,7 @@ body {
 .box {
 	border: $border_width solid $border_color;
 	padding: $small_margin;
+	background-color: $box_background_color;
 	
 	-webkit-border-radius: CSS($corner_round_radius);
 	-moz-border-radius: CSS($corner_round_radius);
