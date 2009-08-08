@@ -1,109 +1,66 @@
-//--------------------------------------------------
-//          BLOCKS
-//--------------------------------------------------
-
+body {
+	background-color : #B3D5FA;
+	font : "Trebuchet MS", Arial, sans-serif;
+}
 .center {
-    align: center;
+	text-align : center;
 }
-
 .width_one_third {
-    width: 33%;
+	width : 30%;
 }
-
 .width_two_thirds {
-    width: 66%;
+	width : 60%;
 }
-
 .width_full {
-    width: 100%;
+	width : 100%;
 }
-
 .float_right {
-    float: right;
+	float : right;
 }
-
 .float_left {
-    float: left;
+	float : left;
 }
-
 .margin_top {
-	margin-top:50px;
+	margin-top : 50px;
 }
-
 .margin_top_small {
-	margin-top: 25px;
+	margin-top : 25px;
 }
-
 .margin_side_small {
-	margin-left: 25px;
-	margin-right: 25px;
+	margin-left : 25px;
+	margin-right : 25px;
 }
-
 .scroll_y {
-	overflow-y: auto; 
-	overflow-x: hidden;
+	overflow-y : auto;
+	overflow-x : hidden;
 }
-
 .box {
-    padding: 5px;
-	border: 1px solid #666;
+	border : 1px solid black;
+	padding : 25px;
 }
-
 .box_top_bottom {
-	border-width: 1px 0px; 
-	border-style: solid; 
-	border-color: #666;
+	border-width : 1px 0px solid $border_color;
+	border-style : solid;
+	border-color : black;
 }
-
-
-
-//--------------------------------------------------
-//          NAV
-//--------------------------------------------------
 ul.nav {
-    display: inline;
+	display : inline;
 }
-
-ul.nav li {
-    
+.tree .gutter {
+	width : 50px;
+	padding-top : 10px;
+	float : right;
 }
-
-//--------------------------------------------------
-//          DATA TABLE
-//--------------------------------------------------
-
-//--------------------------------------------------
-//          MINI TABLE
-//--------------------------------------------------
-
-
-//--------------------------------------------------
-//          TREE
-//--------------------------------------------------
-.tree {
-}
-
-.tree * .gutter {
-	width: 50px;
-	padding-top: 10px;
-	float: right;
-}
-
 .tree .trunk {
-	border:1px solid black;
+	border : 1px solid black;
 }
-
 .tree .header {
-	font-weight: bold;
-	background-color: #A0d5f7;
-	padding: 10px;
-	height: 50px;
-
+	font-weight : bold;
+	background-color : #A0d5f7;
+	padding : 10px;
+	height : 50px;
 }
-
 .tree .trunk .branch {
-	padding: 0px 0px 10px 80px;
-	font-weight: normal;
+	padding : 0px 0px 10px 80px;
+	font-weight : normal;
 }
-
-
