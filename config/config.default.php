@@ -30,6 +30,16 @@ define("DATABASE_PASS", "");
 define("DATABASE_HOST", "localhost");
 define("DATABASE_NAME", "ploof");
 
+// Secondary database
+//  
+//  
+//  
+//define("SECONDARY_DATABASE_USER", "root");
+//define("SECONDARY_DATABASE_PASS", "");
+//define("SECONDARY_DATABASE_HOST", "localhost");
+//define("SECONDARY_DATABASE_NAME", "ploof");
+
+
 /**
  * Turn off / on automatic sanitizers
  */

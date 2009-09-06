@@ -1,7 +1,15 @@
 // HSS Attributes:
 var background_color = #B3D5FA;
 var box_background_color = white;
+
 var font = Arial, sans-serif;
+var font_size = 12px;
+var font_size_small = 10px;
+var font_color = black;
+
+var font_alt_size = 10px;
+var font_alt = Arial, sans-serif;
+var font_alt_color = blue;
 
 var blur_color = #999;
 
@@ -19,25 +27,44 @@ var nav_background_color = yellow;
 var corner_round_radius = 20px;
 
 
-body {
-	background-color: $background_color;
-	font-family: $font;
+//--------------------------------------------------
+//			TEXT
+//--------------------------------------------------
+.text_center {
+	text-align: center;
 }
 
+.text_right {
+    text-align: right;
+}
+
+.text_left {
+	text-align: left;
+}
+
+.text_small {
+    font-size: $font_size_small;
+}
+
+.text_alt {
+	font-size: $font_size_alt;
+	font-family: $font_alt;
+	color: $font_alt_color;
+}
+	
 //--------------------------------------------------
 //          BLOCKS
 //--------------------------------------------------
 
+body {
+	background-color: $background_color;
+	font-family: $font;
+	font-size: $font_size;
+}
+
 .center {
-    text-align: center;
-}
-
-.right {
-    text-align: center;
-}
-
-.left {
-	text-align: left;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 
@@ -69,6 +96,11 @@ body {
 	margin-top: $small_margin;
 }
 
+.margin_side {
+	margin-left: $big_margin;
+	margin-right: $big_margin;
+}
+
 .margin_side_small {
 	margin-left: $small_margin;
 	margin-right: $small_margin;
@@ -83,10 +115,6 @@ body {
 	border: $border_width solid $border_color;
 	padding: $small_margin;
 	background-color: $box_background_color;
-	
-//	-webkit-border-radius: CSS("$corner_round_radius");
-//	-moz-border-radius: CSS("$corner_round_radius");
-	
 }
 
 .box_top_bottom {

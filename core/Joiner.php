@@ -121,6 +121,7 @@ class Joiner
      */
     function add_object($obj, $arr=null)
     {
+        print_r($this);
         if ($this->habtm == false)
         {    
             $parent_id_field= $this->parent_class."_".PRIMARY_KEY;
