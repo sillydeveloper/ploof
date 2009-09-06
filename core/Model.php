@@ -146,6 +146,11 @@ class Model
             if (is_object($this->fields[$field_name]) == false)
                 $this->refresh($field_name);
         }
+        if ($this->is_belongs_to($field_name))
+        {
+            // return the joiner's get, because there is only one:
+            return $this->fields[$field_name]->get();
+        }
         return $this->fields[$field_name];
     }
     

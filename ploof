@@ -106,10 +106,24 @@ function hss()
 //--------------------------------------------------
 //          UPDATE
 //--------------------------------------------------
-
 function update()
 {
+    if (opendir("resource/updates"))
+        exec("rm -rf resource/updates");
     
+    // export a copy of the code off the server:
+    exec("mkdir resource/updates");
+    exec("svn export http://ploof.googlecode.com/svn/trunk/ ./resource/updates/svn");
+    
+    // build patch files:
+    exec("diff -rupN -x .svn ./core ./resource/updates/svn/core > ./resource/updates/core.patch");
+    exec("diff -rupN -x .svn ./config/config.default.php ./resource/updates/svn/config/config.default.php > ./resource/updates/config.patch");
+    exec("diff -rupN -x .svn ./ploof ./resource/updates/svn/ploof > ./resource/updates/ploof.patch");
+    
+    // apply the patches:
+    exec("patch -p1 < resource/updates/core.patch");
+    exec("patch -p1 < resource/updates/config.patch");
+    exec("patch -p1 < resource/updates/ploof.patch");
 }
 
 if ($argc < 2)
