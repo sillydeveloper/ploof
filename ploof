@@ -157,7 +157,8 @@ function get_last_file_number_for($path)
 
 function migration($branch= "trunk")
 {
-    $dir= opendir(get_migration_path($branch));
+    $path= get_migration_path($branch);
+    $dir= opendir($path);
     if (!$dir) 
     {
         mkdir($path);
