@@ -16,16 +16,19 @@ var blur_color = #999;
 var border_color = black;
 var border_width = 1px;
 
-
+var tiny_margin = 10px;
 var small_margin = 25px;
 var big_margin = 50px;
 
 var a_color = red;
 
-var nav_background_color = yellow;
+var nav_background_color = gray;
+var nav_border_color = black;
+var nav_border_width = 1px;
+var nav_font_color = black;
+var nav_font_size = 12px;
 
 var corner_round_radius = 20px;
-
 
 //--------------------------------------------------
 //			TEXT
@@ -77,7 +80,11 @@ body {
 }
 
 .width_full {
-    width: 100%;
+    width: 90%;
+}
+
+.inline {
+	display: inline;
 }
 
 .float_right {
@@ -118,7 +125,7 @@ body {
 }
 
 .box_top_bottom {
-	border-width: CSS("$border_width 0px solid $border_color");
+	border: CSS("$border_width 0px solid $border_color");
 	border-style: CSS("solid"); 
 	border-color: $border_color;
 }
@@ -126,7 +133,6 @@ body {
 input.blur {
 	color: $blur_color;
 }
-
 
 //--------------------------------------------------
 //			ANCHORS
@@ -139,12 +145,24 @@ a,a.visited {
 //          NAV
 //--------------------------------------------------
 ul.nav {
-    display: inline;
+	background-color: $nav_background_color;
+	border: $nav_border_width solid $nav_border_color;
+	border-style: solid;
+	padding: $tiny_margin;
 }
 
 ul.nav li {
-    background-color: $nav_background_color;
+	padding: $tiny_margin;
+	display: inline;
+	color: $nav_font_color;
+	font-size: $nav_font_size;
 }
+
+ul.nav li:hover {
+	background-color: yellow;
+}
+
+
 
 //--------------------------------------------------
 //          DATA TABLE
