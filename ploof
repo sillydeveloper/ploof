@@ -153,6 +153,6 @@ if ($argc < 2)
 
 print "Running ".$argv[1]."... \n";
 
-eval("core\\".$argv[1]."(".$argv[2]");");
+eval("core\\".$argv[1]."(".$argv[2].");");
 
 ?>
