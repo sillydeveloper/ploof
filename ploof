@@ -144,7 +144,7 @@ function update($version= "trunk")
 //--------------------------------------------------
 function get_migration_path($branch)
 {
-    return "./resources/migrations/$branch";
+    return "./resource/migrations/$branch";
 }
 
 function get_last_file_number_for($path)
