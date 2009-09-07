@@ -47,7 +47,7 @@ var corner_round_radius = 20px;
 }
 
 .text_alt {
-	font-size: $font_size_alt;
+	font-size: $font_alt_size;
 	font-family: $font_alt;
 	color: $font_alt_color;
 }

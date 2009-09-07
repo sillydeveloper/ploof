@@ -135,6 +135,10 @@ function update($version= "trunk")
 {
     generate_patch($version);
     patch();
+}
+
+function clean()
+{
     exec("rm -rf resource/updates");
 }
 
@@ -147,12 +151,13 @@ if ($argc < 2)
     print "migration............... create a new migration in resource/migrations\n";
     print "generate_models......... generate classfiles from your database\n";
     print "initialize.............. initialize your database\n";
-    print "update.................. update via diff\n";
+    print "update.................. update via diff; you can optionally supply a version to update to (trunk is default)\n";
+    print "clean................... clean various detritus that can build up";
     exit;
 }
 
 print "Running ".$argv[1]."... \n";
 
-eval("core\\".$argv[1]."(".$argv[2].");");
+($argc < 3) ? eval("core\\".$argv[1]."();") : eval("core\\".$argv[1]."('".$argv[2]."');");
 
 ?>
