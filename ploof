@@ -135,6 +135,7 @@ function update($version= "trunk")
 {
     generate_patch($version);
     patch();
+    exec("rm -rf resource/updates");
 }
 
 if ($argc < 2)
