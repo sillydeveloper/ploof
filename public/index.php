@@ -10,12 +10,17 @@ $layout= ($controller_object->layout) ? $controller_object->layout : DEFAULT_LAY
 //ob_start();
 include("../view/layout/".$layout.VIEW_EXTENSION);
 
+function render_controller_action($controller, $action)
+{
+    $controller_object= new $controller();
+    $controller_object->call($action);
+}
+
 function render()
 {
     $controller= ($_REQUEST["controller"]) ? $_REQUEST["controller"] : DEFAULT_CONTROLLER;    
-    $controller_object= new $controller();
     $action = ($_REQUEST["action"]) ? $_REQUEST['action'] : DEFAULT_ACTION;
-    $controller_object->call($action);
+    render_controller_action($controller, $action);
 }
 
 ?>
