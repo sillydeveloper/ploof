@@ -139,6 +139,49 @@ function update($version= "trunk")
     generate_patch($version);
     patch();
 }
+//--------------------------------------------------
+//          MIGRATIONS
+//--------------------------------------------------
+function get_migration_path($branch)
+{
+    return "./resources/migrations/$branch";
+}
+
+function get_last_file_number_for($path)
+{
+    // input should be in the format:
+    //  [number]__[text]
+    $split= split("__",array_pop(scandir($path, 1))); // scan dir (reverse order) then pop and split
+    return $split[0];
+}
+
+function migration($branch= "trunk")
+{
+    $dir= opendir(get_migration_path($branch));
+    if (!$dir) 
+    {
+        mkdir($path);
+        DB::query("insert into Versioning values(null, 0, '$branch');");
+        touch($path."/1__Migration");
+    }
+    else
+    {
+        $last_number= get_last_file_number_for($path);
+        touch($path."/".($last_number+1)."__Migration");
+    }
+}
+
+function migrate($branch= "trunk")
+{    
+    $v= Versioning::find_object("branch= '".$branch."'");
+    $last_db_number= $v->migration;
+    $last_file_number= get_last_file_number_for(get_migration_path($branch));
+    if ($last_db_number < $last_file_number)
+    {
+        // load them up and apply them!
+        
+    }
+}
 
 //--------------------------------------------------
 //          CLEAN
@@ -158,7 +201,10 @@ if ($argc < 2)
     print "generate_models......... generate classfiles from your database\n";
     print "initialize.............. initialize your database\n";
     print "update.................. update via diff; you can optionally supply a version to update to (trunk is default)\n";
-    print "clean................... clean various detritus that can build up";
+    print "clean................... clean various detritus that can build up\n";
+    print "migration............... create a migration; optionally add the branch for this migration\n";
+    print "migrate................. bring this version of the database up to date; optionally add a branch to migrate from\n";
+    
     exit;
 }
 
