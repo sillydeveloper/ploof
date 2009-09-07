@@ -8,6 +8,8 @@ class Model
     protected $has_one= null;
     protected $has_and_belongs_to_many= null; 
     
+    protected $db_connector_preamble= "";
+    
     function __construct($id=null)
     {
         if ($id)
