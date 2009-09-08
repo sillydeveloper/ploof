@@ -71,4 +71,10 @@ function __autoload($class_name)
 {
     require_once(str_replace("\\", "/", $class_name).".php");
 }
+
+function classname_only($classname)
+{
+    $split= split("\\\\", $classname);
+    return $split[1];
+}
 ?>
