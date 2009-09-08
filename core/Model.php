@@ -14,7 +14,7 @@ class Model
     {
         if ($id)
         {
-            $qry= DB::query("select * from ".static::classname()." where id=".$id);
+            $qry= DB::query("select * from ".classname_only(static::classname())." where id=".$id);
             while($row= mysql_fetch_assoc($qry))
             {   
                 foreach($row as $k=>$v)
@@ -23,7 +23,7 @@ class Model
         }
         elseif (count($this->fields) < 1)
         {
-            $qry= DB::query("show columns from ".static::classname());
+            $qry= DB::query("show columns from ".classname_only(static::classname()));
             while($row= mysql_fetch_assoc($qry))
             {
                 $this->fields[$row["Field"]]= null;
@@ -86,7 +86,7 @@ class Model
      */
     function get_join_table($field_name)
     {
-        $my_class = static::classname();
+        $my_class = classname_only(static::classname());
         return ($field_name > $my_class) ? $my_class.TABLE_SEPARATOR.$field_name : $field_name.TABLE_SEPARATOR.$my_class;
     }
     
@@ -107,7 +107,7 @@ class Model
         if ($this->is_has_many($field_name))
         {
             $lookup_id= $this->fields[PRIMARY_KEY];
-            $lookup_field= static::classname()."_".PRIMARY_KEY;
+            $lookup_field= classname_only(static::classname())."_".PRIMARY_KEY;
             
             $results= $field_name::find($lookup_field."='".$lookup_id."'");
         }
@@ -115,7 +115,7 @@ class Model
         if ($this->is_has_one($field_name))
         {
             $lookup_id= $this->fields[PRIMARY_KEY];
-            $lookup_field= static::classname()."_".PRIMARY_KEY;
+            $lookup_field= classname_only(static::classname())."_".PRIMARY_KEY;
             
             $results= $field_name::find($lookup_field."='".$lookup_id."' limit 1");
         }
@@ -124,13 +124,13 @@ class Model
         {   
             // joiner handles everything for habtm since it has to load
             //  and know about extra fields in the join table.
-            $joiner= new Joiner($this, static::classname(), $field_name);            
+            $joiner= new Joiner($this, classname_only(static::classname()), $field_name);            
         }
         else
         {
             $joiner= new Joiner();
             $joiner->set_objects($results);
-            $joiner->set_parent($this, static::classname());
+            $joiner->set_parent($this, classname_only(static::classname()));
             $joiner->set_child_class($field_name);
         }
         
@@ -183,7 +183,11 @@ class Model
      */
     static function find_object($query)
     {
-        return array_pop($this->find($query));
+        $classname= classname_only(static::classname());
+        $results= $classname::find($query);
+        if (is_array($results))
+            return array_pop($results);
+        return false;
     }
     
     /**
@@ -191,7 +195,8 @@ class Model
      */
     static function find($query=null)
     {
-        $classname= static::classname();
+        $classname= classname_only(static::classname());
+        
         if ($query === null or strlen($query) < 1)
         {
             $query= "select ".PRIMARY_KEY." from ".$classname;  
@@ -208,11 +213,13 @@ class Model
         if (!$result)
             return false;
 
+        // to instance, we need full path:
+        $c= static::classname();
         while($ids= mysql_fetch_assoc($result))
         {
             foreach($ids as $k=>$v)
             {
-                $results[]= new $classname($v);
+                $results[]= new $c($v);
             }
         }
         return $results;
@@ -227,7 +234,7 @@ class Model
                 
         if ($existing)
         {
-            $sql= "update ".static::classname()." set ";
+            $sql= "update ".classname_only(static::classname())." set ";
             foreach($this->fields as $k=>$v)
             {
                 if ($k == PRIMARY_KEY) continue;
@@ -239,7 +246,7 @@ class Model
         else
         {
             unset($this->fields[PRIMARY_KEY]);
-            $sql= "insert into ".static::classname()."(".PRIMARY_KEY.", ".implode(",", array_keys($this->fields)).") values(null, '".implode("','",array_values($this->fields))."')";
+            $sql= "insert into ".classname_only(static::classname())."(".PRIMARY_KEY.", ".implode(",", array_keys($this->fields)).") values(null, '".implode("','",array_values($this->fields))."')";
         }
         
         // TODO update children

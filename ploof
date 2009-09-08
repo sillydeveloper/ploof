@@ -9,7 +9,8 @@ include_once 'config/config.php';
 //--------------------------------------------------
 function initialize()
 {
-    DB::query(file_get_contents("resource/schemas/init.sql"));
+    DB::query("create table Versioning(id int not null primary key auto_increment, migration int, branch varchar(255))");
+    DB::query("insert into versioning values(null, 0, 'trunk')");
 }
 
 //--------------------------------------------------
@@ -106,7 +107,7 @@ function hss()
 //--------------------------------------------------
 //          UPDATE
 //--------------------------------------------------
-function generate_patch($version= "trunk")
+function setup_patch_directory($version= "trunk")
 {
     if (opendir("resource/updates"))
         exec("rm -rf resource/updates");
@@ -117,21 +118,42 @@ function generate_patch($version= "trunk")
         $version= "branches/".$version;
     
     exec("svn export http://ploof.googlecode.com/svn/$version ./resource/updates/svn");
+}
+
+$patch_list= array(
+        "./core"=>"./resource/updates/svn/core",
+        "./config/config.default.php"=>"./resource/updates/svn/config/config.default.php",
+        "./ploof"=>"./resource/updates/svn/ploof",
+        "./public/index.php"=>"./resource/updates/svn/public/index.php",
+        "./resource/schemas/init.sql"=>"./resource/updates/svn/resource/schemas/init.sql",
+        "./README"=>"./resource/updates/svn/README",
+        "./resource/bin"
+    );
+            
+function generate_patch($version= "trunk")
+{   
+    global $patch_list; 
+    setup_patch_directory($version);
     
     // build patch files:
-    exec("diff -rupN -x .svn ./core ./resource/updates/svn/core > ./resource/updates/core.patch");
-    exec("diff -rupN -x .svn ./config/config.default.php ./resource/updates/svn/config/config.default.php > ./resource/updates/config.patch");
-    exec("diff -rupN -x .svn ./ploof ./resource/updates/svn/ploof > ./resource/updates/ploof.patch");
-    exec("diff -rupN -x .svn ./public/index.php ./resource/updates/svn/public/index.php > ./resource/updates/index.patch");
+    foreach($patch_list as $k=>$v)
+    {
+        // alternative file name....
+        //$split= split("/", $k);
+        //$patch_filename= end($split);
+        $patch_filename= preg_replace("/[\.\/]*/", "_",$k);
+        exec("diff -rupN -x .svn $k $v > ./resource/updates/$patch_filename.patch");
+    }
 }
 
 function patch()
 {
-    // apply the patches:
-    exec("patch -p1 < ./resource/updates/core.patch");
-    exec("patch -p1 < ./resource/updates/config.patch");
-    exec("patch -p1 < ./resource/updates/ploof.patch");
-    exec("patch -p1 < ./resource/updates/index.patch");
+    global $patch_list;
+    foreach($patch_list as $k=>$v)
+    {
+        $patch_filename= preg_replace("/[\.\/]*/", "_",$k);
+        exec("patch -p1 < ./resource/updates/$patch_filename.patch");
+    }
 }
 
 function update($version= "trunk")
@@ -174,14 +196,24 @@ function migration($branch= "trunk")
 
 function migrate($branch= "trunk")
 {    
-    $v= Versioning::find_object("branch= '".$branch."'");
+    $v= Versioning::find("branch= '".$branch."'");
     $last_db_number= $v->migration;
     $last_file_number= get_last_file_number_for(get_migration_path($branch));
     if ($last_db_number < $last_file_number)
     {
         // load them up and apply them!
-        
-    }
+        $path= get_migration_path($branch);
+        $scan= scandir($path);
+        foreach($scan as $k=>$v)
+        {
+            $split= split("__", $v);
+            $fnum= $split[0];
+            if ($fnum > $last_db_number and $v != "." and $v != "..")
+            {
+                exec("cat ".$path."/".$v." | mysql -u ".DATABASE_USER." ".DATABASE_NAME);
+            }
+        } // end foreach
+    } // end db_number vs file_number
 }
 
 //--------------------------------------------------
@@ -190,6 +222,25 @@ function migrate($branch= "trunk")
 function clean()
 {
     exec("rm -rf resource/updates");
+}
+
+//--------------------------------------------------
+//          PATCH PLOOF
+//--------------------------------------------------
+function patch_ploof($version= "trunk")
+{
+    global $patch_list;
+    
+    setup_patch_directory($version);
+
+    exec("rm ./resource/updates/patch_ploof.patch");
+
+    foreach($patch_list as $k=>$v)
+    {
+        exec("diff -rupN -x .svn $v $k >> ./resource/updates/patch_ploof.patch");
+    }
+    
+    print "Please send ./resource/updates/patch_ploof.patch to frugalprogrammer@gmail.com!\n";
 }
 
 if ($argc < 2)
@@ -205,6 +256,7 @@ if ($argc < 2)
     print "clean................... clean various detritus that can build up\n";
     print "migration............... create a migration; optionally add the branch for this migration\n";
     print "migrate................. bring this version of the database up to date; optionally add a branch to migrate from\n";
+    print "patch_ploof............. for developers: create a patchfile to submit to patch ploof\n";
     
     exit;
 }

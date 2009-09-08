@@ -1,6 +1,7 @@
 <?
+namespace core;
 
-class Versioning extends core/Model
+class Versioning extends Model
 {
     static function classname()
     {
