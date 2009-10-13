@@ -4,9 +4,10 @@ namespace core;
 class Controller
 {
     protected $data= array();
-    public $layout= null;
     private $assigns= array();
     
+    public static $layout= null;
+        
     function sanitize_inputs()
     {
         // TODO
@@ -20,6 +21,11 @@ class Controller
     function call($action)
     {
         $this->data= $_REQUEST["data"];
+        
+        if (!$this->id)
+            $this->id = $_REQUEST["id"];
+        
+        $this->assign('session_object', Session::get('object'));
 
         if (SANITIZE_INPUT)
                 $this->sanitize_inputs();
@@ -31,7 +37,7 @@ class Controller
             $$name = $value;
         }
             
-        include("../view/".static::classname()."/".$action.VIEW_EXTENSION);
+        include("../view/".classname_only(static::classname())."/".$action.VIEW_EXTENSION);
     }
     
     static function classname()

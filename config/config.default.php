@@ -1,5 +1,13 @@
 <?
 /**
+ * What object that a session attaches to
+ */
+define("SESSION_OBJECT", "user");
+define("SESSION_KEY", "email");
+define("SESSION_PASSWORD", "password");
+define("SESSION_PASSWORD_SALT", false);
+ 
+/**
  * By default ploof expects your primary keys to be 'id'.
  * You can change it to something else if you want a different convention.
  */
@@ -8,7 +16,7 @@ define("PRIMARY_KEY", "id");
 /**
  * Table separator for HABTM
  */
-define("TABLE_SEPARATOR", "__");
+define("PLOOF_SEPARATOR", "__");
 
 /**
  * Initial controller to load
@@ -39,6 +47,7 @@ define("DATABASE_NAME", "ploof");
 //define("SECONDARY_DATABASE_HOST", "localhost");
 //define("SECONDARY_DATABASE_NAME", "ploof");
 
+date_default_timezone_set('America/Los_Angeles');
 
 /**
  * Turn off / on automatic sanitizers
@@ -60,11 +69,15 @@ define("TEST_DATABASE_NAME", "ploof_fixtures");
  */
 define("VIEW_EXTENSION", ".html");
 
-// TODO
+// TODO: Make it so you don't have to set this. It's annoying.
 define("BASE_INSTALL", "");
 
-// TODO
+// TODO: Same as above
 set_include_path(get_include_path().PATH_SEPARATOR.BASE_INSTALL.PATH_SEPARATOR.BASE_INSTALL."/model".PATH_SEPARATOR.BASE_INSTALL."/controller".PATH_SEPARATOR.BASE_INSTALL."/view");
+
+//--------------------------------------------------
+//          SHARED HELPER METHODS
+//--------------------------------------------------
 
 // namespace autoloader
 function __autoload($class_name)
@@ -74,7 +87,7 @@ function __autoload($class_name)
 
 function classname_only($classname)
 {
-    $split= split("\\\\", $classname);
-    return $split[1];
+    return preg_replace("/([A-Za-z0-9]*\\\\)/", "", $classname);
 }
+
 ?>

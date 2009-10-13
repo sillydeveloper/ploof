@@ -26,7 +26,7 @@ function generate_models()
         $table= $table[0];
                 
         // check for habtm:
-        $split= split(TABLE_SEPARATOR, $table);
+        $split= split(PLOOF_SEPARATOR, $table);
         $habtm = true;
         
         if (count($split) < 2)
@@ -138,9 +138,6 @@ function generate_patch($version= "trunk")
     // build patch files:
     foreach($patch_list as $k=>$v)
     {
-        // alternative file name....
-        //$split= split("/", $k);
-        //$patch_filename= end($split);
         $patch_filename= preg_replace("/[\.\/]*/", "_",$k);
         exec("diff -rupN -x .svn $k $v > ./resource/updates/$patch_filename.patch");
     }
@@ -173,8 +170,11 @@ function get_last_file_number_for($path)
 {
     // input should be in the format:
     //  [number]__[text]
-    $split= split("__",array_pop(scandir($path, 1))); // scan dir (reverse order) then pop and split
-    return $split[0];
+    foreach(scandir($path,1) as $k=>$v)
+    {
+        if ($v != "." and $v != "..")
+            return $v; // scan dir (reverse order) then pop and split 
+    }
 }
 
 function migration($branch= "trunk")
@@ -190,7 +190,7 @@ function migration($branch= "trunk")
     else
     {
         $last_number= get_last_file_number_for($path);
-        touch($path."/".($last_number+1)."__Migration");
+        touch($path."/".($last_number+1).PLOOF_SEPARATOR."Migration");
     }
 }
 
@@ -208,6 +208,8 @@ function migrate($branch= "trunk")
         {
             $split= split("__", $v);
             $fnum= $split[0];
+            print_r($fnum);
+            print_r($last_db_number);
             if ($fnum > $last_db_number and $v != "." and $v != "..")
             {
                 exec("cat ".$path."/".$v." | mysql -u ".DATABASE_USER." ".DATABASE_NAME);

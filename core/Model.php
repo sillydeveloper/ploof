@@ -4,6 +4,7 @@ namespace core;
 class Model
 {
     protected $fields= null;
+    protected $field_types= null;
     protected $has_many= null;
     protected $has_one= null;
     protected $has_and_belongs_to_many= null; 
@@ -14,21 +15,44 @@ class Model
     {
         if ($id)
         {
-            $qry= DB::query("select * from ".classname_only(static::classname())." where id=".$id);
+            $sql= "select * from ".classname_only(static::classname())." where id=".$id;
+            $qry= DB::query($sql);
             while($row= mysql_fetch_assoc($qry))
             {   
                 foreach($row as $k=>$v)
+                {
                     $this->fields[$k] = $v;
+                }
             }
+            
+            $this->set_field_types();
         }
         elseif (count($this->fields) < 1)
         {
-            $qry= DB::query("show columns from ".classname_only(static::classname()));
-            while($row= mysql_fetch_assoc($qry))
-            {
-                $this->fields[$row["Field"]]= null;
-            }
+            $this->set_field_types(true);
         }   
+    }
+    
+    private function set_field_types($nullify= false)
+    {
+        $qry= DB::query("show columns from ".classname_only(static::classname()));
+        while($row= mysql_fetch_assoc($qry))
+        {
+            if ($nullify)
+                $this->fields[$row["Field"]]= null;
+                
+            $this->field_types[$row["Field"]]= preg_replace("/\(([0-9])*\)/", "", $row["Type"]);
+        }
+    }
+    
+    public function get_fields()
+    {
+        return $this->fields;
+    }
+    
+    public function get_field_type($field)
+    {
+        return $this->field_types[$field];
     }
     
     /**
@@ -87,7 +111,7 @@ class Model
     function get_join_table($field_name)
     {
         $my_class = classname_only(static::classname());
-        return ($field_name > $my_class) ? $my_class.TABLE_SEPARATOR.$field_name : $field_name.TABLE_SEPARATOR.$my_class;
+        return ($field_name > $my_class) ? $my_class.PLOOF_SEPARATOR.$field_name : $field_name.PLOOF_SEPARATOR.$my_class;
     }
     
     /**
@@ -231,24 +255,28 @@ class Model
     function store()
     {
         $existing= ($this->fields[PRIMARY_KEY] != null);
+        
+        if (array_key_exists("created_on", $this->fields) and !$this->fields["created_on"])
+            $this->fields["created_on"]= date("Y-m-d H:i:s", time());
                 
         if ($existing)
         {
             $sql= "update ".classname_only(static::classname())." set ";
+            
+            $field_query= array();
             foreach($this->fields as $k=>$v)
             {
                 if ($k == PRIMARY_KEY) continue;
                 if ($this->is_foreign($k)) continue;
-                $sql.= $k."='".$v."'";
+                $field_query[]= $k."='".$v."'";
             }
-            $sql.= "where ".PRIMARY_KEY."='".$this->fields[PRIMARY_KEY]."'";
+            $sql.= implode(",", $field_query)."where ".PRIMARY_KEY."='".$this->fields[PRIMARY_KEY]."'";
         }
         else
         {
             unset($this->fields[PRIMARY_KEY]);
             $sql= "insert into ".classname_only(static::classname())."(".PRIMARY_KEY.", ".implode(",", array_keys($this->fields)).") values(null, '".implode("','",array_values($this->fields))."')";
         }
-        
         // TODO update children
         DB::query($sql);
 
