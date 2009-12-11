@@ -3,6 +3,7 @@ namespace core;
 
 class Model
 {
+    protected $pk= PRIMARY_KEY;
     protected $fields= null;
     protected $field_types= null;
     protected $has_many= null;
@@ -15,9 +16,9 @@ class Model
     {
         if ($id)
         {
-            $sql= "select * from ".classname_only(static::classname())." where id=".$id;
+            $sql= "select * from ".classname_only(static::classname())." where ".$this->pk."=".$id;
             $qry= DB::query($sql);
-            while($row= mysql_fetch_assoc($qry))
+            while($row= \mysqli_fetch_assoc($qry))
             {   
                 foreach($row as $k=>$v)
                 {
@@ -36,7 +37,7 @@ class Model
     private function set_field_types($nullify= false)
     {
         $qry= DB::query("show columns from ".classname_only(static::classname()));
-        while($row= mysql_fetch_assoc($qry))
+        while($row= \mysqli_fetch_assoc($qry))
         {
             if ($nullify)
                 $this->fields[$row["Field"]]= null;
@@ -239,7 +240,7 @@ class Model
 
         // to instance, we need full path:
         $c= static::classname();
-        while($ids= mysql_fetch_assoc($result))
+        while($ids= \mysqli_fetch_assoc($result))
         {
             foreach($ids as $k=>$v)
             {
@@ -258,6 +259,9 @@ class Model
         
         if (array_key_exists("created_on", $this->fields) and !$this->fields["created_on"])
             $this->fields["created_on"]= date("Y-m-d H:i:s", time());
+        
+        if (array_key_exists("updated_on", $this->fields))
+            $this->fields["updated_on"]= date("Y-m-d H:i:s", time());
                 
         if ($existing)
         {

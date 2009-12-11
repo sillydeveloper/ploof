@@ -90,4 +90,26 @@ function classname_only($classname)
     return preg_replace("/([A-Za-z0-9]*\\\\)/", "", $classname);
 }
 
+function url_matches($url)
+{
+    $uri= $_SERVER['REQUEST_URI'];
+    
+    list($url_con, $url_act, $url_id) = get_url_parts($url);
+    list($uri_con, $uri_act, $uri_id) = get_url_parts($uri);    
+    
+    if ($url_con and $url_act and $url_id)
+        return  get_url_parts($url) == get_url_parts($uri);
+    if ($url_con and $url_act)
+        return ($url_con == $uri_con and $url_act == $uri_act);
+    if ($url_con)
+        return ($url_con == $uri_con);
+}       
+
+function get_url_parts($url)
+{
+    $split= explode("/",substr($url, 1)); // trim the front slash and split
+    return array($split[0], $split[1], $split[2]);
+        
+}
+
 ?>

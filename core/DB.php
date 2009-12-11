@@ -8,8 +8,7 @@ class DB
     
     private function __construct($username, $password, $host, $database)
     {
-        $this->connect_id = mysql_connect($host, $username, $password);
-        mysql_select_db($database, $this->connect_id);
+        $this->connect_id = \mysqli_connect($host, $username, $password, $database);
     }
 
     public static function getInstance()
@@ -24,7 +23,7 @@ class DB
     
     public function run_sql($sql)
     {
-        return mysql_query($sql, $this->connect_id);
+        return \mysqli_query($this->connect_id, $sql);
     }
 }
 

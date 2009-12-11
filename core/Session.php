@@ -29,7 +29,7 @@ class Session
         }
         else
         {
-            print_r("NOPE");
+            Session::set_error_message("Couldn't log in with that username and password");
         }
     }
     
@@ -48,6 +48,13 @@ class Session
     static function set_logged_out()
     {
         session_destroy();
+    }
+    
+    static function set_error_message($msg)
+    {
+        $sys= Session::get("PLOOF_SYSTEM_ERROR_MESSAGES");
+        $sys= ($sys) ? array_push($sys, $msg) : array($msg);
+        Session::set("PLOOF_SYSTEM_ERROR_MESSAGES", $sys);
     }
     
     

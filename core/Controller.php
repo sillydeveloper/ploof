@@ -10,7 +10,10 @@ class Controller
         
     function sanitize_inputs()
     {
-        // TODO
+        foreach($this->data as $k=>$v)
+        {
+            $this->data[$k]= mysql_real_escape_string($v);
+        }
     }
     
     function assign($name, $value)
