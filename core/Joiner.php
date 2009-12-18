@@ -26,17 +26,17 @@ class Joiner
             $this->habtm= true;
             
             $lookup_id= $parent->id;
-            $lookup_field= $parent_class."_".PRIMARY_KEY;  
+            $lookup_field= $parent_class.PK_SEPERATOR.PRIMARY_KEY;  
             
             $foreign_object= $child_class;
-            $foreign_key= $child_class."_".PRIMARY_KEY;
+            $foreign_key= $child_class.PK_SEPERATOR.PRIMARY_KEY;
             
             $qry= DB::query("select * from ".$parent->get_join_table($field_name)." where ".$lookup_field."='".$lookup_id."'");
             
             $field_list= array();
             $objects = array();
             
-            while($row= mysql_fetch_assoc($qry))
+            while($row= DB::fetch_assoc($qry))
             {
                 foreach($row as $k=>$v)
                 {
@@ -100,7 +100,7 @@ class Joiner
         if ($this->habtm == false)
         {
             $child_class= $this->child_class;
-            $parent_id_field= $this->parent_class."_".PRIMARY_KEY;
+            $parent_id_field= $this->parent_class.PK_SEPERATOR.PRIMARY_KEY;
         
             $obj= new $child_class();
             $obj->populate_from($arr);
@@ -121,12 +121,11 @@ class Joiner
      */
     function add_object($obj, $arr=null)
     {
-        print_r($this);
         if ($this->habtm == false)
         {    
-            $parent_id_field= $this->parent_class."_".PRIMARY_KEY;
-        
+            $parent_id_field= $this->parent_class.PK_SEPERATOR.PRIMARY_KEY;
             $obj->$parent_id_field= $this->parent->id;
+            
             $obj->store();
             $this->objects[]= $obj;
         }

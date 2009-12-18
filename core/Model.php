@@ -3,29 +3,37 @@ namespace core;
 
 class Model
 {
-    protected $pk= PRIMARY_KEY;
     protected $fields= null;
     protected $field_types= null;
     protected $has_many= null;
     protected $has_one= null;
     protected $has_and_belongs_to_many= null; 
     
-    protected $db_connector_preamble= "";
+    protected $validates= null;
+    
+    protected $db_connector_preamble= '';
+    
+    protected $getter_override= null;
     
     function __construct($id=null)
     {
         if ($id)
         {
-            $sql= "select * from ".classname_only(static::classname())." where ".$this->pk."=".$id;
+            $sql= "select * from ".classname_only(static::classname())." where ".PRIMARY_KEY."=".$id;
+            
+            $this->debug(5, "Loading:". $sql);
+            
             $qry= DB::query($sql);
-            while($row= \mysqli_fetch_assoc($qry))
+            $this->debug(5, $qry);
+            
+            while($row= DB::fetch_assoc($qry))            
             {   
+                $this->debug(5, $row);
                 foreach($row as $k=>$v)
                 {
-                    $this->fields[$k] = $v;
+                    $this->fields[$k] = stripslashes($v);
                 }
             }
-            
             $this->set_field_types();
         }
         elseif (count($this->fields) < 1)
@@ -37,7 +45,7 @@ class Model
     private function set_field_types($nullify= false)
     {
         $qry= DB::query("show columns from ".classname_only(static::classname()));
-        while($row= \mysqli_fetch_assoc($qry))
+        while($row= DB::fetch_assoc($qry))
         {
             if ($nullify)
                 $this->fields[$row["Field"]]= null;
@@ -49,6 +57,12 @@ class Model
     public function get_fields()
     {
         return $this->fields;
+    }
+    
+    public function is_numeric($field)
+    {
+        $numeric= array("tinyint","bigint","int", "float");
+        return (array_search($this->get_field_type($field), $numeric) !== false);
     }
     
     public function get_field_type($field)
@@ -117,46 +131,61 @@ class Model
     
     /**
      * If a field_name is foreign, then refresh the data it points to.
-     * Used to make sure cached data is up-to-date d.
+     * Used to make sure cached data is up-to-date.
      */
-    function refresh($field_name)
+    function refresh($field_name, $order= null, $limit= null)
     {   
-        if ($this->is_belongs_to($field_name))
+        // Check to see if we need to override the geter by calling a different
+        //  method:
+        if ($this->getter_override and array_key_exists($field_name, $this->getter_override))
         {
-            $lookup_id= $this->fields[$field_name."_".PRIMARY_KEY];
-            $lookup_field= PRIMARY_KEY;
-            
-            $results= $field_name::find($lookup_field."='".$lookup_id."'");
+            $method= $this->getter_override[$field_name];
+            $this->debug(5, "Calling override ".$method." for refresh of ".$field_name);
+            $results= $this->$method($order, $limit);
         }
-        
-        if ($this->is_has_many($field_name))
-        {
-            $lookup_id= $this->fields[PRIMARY_KEY];
-            $lookup_field= classname_only(static::classname())."_".PRIMARY_KEY;
-            
-            $results= $field_name::find($lookup_field."='".$lookup_id."'");
-        }
-        
-        if ($this->is_has_one($field_name))
-        {
-            $lookup_id= $this->fields[PRIMARY_KEY];
-            $lookup_field= classname_only(static::classname())."_".PRIMARY_KEY;
-            
-            $results= $field_name::find($lookup_field."='".$lookup_id."' limit 1");
-        }
-        
-        if ($this->is_habtm($field_name))
+        elseif($this->is_habtm($field_name))
         {   
             // joiner handles everything for habtm since it has to load
             //  and know about extra fields in the join table.
-            $joiner= new Joiner($this, classname_only(static::classname()), $field_name);            
+            $joiner= new Joiner($this, classname_only(static::classname()), $field_name);
         }
-        else
+        else 
+        {
+            if ($this->is_belongs_to($field_name))
+            {
+                $lookup_id= $this->fields[$field_name.PK_SEPERATOR.PRIMARY_KEY];
+                $lookup_field= PRIMARY_KEY;
+            
+                $results= $field_name::find($lookup_field."='".$lookup_id."'");
+            }
+        
+            if ($this->is_has_many($field_name))
+            {
+                $lookup_id= $this->fields[PRIMARY_KEY];
+                $lookup_field= classname_only(static::classname()).PK_SEPERATOR.PRIMARY_KEY;
+            
+                $sql= $lookup_field."='".$lookup_id."' ".$order." ".$limit;
+            
+                $this->debug(5, $field_name." sql=".$sql);
+            
+                $results= $field_name::find($sql);
+            }
+        
+            if ($this->is_has_one($field_name))
+            {
+                $lookup_id= $this->fields[PRIMARY_KEY];
+                $lookup_field= classname_only(static::classname()).PK_SEPERATOR.PRIMARY_KEY;
+            
+                $results= $field_name::find($lookup_field."='".$lookup_id."' limit 1");
+            }
+        }
+        
+        if (!$joiner)
         {
             $joiner= new Joiner();
             $joiner->set_objects($results);
             $joiner->set_parent($this, classname_only(static::classname()));
-            $joiner->set_child_class($field_name);
+            $joiner->set_child_class($field_name);            
         }
         
         $this->fields[$field_name]= $joiner;
@@ -171,22 +200,86 @@ class Model
         if ($this->is_foreign($field_name))
         {
             if (is_object($this->fields[$field_name]) == false)
+            {
+                $this->debug(5, "Refreshing ".$field_name);
                 $this->refresh($field_name);
+            }
+            else
+            {
+                $this->debug(5, "No refresh for ".$field_name);
+                //$this->debug(5, $this->fields[$field_name]);
+            }
         }
-        if ($this->is_belongs_to($field_name))
+        
+        if (is_object($this->fields[$field_name]) and ($this->is_belongs_to($field_name) or $this->is_has_one($field_name)))
         {
+            $this->debug(5, "Found is_belongs_to or is_has_one, returning get() for ".$field_name);
             // return the joiner's get, because there is only one:
             return $this->fields[$field_name]->get();
         }
+
+        if ($this->field_types[$field_name] == "datetime")
+            return format_date($this->fields[$field_name]);
+            
         return $this->fields[$field_name];
     }
     
     /**
      * Generic __set. All $obj->property= $val calls come through here.
+     *  Note that Controller handles the weatherstripping of user input.
      */
     function __set($field_name, $value)
     {
-        $this->fields[$field_name]= $value;
+        if ($this->is_foreign($field_name))
+        {
+            if (is_object($this->fields[$field_name]) == false)
+            {
+                $this->debug(5, "Refreshing ".$field_name." for __set");
+                $this->refresh($field_name);
+            }
+            else
+                $this->debug(5, $field_name." already loaded for __set");
+
+            // now add to joiner:
+            $this->fields[$field_name]->add_object($value);
+        }
+        else
+            $this->fields[$field_name]= $value;
+    }
+    
+    /**
+     *  Find and overwrite, or create and store, an object of $classname
+     *      with $values_array. It'll auto link back to this object.
+     */
+    function save($classname, $values_array)
+    {
+        if ($this->is_belongs_to($classname))
+        {
+            $this->debug(5, 'Saving '.$classname.' with ');
+            $this->debug(5, $values_array);
+                        
+            if (is_object($this->$classname))
+            {
+                $this->debug(5, $classname.' exists, id '.$this->$classname->id);
+                $this->$classname->populate_from($values_array);
+                $this->$classname->store();
+            }
+            else
+            {
+                $object= new $classname();
+                $object->fields[PRIMARY_KEY]= null;
+                $object->populate_from($values_array);
+                $object->store();
+                
+                $lookup_field= $classname.PK_SEPERATOR.PRIMARY_KEY;
+                $this->$lookup_field= $object->id;
+                $this->store();
+                
+                $this->debug(5, $classname.' does not exist; adding id '.$this->$classname->id);
+            }
+            
+            $this->refresh($classname);
+        }        
     }
     
     /**
@@ -195,7 +288,7 @@ class Model
     function populate_from($arr)
     {
         foreach($arr as $key=>$value)
-        {
+        {   
             if (array_key_exists($key, $this->fields) and $this->is_foreign($key) === false)
             {
                 $this->fields[$key]= $value;
@@ -210,8 +303,9 @@ class Model
     {
         $classname= classname_only(static::classname());
         $results= $classname::find($query);
-        if (is_array($results))
+        if ($results)
             return array_pop($results);
+            
         return false;
     }
     
@@ -225,22 +319,25 @@ class Model
         if ($query === null or strlen($query) < 1)
         {
             $query= "select ".PRIMARY_KEY." from ".$classname;  
-            DB::query($query);
+            $result= DB::query($query);
         }
         else
         {
             $query= "select ".PRIMARY_KEY." from ".$classname." where ".$query;
+            self::debug(5, $query);
             $result= DB::query($query);
         }
         
         $results= array();
         
-        if (!$result)
+        if (!$result) // or DB::num_rows($result) < 1)
+        { 
             return false;
+        }
 
         // to instance, we need full path:
         $c= static::classname();
-        while($ids= \mysqli_fetch_assoc($result))
+        while($ids= DB::fetch_assoc($result))
         {
             foreach($ids as $k=>$v)
             {
@@ -253,7 +350,7 @@ class Model
     /** 
      * Store this object back into the database.
      */
-    function store()
+    function store($additional=null)
     {
         $existing= ($this->fields[PRIMARY_KEY] != null);
         
@@ -270,23 +367,69 @@ class Model
             $field_query= array();
             foreach($this->fields as $k=>$v)
             {
+                if ($v === null) $v= "NULL";
+                
                 if ($k == PRIMARY_KEY) continue;
                 if ($this->is_foreign($k)) continue;
-                $field_query[]= $k."='".$v."'";
+                if ($this->is_numeric($k) or $v === "NULL")
+                    $field_query[]= $k."=".$v."";
+                else
+                    $field_query[]= $k."='".$v."'";
             }
-            $sql.= implode(",", $field_query)."where ".PRIMARY_KEY."='".$this->fields[PRIMARY_KEY]."'";
+            $sql.= implode(",", $field_query)." where ".PRIMARY_KEY."='".$this->fields[PRIMARY_KEY]."'";
         }
         else
         {
             unset($this->fields[PRIMARY_KEY]);
-            $sql= "insert into ".classname_only(static::classname())."(".PRIMARY_KEY.", ".implode(",", array_keys($this->fields)).") values(null, '".implode("','",array_values($this->fields))."')";
+            $field_query= array();
+            foreach($this->fields as $k=>$v)
+            {
+                if ($v === null) $v= "NULL";
+                
+                if ($this->is_numeric($k) or $v === "NULL")
+                    $field_query[]= $v;
+                else
+                    $field_query[]= '"'.$v.'"';
+            }
+            
+            $sql= 'insert into '.classname_only(static::classname()).'('.PRIMARY_KEY.', '.implode(',', array_keys($this->fields)).') values(null, '.implode(',',array_values($field_query)).')';
         }
+        
+        $this->debug(5, $sql);
+        
         // TODO update children
         DB::query($sql);
 
         if (!$existing)
         {
-            $this->fields[PRIMARY_KEY]= mysql_insert_id();
+            $this->fields[PRIMARY_KEY]= DB::insert_id();
+        }
+        
+        // this allows you to use a primary key that is not named like the others;
+        //  to use it, override store() like:
+        //      function store() { parent::store(array(to=>from)); }
+        // this is not recommended for long term use due to indexing and other possible problems,
+        //  but can be used to migrate from an old table system.
+        if ($additional)
+        {
+            foreach($additional as $to=>$from)
+                DB::query("update ".classname_only(static::classname())." set ".$to."=".$from." where ".$from."=".$this->fields[PRIMARY_KEY]);
+        }
+    }
+    
+    function json_validates()
+    {
+        return json_encode($this->validates);
+    }
+    
+    static function debug($level, $msg)
+    {
+        if ($level <= DEBUG_LEVEL)
+        {
+            echo "<pre>";
+            echo self::classname()."($level): ";
+            print_r($msg);
+            echo "</pre>";
         }
     }
     

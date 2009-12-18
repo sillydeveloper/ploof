@@ -9,8 +9,9 @@ include_once 'config/config.php';
 //--------------------------------------------------
 function initialize()
 {
-    DB::query("create table Versioning(id int not null primary key auto_increment, migration int, branch varchar(255))");
-    DB::query("insert into versioning values(null, 0, 'trunk')");
+    DB::query("create table if not exists Versioning(id int not null primary key auto_increment, migration int, branch varchar(255))");
+    
+    DB::query("insert into Versioning values(null, 0, 'trunk')");
 }
 
 //--------------------------------------------------
@@ -21,12 +22,12 @@ function generate_models()
     $qry= DB::query("show tables");
     $classes= array();
     
-    while($table= mysql_fetch_array($qry))
-    {    
+    while($table= \mysql_fetch_array($qry))
+    {   
         $table= $table[0];
                 
         // check for habtm:
-        $split= split(PLOOF_SEPARATOR, $table);
+        $split= explode(PLOOF_SEPARATOR, $table);
         $habtm = true;
         
         if (count($split) < 2)
@@ -62,16 +63,21 @@ function generate_models()
             {
                 $column= $column["Field"];
                 
-                if (preg_match('/_'.PRIMARY_KEY.'/', $column))
+                if ($column == PRIMARY_KEY)
+                    $classes[$table]= array();
+                
+                if (preg_match('/'.PK_SEPERATOR.PRIMARY_KEY.'$/', $column))
                 {
-                    $foreign_table= str_replace("_id","",$column);
-                    print_r($foreign_table);
+                    $foreign_table= str_replace( PK_SEPERATOR.PRIMARY_KEY,"",$column);
                     $classes[$table]['belongs_to'][]= $foreign_table;
                     $classes[$foreign_table]['has_many'][]= $table;
                 }
             } // end foreach show columns
         } // end if !habtm
+        
     } // end foreach table
+    
+    print_r($classes);
     
     foreach($classes as $class=>$relations)
     {
@@ -206,7 +212,7 @@ function migrate($branch= "trunk")
         $scan= scandir($path);
         foreach($scan as $k=>$v)
         {
-            $split= split("__", $v);
+            $split= explode("__", $v);
             $fnum= $split[0];
             print_r($fnum);
             print_r($last_db_number);

@@ -6,13 +6,20 @@ class Controller
     protected $data= array();
     private $assigns= array();
     
+    public $protected= array(); // protected actions
+    public $handler= null; // handler for errors, array('controller'=>foo, 'action'=>bar)
+    
     public static $layout= null;
         
     function sanitize_inputs()
     {
-        foreach($this->data as $k=>$v)
+        if (!USE_MYSQLI)
         {
-            $this->data[$k]= mysql_real_escape_string($v);
+            if (is_array($this->data))
+                foreach($this->data as $k=>$v)
+                {
+                     $this->data[$k]= \mysql_real_escape_string($v);
+                }
         }
     }
     
@@ -25,22 +32,52 @@ class Controller
     {
         $this->data= $_REQUEST["data"];
         
-        if (!$this->id)
+        if ($this->id === null)
             $this->id = $_REQUEST["id"];
         
-        $this->assign('session_object', Session::get('object'));
-
         if (SANITIZE_INPUT)
                 $this->sanitize_inputs();
-                
-        $this->$action();
         
-        foreach($this->assigns as $name=>$value)
+        if (method_exists($this, $action))
         {
-            $$name = $value;
+            try
+            {
+                $this->debug(5, "Calling action $action...");
+                $this->$action();
+                $this->debug(5, "Call complete.");   
+            }
+            catch (\Exception $e)
+            {
+                if ($this->handler)
+                {
+                    render($this->handler['controller'], $this->handler['action'], $this->id);
+                    exit;
+                }
+                print_r('<pre>Controller caught a message it didn\'t know how to handle:');
+                print_r($e->getMessage());
+                print_r($e->getTraceAsString());
+                print_r('</pre>');
+                exit;
+            }        
+            foreach($this->assigns as $name=>$value)
+            {
+                $$name= $value;
+            }
         }
-            
-        include("../view/".classname_only(static::classname())."/".$action.VIEW_EXTENSION);
+        
+        if (file_exists("../view/".classname_only(static::classname())."/".$action.VIEW_EXTENSION))
+            include("../view/".classname_only(static::classname())."/".$action.VIEW_EXTENSION);
+    }
+    
+    static function debug($level, $msg)
+    {
+        if ($level <= DEBUG_LEVEL)
+        {
+            echo "<pre>";
+            echo static::classname()."($level): ";
+            print_r($msg);
+            echo "</pre>";
+        }
     }
     
     static function classname()

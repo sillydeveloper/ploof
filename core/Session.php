@@ -8,9 +8,9 @@ class Session
         session_start();
     }
     
-    static function as_object()
+    static function object()
     {
-        
+        return Session::get("object");
     }
     
     static function login($key, $password)
@@ -19,6 +19,12 @@ class Session
         $p_field= SESSION_PASSWORD;
         $class = SESSION_OBJECT;
         
+        if ($key == "" or $password == "")
+        {
+            Session::set_error_message("Please enter a username and password");
+            return false;
+        }
+            
         $sql= $k_field."='".$key."' and ".$p_field."='".$password."'";
 
         $object= $class::find_object($sql);
@@ -26,10 +32,12 @@ class Session
         if ($object)
         {
             Session::set_logged_in($object);
+            return true;
         }
         else
         {
             Session::set_error_message("Couldn't log in with that username and password");
+            return false;
         }
     }
     
@@ -57,6 +65,23 @@ class Session
         Session::set("PLOOF_SYSTEM_ERROR_MESSAGES", $sys);
     }
     
+    static function has_error_messages()
+    {
+        return (count(Session::get_error_messages(false)) > 0);
+    }
+    
+    static function get_error_messages($clear=true)
+    {
+        $msgs= Session::get("PLOOF_SYSTEM_ERROR_MESSAGES");
+        if ($clear)
+            Session::clear_error_messages();
+        return $msgs;
+    }
+    
+    static function clear_error_messages()
+    {
+        Session::clear("PLOOF_SYSTEM_ERROR_MESSAGES");
+    }
     
     static function set($name, $value)
     {
@@ -67,5 +92,10 @@ class Session
     {
         return $_SESSION[$name];
     }    
+    
+    static function clear($name)
+    {
+        unset($_SESSION[$name]);
+    }
 }
 ?>
