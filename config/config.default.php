@@ -60,7 +60,8 @@ define("USE_MYSQLI", true);
 date_default_timezone_set('America/Los_Angeles');
 
 /**
- * Turn off / on automatic sanitizers
+ * Turn off / on automatic sanitizers. What this does
+ *  generally depends on your database type.
  */
 define("SANITIZE_INPUT", true);
 
@@ -85,5 +86,5 @@ define("BASE_INSTALL", "");
 // TODO: Same as above
 set_include_path(get_include_path().PATH_SEPARATOR.BASE_INSTALL.PATH_SEPARATOR.BASE_INSTALL."/model".PATH_SEPARATOR.BASE_INSTALL."/controller".PATH_SEPARATOR.BASE_INSTALL."/view");
 
-
+include_once 'fun.php';
 ?>
