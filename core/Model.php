@@ -122,6 +122,7 @@ class Model
     
     /**
      * Generate the join table name for field_name
+     * TODO: Change this method name to get_habtm_join_table
      */
     function get_join_table($field_name)
     {
@@ -207,7 +208,6 @@ class Model
             else
             {
                 $this->debug(5, "No refresh for ".$field_name);
-                //$this->debug(5, $this->fields[$field_name]);
             }
         }
         
@@ -249,26 +249,30 @@ class Model
     
     /**
      *  Find and overwrite, or create and store, an object of $classname
-     *      with $values_array. It'll auto link back to this object.
+     *      with $values_array that has a relationship to $this. 
+     *      Use store() on an object, save() on a relationship.
      */
     function save($classname, $values_array)
     {
         if ($this->is_belongs_to($classname))
         {
-            $this->debug(5, 'Saving '.$classname.' with ');
+            $this->debug(5, 'Saving '.$classname.' (belongs_to) with:');
             $this->debug(5, $values_array);
                         
+            // Question: Do we need a refresh check here? No because $this->$classname calls
+            //  the getter (which should be an object of the type described by the belongs_to)
             if (is_object($this->$classname))
             {
                 $this->debug(5, $classname.' exists, id '.$this->$classname->id);
-                $this->$classname->populate_from($values_array);
+                // this is a belongs to, so only the first is item is touched:
+                $this->$classname->populate_from($values_array[$classname]);
                 $this->$classname->store();
             }
             else
             {
                 $object= new $classname();
                 $object->fields[PRIMARY_KEY]= null;
-                $object->populate_from($values_array);
+                $object->populate_from($values_array[$classname]);
                 $object->store();
                 
                 $lookup_field= $classname.PK_SEPERATOR.PRIMARY_KEY;
@@ -277,21 +281,68 @@ class Model
                 
                 $this->debug(5, $classname.' does not exist; adding id '.$this->$classname->id);
             }
-            
             $this->refresh($classname);
-        }        
-    }
+        } // end belongs_to
+        if ($this->is_has_one($classname))
+        {
+            $this->debug(5, 'Saving '.$classname.' (has_one) with:');
+            $this->debug(5, $values_array);
+            
+            if (is_object($this->$classname))
+            {
+                $this->debug(5, $classname.' exists, id '.$this->$classname->id);
+                $this->$classname->populate_from($values_array[$classname]);
+                $this->$classname->store();
+            }
+            else
+            {
+                $this_class= classname_only(static::classname());
+                $lookup_field= $this_class.PK_SEPERATOR.PRIMARY_KEY;
+                
+                $object= new $classname();
+                $object->fields[PRIMARY_KEY]= null;
+                $object->$lookup_field= $this->fields[PRIMARY_KEY];
+                $object->populate_from($values_array[$classname]);
+                $object->store();
+                
+                $this->debug(5, $classname.' does not exist; adding id '.$this->$classname->id);
+            }
+        }    // end has_one
+        if ($this->is_has_many($classname))
+        {
+            $this->debug(5, 'Saving '.$classname.' (has_many) with:');
+            $this->debug(5, $values_array);
+            
+            if (is_object($this->$classname))
+            {
+                $this->debug(5, 'Currently '.count($this->$classname->find()).' exist; repopulating with new values...');
+                $this->$classname->delete();
+                foreach($values_array[$classname] as $property=>$index)
+                {
+                    $number_of_records= count($values_array[$classname][$property]);
+                    break;
+                }
+                for($i=0; $i<$number_of_records; $i++)
+                {
+                    $this->$classname->add_array($values_array[$classname], $i);
+                }
+            }
+        } // end has_many
+    } // end save()
     
     /**
      * Auto populate the fields from an array
      */
-    function populate_from($arr)
+    function populate_from($arr, $index=0)
     {
-        foreach($arr as $key=>$value)
-        {   
-            if (array_key_exists($key, $this->fields) and $this->is_foreign($key) === false)
-            {
-                $this->fields[$key]= $value;
+        if (is_array($arr))
+        {
+            foreach($arr as $key=>$value)
+            {   
+                if (array_key_exists($key, $this->fields) and $this->is_foreign($key) === false)
+                {
+                    $this->fields[$key]= $value[$index];
+                }
             }
         }
     }
@@ -359,7 +410,11 @@ class Model
         
         if (array_key_exists("updated_on", $this->fields))
             $this->fields["updated_on"]= date("Y-m-d H:i:s", time());
+        
+        $field_query= array();
+        // set it up:
                 
+        
         if ($existing)
         {
             $sql= "update ".classname_only(static::classname())." set ";
@@ -367,14 +422,22 @@ class Model
             $field_query= array();
             foreach($this->fields as $k=>$v)
             {
-                if ($v === null) $v= "NULL";
-                
+                if ($v === null or $v == '') $v= "NULL";
+             
                 if ($k == PRIMARY_KEY) continue;
-                if ($this->is_foreign($k)) continue;
-                if ($this->is_numeric($k) or $v === "NULL")
+                
+                if ($this->is_numeric($k) or $v === "NULL" )
                     $field_query[]= $k."=".$v."";
+                elseif ($this->is_belongs_to($k) and is_object($v))
+                {
+                    $field_query[]= $k."=".$v->get()->id; // remember: it's a joiner object
+                }
+                elseif ($this->is_foreign($k))
+                {
+                    continue;
+                }
                 else
-                    $field_query[]= $k."='".$v."'";
+                    $field_query[]= $k."='".$v."'";                    
             }
             $sql.= implode(",", $field_query)." where ".PRIMARY_KEY."='".$this->fields[PRIMARY_KEY]."'";
         }
@@ -384,15 +447,22 @@ class Model
             $field_query= array();
             foreach($this->fields as $k=>$v)
             {
-                if ($v === null) $v= "NULL";
-                
-                if ($this->is_numeric($k) or $v === "NULL")
-                    $field_query[]= $v;
+                if ($v === null or $v == '') $v= "NULL";
+                if ($this->is_numeric($k) or $v === "NULL" )
+                    $field_query[$k]= $v;
+                elseif ($this->is_belongs_to($k) and is_object($v))
+                {
+                    $field_query[$k]= $v->id;
+                }
+                elseif ($this->is_foreign($k))
+                {
+                    continue;
+                }
                 else
-                    $field_query[]= '"'.$v.'"';
+                    $field_query[$k]= '"'.$v.'"';
             }
             
-            $sql= 'insert into '.classname_only(static::classname()).'('.PRIMARY_KEY.', '.implode(',', array_keys($this->fields)).') values(null, '.implode(',',array_values($field_query)).')';
+            $sql= 'insert into '.classname_only(static::classname()).'('.PRIMARY_KEY.', '.implode(',', array_keys($field_query)).') values(null, '.implode(',',array_values($field_query)).')';
         }
         
         $this->debug(5, $sql);
@@ -403,8 +473,10 @@ class Model
         if (!$existing)
         {
             $this->fields[PRIMARY_KEY]= DB::insert_id();
+            $this->debug(5, "Set pk to ".$this->fields[PRIMARY_KEY]);
         }
         
+        // think of $additional as a trigger.
         // this allows you to use a primary key that is not named like the others;
         //  to use it, override store() like:
         //      function store() { parent::store(array(to=>from)); }
@@ -413,14 +485,25 @@ class Model
         if ($additional)
         {
             foreach($additional as $to=>$from)
-                DB::query("update ".classname_only(static::classname())." set ".$to."=".$from." where ".$from."=".$this->fields[PRIMARY_KEY]);
+            {
+                $sql= "update ".classname_only(static::classname())." set ".$to."=".$from." where ".$from."=".$this->fields[PRIMARY_KEY];
+                $this->debug(5, "Performing additional trigger: ".$sql);
+                DB::query($sql);
+            }
         }
-    }
+    } // end store
+    
+    function delete()
+    {
+        $sql= 'delete from '.classname_only(static::classname()).' where '.PRIMARY_KEY.'="'.$this->fields[PRIMARY_KEY].'"';
+        $this->debug(5, "Deleting- ".$sql);
+        DB::query($sql);
+    } // end delete
     
     function json_validates()
     {
         return json_encode($this->validates);
-    }
+    } // end json_validates
     
     static function debug($level, $msg)
     {

@@ -95,7 +95,7 @@ class Joiner
      * array("column"=>"value")
      * This will auto assign the object to the parent's key.
      */
-    function add_array($arr)
+    function add_array($arr, $index=0)
     {
         if ($this->habtm == false)
         {
@@ -103,7 +103,7 @@ class Joiner
             $parent_id_field= $this->parent_class.PK_SEPERATOR.PRIMARY_KEY;
         
             $obj= new $child_class();
-            $obj->populate_from($arr);
+            $obj->populate_from($arr, $index);
             $obj->$parent_id_field= $this->parent->id;
             $obj->store();
         
@@ -199,6 +199,18 @@ class Joiner
     function get()
     {
         return $this->objects[0];
+    }
+    
+    /**
+     * Remove items
+     */ 
+    function delete()
+    {
+        foreach($this->objects as $o)
+        {
+            $o->delete();
+        }
+        $this->objects= array();
     }
     
 }

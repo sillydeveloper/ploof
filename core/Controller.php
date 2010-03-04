@@ -28,9 +28,14 @@ class Controller
         $this->assigns[$name]= $value;
     }
     
-    function call($action)
+    function call($action, $set_assigns=null)
     {
         $this->data= $_REQUEST["data"];
+
+        if ($set_assigns)
+        {
+            $this->assigns= $set_assigns;
+        }
         
         if ($this->id === null)
             $this->id = $_REQUEST["id"];
@@ -58,11 +63,11 @@ class Controller
                 print_r($e->getTraceAsString());
                 print_r('</pre>');
                 exit;
-            }        
-            foreach($this->assigns as $name=>$value)
-            {
-                $$name= $value;
-            }
+            }                    
+        }
+        foreach($this->assigns as $name=>$value)
+        {
+            $$name= $value;
         }
         
         if (file_exists("../view/".classname_only(static::classname())."/".$action.VIEW_EXTENSION))
