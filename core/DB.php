@@ -1,7 +1,7 @@
 <?
 namespace core;
 
-class DB
+class DB extends Ploof
 {
     private static $db;
     private $connect_id;
@@ -9,19 +9,22 @@ class DB
     private function __construct($username, $password, $host, $database)
     {
         if (USE_MYSQLI)
-        {
             $this->connect_id = \mysqli_connect($host, $username, $password, $database);
-        }
         else
         {
-            $this->connect_id = \mysql_connect($host, $username, $password, $database);
-            mysql_select_db(DATABASE_NAME);
+            $this->connect_id = \mysql_connect($host, $username, $password) or die("Could not connect to mysql");
+            if (IN_UNIT_TESTING)
+                mysql_select_db(TEST_DATABASE_NAME);
+            else
+                mysql_select_db(DATABASE_NAME);
         }
     }
 
     public static function getInstance()
     {
-        if (empty(self::$db))
+        if (IN_UNIT_TESTING)
+            self::$db = new DB(TEST_DATABASE_USER, TEST_DATABASE_PASS, TEST_DATABASE_HOST, TEST_DATABASE_NAME);
+        elseif (empty(self::$db))
             self::$db = new DB(DATABASE_USER, DATABASE_PASS, DATABASE_HOST, DATABASE_NAME);
         
         return self::$db;
@@ -87,9 +90,11 @@ class DB
     public function run_sql($sql)
     {
         if (USE_MYSQLI)
-            return \mysqli_query($this->connect_id, $sql);// or die("Could not execute query\n");
+            return \mysqli_query($this->connect_id, $sql);// or die("Could not execute query: \n".mysqli_error());
         else
-            return \mysql_query($sql, $this->connect_id);
+        {
+            return \mysql_query($sql);// or die("Could not execute query: \n".mysql_error());
+        }
     }
 }
 

@@ -1,7 +1,7 @@
 <?
 namespace core;
 
-class Scaffold
+class Scaffold extends Ploof
 {
     private static $textbox_types= array("varchar", "datetime", "int");
     private static $textarea_types= array("text");

@@ -1,7 +1,7 @@
 <?
 namespace core;
 
-class Model
+class Model extends Ploof
 {
     protected $fields= null;
     protected $field_types= null;
@@ -10,9 +10,7 @@ class Model
     protected $has_and_belongs_to_many= null; 
     
     protected $validates= null;
-    
     protected $db_connector_preamble= '';
-    
     protected $getter_override= null;
     
     function __construct($id=null)
@@ -21,10 +19,9 @@ class Model
         {
             $sql= "select * from ".classname_only(static::classname())." where ".PRIMARY_KEY."=".$id;
             
-            $this->debug(5, "Loading:". $sql);
+            $this->debug(5, "Loading: ". $sql);
             
             $qry= DB::query($sql);
-            $this->debug(5, $qry);
             
             while($row= DB::fetch_assoc($qry))            
             {   
@@ -61,8 +58,13 @@ class Model
     
     public function is_numeric($field)
     {
-        $numeric= array("tinyint","bigint","int", "float");
+        $numeric= array("tinyint", "bigint", "int", "float", "double");
         return (array_search($this->get_field_type($field), $numeric) !== false);
+    }
+    
+    public function get_field_types()
+    {
+        return $this->field_types;
     }
     
     public function get_field_type($field)
@@ -136,7 +138,7 @@ class Model
      */
     function refresh($field_name, $order= null, $limit= null)
     {   
-        // Check to see if we need to override the geter by calling a different
+        // Check to see if we need to override the getter by calling a different
         //  method:
         if ($this->getter_override and array_key_exists($field_name, $this->getter_override))
         {
@@ -164,11 +166,11 @@ class Model
             {
                 $lookup_id= $this->fields[PRIMARY_KEY];
                 $lookup_field= classname_only(static::classname()).PK_SEPERATOR.PRIMARY_KEY;
-            
+                
                 $sql= $lookup_field."='".$lookup_id."' ".$order." ".$limit;
-            
+                
                 $this->debug(5, $field_name." sql=".$sql);
-            
+                
                 $results= $field_name::find($sql);
             }
         
@@ -176,7 +178,7 @@ class Model
             {
                 $lookup_id= $this->fields[PRIMARY_KEY];
                 $lookup_field= classname_only(static::classname()).PK_SEPERATOR.PRIMARY_KEY;
-            
+                
                 $results= $field_name::find($lookup_field."='".$lookup_id."' limit 1");
             }
         }
@@ -218,6 +220,7 @@ class Model
             return $this->fields[$field_name]->get();
         }
 
+        // call the datetime handler if this is a datetime:
         if ($this->field_types[$field_name] == "datetime")
             return format_date($this->fields[$field_name]);
             
@@ -515,6 +518,94 @@ class Model
             echo "</pre>";
         }
     }
+    
+    /**
+     * Create class files based on database structure.
+     *  This will not create files if they already exist.
+     */
+    static function generate_models()
+    {
+        $qry= DB::query("show tables");
+        $classes= array();
+
+        while($table= \mysql_fetch_array($qry))
+        {   
+            $table= $table[0];
+
+            // check for habtm:
+            $split= explode(PLOOF_SEPARATOR, $table);
+            $habtm = true;
+
+            if (count($split) < 2)
+                $habtm= false; // no habtm
+            else
+            {   
+                // we may have a habtm; check to make sure that the joined tables match:
+                //foreach($split as $s=>$search_for_tablename)
+                //{
+                //    if (array_search($split[0], $search_for_tablename) === false)
+                //        $habtm = false;
+                //}
+
+                //if ($habtm)
+                //{
+                    // link them all together:
+                    foreach($split as $s=>$search_for_tablename)
+                    {
+                        foreach($split as $s2=>$search_for_tablename2)
+                        {
+                            if ($search_for_tablename != $search_for_tablename2)
+                                $classes[$search_for_tablename]['habtm'][]= $search_for_tablename2;
+                        }
+                    }
+                //}
+            }
+
+            if ($habtm == false)
+            {
+                $qry2= DB::query("show columns from ".$table);
+
+                while($column= mysql_fetch_array($qry2))
+                {
+                    $column= $column["Field"];
+
+                    if (preg_match('/'.PK_SEPERATOR.PRIMARY_KEY.'$/', $column))
+                    {
+                        $foreign_table= str_replace( PK_SEPERATOR.PRIMARY_KEY,"",$column);
+                        $classes[$table]['belongs_to'][]= $foreign_table;
+                        $classes[$foreign_table]['has_many'][]= $table;
+                        
+                    }
+                } // end foreach show columns
+            } // end if !habtm
+
+        } // end foreach table
+        
+        foreach($classes as $class=>$relations)
+        {
+            if (IN_UNIT_TESTING)
+                $file = "test/temp/".$class.".php";
+            else
+                $file = "model/".$class.".php";
+
+            if (file_exists($file) == false)
+            {
+                $f= fopen($file, "w+");
+                fwrite($f,"<?\n");
+                fwrite($f,"class $class extends \\core\\Model\n");
+                fwrite($f,"{\n");
+                foreach ($relations as $k=>$r)
+                    fwrite($f,"    protected \$$k= array('".implode("', '", $r)."');\n");
+                fwrite($f,"    static function classname()\n");
+                fwrite($f,"    {\n");
+                fwrite($f,"        return __CLASS__;\n");
+                fwrite($f,"    }\n");
+                fwrite($f,"}\n");
+                fwrite($f,"?>");
+                fclose($f);
+            }
+        }
+    } // end generate_models
     
     /**
      * Get this objects static classname (PHP5.3 only)

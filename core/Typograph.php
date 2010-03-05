@@ -1,7 +1,7 @@
 <?
 namespace core;
 
-class Typograph
+class Typograph extends Ploof
 {
     static function to_human($value)
     {

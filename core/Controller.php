@@ -1,7 +1,7 @@
 <?
 namespace core;
 
-class Controller
+class Controller extends Ploof
 {
     protected $data= array();
     private $assigns= array();

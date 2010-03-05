@@ -2,9 +2,9 @@
 namespace core;
 
 /**
- * 
+ * Provides helper methods to joined objects.
  */
-class Joiner
+class Joiner extends Ploof
 {
     protected $objects= array();
     protected $child_class;
@@ -127,6 +127,7 @@ class Joiner
             $obj->$parent_id_field= $this->parent->id;
             
             $obj->store();
+
             $this->objects[]= $obj;
         }
         else
@@ -204,11 +205,12 @@ class Joiner
     /**
      * Remove items
      */ 
-    function delete()
+    function delete($id_array=null)
     {
         foreach($this->objects as $o)
         {
-            $o->delete();
+            if (!$id_array or array_search($o->id, $id_array) !== false)
+                $o->delete();
         }
         $this->objects= array();
     }

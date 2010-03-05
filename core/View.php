@@ -1,7 +1,7 @@
 <?
 namespace core;
 
-class View
+class View extends Ploof
 {
     
 

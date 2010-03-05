@@ -1,7 +1,7 @@
 <?
 namespace core;
 
-class Session
+class Session extends Ploof
 {
     static function start()
     {
