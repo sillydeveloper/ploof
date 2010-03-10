@@ -10,12 +10,12 @@ function format_date($d)
  */
 function __autoload($class_name)
 {
-    if (file_exists(str_replace("\\", "/", $class_name).".php"))
+    //if (file_exists(str_replace("\\", "/", $class_name).".php"))
         require_once(str_replace("\\", "/", $class_name).".php");
-    elseif (IN_UNIT_TESTING and file_exists("./test/temp/".$class_name.".php"))
+    //elseif (IN_UNIT_TESTING and file_exists("./test/temp/".$class_name.".php"))
         require_once("test/temp/".$class_name.".php");
-    else
-        throw new Exception("Hey, $class_name doesn't seem to exist...");
+    //else
+    //    throw new Exception("Hey, $class_name doesn't seem to exist...");
 }
 
 /**

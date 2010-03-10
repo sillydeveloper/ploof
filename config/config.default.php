@@ -83,7 +83,7 @@ define("VIEW_EXTENSION", ".html");
 define("BASE_INSTALL", "");
 
 // TODO: Same as above
-set_include_path(get_include_path().PATH_SEPARATOR.BASE_INSTALL.PATH_SEPARATOR.BASE_INSTALL."/model".PATH_SEPARATOR.BASE_INSTALL."/controller".PATH_SEPARATOR.BASE_INSTALL."/view");
+set_include_path(get_include_path().PATH_SEPARATOR.BASE_INSTALL.PATH_SEPARATOR.BASE_INSTALL."/model".PATH_SEPARATOR.BASE_INSTALL."/controller".PATH_SEPARATOR.BASE_INSTALL."/view".PATH_SEPARATOR.BASE_INSTALL."/core");
 
-
+require_once "fun.php";
 ?>
