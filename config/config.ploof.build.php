@@ -42,10 +42,10 @@ define("DATABASE_NAME", "");
  * Fixture database for unit tests. This database
  * WILL BE WIPED each time you run unit tests.
  */
-define("TEST_DATABASE_USER", "");
-define("TEST_DATABASE_PASS", "");
-define("TEST_DATABASE_HOST", "");
-define("TEST_DATABASE_NAME", "");
+define("TEST_DATABASE_USER", "@TEST_DATABASE_USER");
+define("TEST_DATABASE_PASS", "@TEST_DATABASE_PASS");
+define("TEST_DATABASE_HOST", "@TEST_DATABASE_HOST");
+define("TEST_DATABASE_NAME", "@TEST_DATABASE_NAME");
 
 /**
  * Initial action to call on controllers

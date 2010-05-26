@@ -3,6 +3,14 @@ namespace core;
 
 class Session extends Ploof
 {
+    const ERROR= "Error";
+    const WARNING= "Warning";
+    const SYSTEM= "System";
+    const NOTICE= "Notice";
+
+	const CLEAR= true;
+	const NO_CLEAR= false;
+    
     static function start()
     {
         session_start();
@@ -21,7 +29,7 @@ class Session extends Ploof
         
         if ($key == "" or $password == "")
         {
-            Session::set_error_message("Please enter a username and password");
+            Session::set_message(Session::NOTICE, "Please enter a username and password");
             return false;
         }
             
@@ -36,7 +44,7 @@ class Session extends Ploof
         }
         else
         {
-            Session::set_error_message("Couldn't log in with that username and password");
+            Session::set_message(Session::NOTICE, "Couldn't log in with that username and password");
             return false;
         }
     }
@@ -58,29 +66,62 @@ class Session extends Ploof
         session_destroy();
     }
     
-    static function set_error_message($msg)
+    static function push_request()
     {
-        $sys= Session::get("PLOOF_SYSTEM_ERROR_MESSAGES");
-        $sys= ($sys) ? array_push($sys, $msg) : array($msg);
-        Session::set("PLOOF_SYSTEM_ERROR_MESSAGES", $sys);
+        $sys= Session::get("PLOOF_ROUTES");
+        if (is_array($sys)) 
+            array_push($sys, $_SERVER['REQUEST_URI']);
+        else
+            $sys= array($_SERVER['REQUEST_URI']);
+        Session::set("PLOOF_ROUTES", $sys);
     }
     
-    static function has_error_messages()
+    static function pop_request()
     {
-        return (count(Session::get_error_messages(false)) > 0);
+        $sys= Session::get("PLOOF_ROUTES");
+        $res= array_pop($sys);
+        Session::set("PLOOF_ROUTES", $sys);
+        return $res;
     }
     
-    static function get_error_messages($clear=true)
+    static function set_message($type, $msg)
     {
-        $msgs= Session::get("PLOOF_SYSTEM_ERROR_MESSAGES");
+        $sys= Session::get("PLOOF_MESSAGES");
+        if (is_array($sys[$type]))
+            array_push($sys[$type], $msg);
+        else
+            $sys= array($type => array($msg));
+        
+        Session::set("PLOOF_MESSAGES", $sys);
+    }
+    
+    static function has_messages($type)
+    {
+        return (count(Session::get_messages($type, false)) > 0);
+    }
+    
+    static function get_messages($type=null, $clear=Session::CLEAR)
+    {
+        $msgs= Session::get("PLOOF_MESSAGES");
+        
+        $message= ($type) ? $msgs[$type] : $msgs;
+        
         if ($clear)
-            Session::clear_error_messages();
-        return $msgs;
+            Session::clear_messages($type);
+        
+        return $message;
     }
     
-    static function clear_error_messages()
+    static function clear_messages($type=null)
     {
-        Session::clear("PLOOF_SYSTEM_ERROR_MESSAGES");
+        if ($type)
+        {
+            $sys= Session::get("PLOOF_MESSAGES");
+            unset($sys[$type]);
+            Session::set("PLOOF_MESSAGES", $sys);
+        }
+        else
+            Session::clear("PLOOF_MESSAGES");
     }
     
     static function set($name, $value)

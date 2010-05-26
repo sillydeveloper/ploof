@@ -4,22 +4,3 @@ $(function(){
        // find all the input elements with title attributes
        $('input[title!=""]').hint();
 });
-
-// Thanks to Curvy Corners:
-// http://www.curvycorners.net/
-curvy= function(size, target)
-{
-    
-    addEvent(window, 'load', function()
-                            {
-                                var settings = 
-                                {
-                                    tl: { radius: size },
-                                    tr: { radius: size },
-                                    bl: { radius: size },
-                                    br: { radius: size },
-                                    antiAlias: true
-                                }
-                                curvyCorners(settings, target);
-                            });
-}

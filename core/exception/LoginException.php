@@ -1,7 +1,7 @@
 <?
 namespace core\exception;
 
-class LoginException extends \Exception
+class LoginException extends \core\exception\PloofException
 {
     
 }

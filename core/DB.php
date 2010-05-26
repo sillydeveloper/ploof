@@ -9,7 +9,7 @@ class DB extends Ploof
     private function __construct($username, $password, $host, $database)
     {
         if (USE_MYSQLI)
-            $this->connect_id = \mysqli_connect($host, $username, $password, $database);
+            $this->connect_id = \mysqli_connect($host, $username, $password, $database) or die("Could not connect to mysqli");
         else
         {
             $this->connect_id = \mysql_connect($host, $username, $password) or die("Could not connect to mysql");
@@ -26,16 +26,19 @@ class DB extends Ploof
             self::$db = new DB(TEST_DATABASE_USER, TEST_DATABASE_PASS, TEST_DATABASE_HOST, TEST_DATABASE_NAME);
         elseif (empty(self::$db))
             self::$db = new DB(DATABASE_USER, DATABASE_PASS, DATABASE_HOST, DATABASE_NAME);
-        
         return self::$db;
     }
     
     static function insert_id()
     {   
+        //$id= DB::query_first("LAST_INSERT_ID()");
         if (USE_MYSQLI)
-            return \mysqli_insert_id(self::getInstance()->connect_id);
+            $id= \mysqli_insert_id(self::getInstance()->connect_id);
         else 
-            return \mysql_insert_id();
+            $id= \mysql_insert_id();
+        
+        
+        return $id;
     }
     
     static function fetch_array($res)
@@ -64,13 +67,9 @@ class DB extends Ploof
     
     static function query_first($sql)
     {
-        $res= self::getInstance()->query($sql);
-        
-        if (USE_MYSQLI)
-            $result= \mysqli_fetch_array($res);
-        else
-            $result= \mysql_fetch_array($res);
-            
+        $res= DB::query($sql);
+    
+        $result= DB::fetch_array($res);            
         if (is_array($result))
             return array_pop($result);
         

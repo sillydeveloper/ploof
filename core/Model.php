@@ -3,15 +3,32 @@ namespace core;
 
 class Model extends Ploof
 {
+    // storage area for database field values 
     protected $fields= null;
-    protected $field_types= null;
+    
+    // storage area for database field types (datetime, int, etc)
+    protected $field_types= null;   
+    
     protected $has_many= null;
     protected $has_one= null;
+    protected $belongs_to= null;
     protected $has_and_belongs_to_many= null; 
     
+    // TODO: auto validation
     protected $validates= null;
-    protected $db_connector_preamble= '';
+    
+    // TODO: an array of sort functions; ex:
+    //  $sort_by= array('name'=>function($a, $b) 
+    //      { if ($a->name == $b->name) return 0; return ($a->name < $b->name) ? -1 : 1;) });
+    protected $sort_by= null;
+    
+    // you can override relationships by naming a method
+    //  get_[relatedclass]() or set
+    //  $getter_override= array('[relatedclass]'=>'[method]')
     protected $getter_override= null;
+    
+    // array of classes that will be autocreated when asked for via find()
+    protected $requires= null;
     
     function __construct($id=null)
     {
@@ -39,6 +56,12 @@ class Model extends Ploof
         }   
     }
     
+    public function requires_a($classname)
+    {
+        if (!$this->requires) return false;
+        return (array_search($classname, $this->requires) !== false);
+    }
+    
     private function set_field_types($nullify= false)
     {
         $qry= DB::query("show columns from ".classname_only(static::classname()));
@@ -56,6 +79,9 @@ class Model extends Ploof
         return $this->fields;
     }
     
+    /**
+     * Check and see if a field is a numeric type; dates are not numeric.
+     */
     public function is_numeric($field)
     {
         $numeric= array("tinyint", "bigint", "int", "float", "double");
@@ -109,7 +135,6 @@ class Model extends Ploof
         if (count($this->has_one) > 0 and array_search($field_name, $this->has_one) !== false)
             return true;
         return false;
-        
     }
     
     /**
@@ -136,13 +161,15 @@ class Model extends Ploof
      * If a field_name is foreign, then refresh the data it points to.
      * Used to make sure cached data is up-to-date.
      */
-    function refresh($field_name, $order= null, $limit= null)
+    function refresh($field_name, $sort_fun=null, $order=null, $limit=null)
     {   
+        $joiner= false;
+        
         // Check to see if we need to override the getter by calling a different
         //  method:
-        if ($this->getter_override and array_key_exists($field_name, $this->getter_override))
+        if (($this->getter_override and array_key_exists($field_name, $this->getter_override)) or method_exists($this, "get_".$field_name))
         {
-            $method= $this->getter_override[$field_name];
+            $method= ($this->getter_override and array_key_exists($field_name, $this->getter_override)) ?  $this->getter_override[$field_name] : "get_".$field_name;
             $this->debug(5, "Calling override ".$method." for refresh of ".$field_name);
             $results= $this->$method($order, $limit);
         }
@@ -173,7 +200,7 @@ class Model extends Ploof
                 
                 $results= $field_name::find($sql);
             }
-        
+            
             if ($this->is_has_one($field_name))
             {
                 $lookup_id= $this->fields[PRIMARY_KEY];
@@ -183,12 +210,15 @@ class Model extends Ploof
             }
         }
         
+        if ($sort_fun)
+            usort($results, $sort_fun);
+        
         if (!$joiner)
         {
             $joiner= new Joiner();
             $joiner->set_objects($results);
             $joiner->set_parent($this, classname_only(static::classname()));
-            $joiner->set_child_class($field_name);            
+            $joiner->set_child_class($field_name);         
         }
         
         $this->fields[$field_name]= $joiner;
@@ -202,9 +232,10 @@ class Model extends Ploof
         // lazy loading part.
         if ($this->is_foreign($field_name))
         {
-            if (is_object($this->fields[$field_name]) == false)
+            $this->debug(5, "Found foreign: ".$field_name);
+            if (array_key_exists($field_name, $this->fields) == false or is_object($this->fields[$field_name]) == false or ENABLE_OBJECT_CACHE == 0)
             {
-                $this->debug(5, "Refreshing ".$field_name);
+                $this->debug(5, "Refreshing ".$field_name. " (ENABLE_OBJET_CACHE=".ENABLE_OBJECT_CACHE.")");
                 $this->refresh($field_name);
             }
             else
@@ -221,7 +252,7 @@ class Model extends Ploof
         }
 
         // call the datetime handler if this is a datetime:
-        if ($this->field_types[$field_name] == "datetime")
+        if (array_key_exists($field_name, $this->field_types) and $this->field_types[$field_name] == "datetime")
             return format_date($this->fields[$field_name]);
             
         return $this->fields[$field_name];
@@ -261,7 +292,7 @@ class Model extends Ploof
         {
             $this->debug(5, 'Saving '.$classname.' (belongs_to) with:');
             $this->debug(5, $values_array);
-                        
+            
             // Question: Do we need a refresh check here? No because $this->$classname calls
             //  the getter (which should be an object of the type described by the belongs_to)
             if (is_object($this->$classname))
@@ -294,7 +325,7 @@ class Model extends Ploof
             if (is_object($this->$classname))
             {
                 $this->debug(5, $classname.' exists, id '.$this->$classname->id);
-                $this->$classname->populate_from($values_array[$classname]);
+                $this->$classname->populate_from($values_array[$classname], 0);
                 $this->$classname->store();
             }
             else
@@ -305,7 +336,7 @@ class Model extends Ploof
                 $object= new $classname();
                 $object->fields[PRIMARY_KEY]= null;
                 $object->$lookup_field= $this->fields[PRIMARY_KEY];
-                $object->populate_from($values_array[$classname]);
+                $object->populate_from($values_array[$classname], 0);
                 $object->store();
                 
                 $this->debug(5, $classname.' does not exist; adding id '.$this->$classname->id);
@@ -319,15 +350,44 @@ class Model extends Ploof
             if (is_object($this->$classname))
             {
                 $this->debug(5, 'Currently '.count($this->$classname->find()).' exist; repopulating with new values...');
-                $this->$classname->delete();
-                foreach($values_array[$classname] as $property=>$index)
+                $this_class= classname_only(static::classname());
+                $lookup_field= $this_class.PK_SEPERATOR.PRIMARY_KEY;
+                
+                if (!count($values_array))
                 {
-                    $number_of_records= count($values_array[$classname][$property]);
-                    break;
+                    $this->debug(5, "No data; adding raw object");
+                    // add a new one:
+                    $obj= new $classname();
+                    $obj->$lookup_field= $this->id;
+                    $obj->store();
+                    $this->refresh($classname);
                 }
-                for($i=0; $i<$number_of_records; $i++)
+                else
                 {
-                    $this->$classname->add_array($values_array[$classname], $i);
+                    foreach($values_array[$classname] as $property=>$index)
+                    {
+                        $number_of_records= count($values_array[$classname][$property]);
+                        break; 
+                    }
+                    
+                    for($i=0; $i<$number_of_records; $i++)
+                    {
+                        if (array_key_exists(PRIMARY_KEY, $values_array[$classname]))
+                        {
+                            $obj= $this->$classname->find_object(array(PRIMARY_KEY=>$values_array[$classname][PRIMARY_KEY][$i]));
+                            if ($obj) 
+                            {
+                                $this->debug(5, 'Found '.$obj->id);
+                                $obj->populate_from($values_array[$classname], $i);
+                                $obj->store();
+                            }
+                        }
+                        else
+                        {
+                            $this->debug(5, 'Not found, creating');
+                            $this->$classname->add_array($values_array[$classname], $i);
+                        }
+                    }
                 }
             }
         } // end has_many
@@ -336,7 +396,7 @@ class Model extends Ploof
     /**
      * Auto populate the fields from an array
      */
-    function populate_from($arr, $index=0)
+    function populate_from($arr, $index= null)
     {
         if (is_array($arr))
         {
@@ -344,7 +404,7 @@ class Model extends Ploof
             {   
                 if (array_key_exists($key, $this->fields) and $this->is_foreign($key) === false)
                 {
-                    $this->fields[$key]= $value[$index];
+                    $this->fields[$key]= ($index === null) ? $value : $value[$index];
                 }
             }
         }
@@ -357,6 +417,7 @@ class Model extends Ploof
     {
         $classname= classname_only(static::classname());
         $results= $classname::find($query);
+
         if ($results)
             return array_pop($results);
             
@@ -386,6 +447,7 @@ class Model extends Ploof
         
         if (!$result) // or DB::num_rows($result) < 1)
         { 
+			self::debug(5, 'No result');
             return false;
         }
 
@@ -423,49 +485,60 @@ class Model extends Ploof
             $sql= "update ".classname_only(static::classname())." set ";
             
             $field_query= array();
-            foreach($this->fields as $k=>$v)
+            foreach($this->field_types as $k=>$v)
             {
-                if ($v === null or $v == '') $v= "NULL";
+                $v= $this->fields[$k];
+                if ($k != PRIMARY_KEY)
+                {
+                    if (!is_object($v) and !is_array($v) and ($v === null or strlen($v) == 0)) $v= "NULL";
              
-                if ($k == PRIMARY_KEY) continue;
+                    if ($k == PRIMARY_KEY) continue;
                 
-                if ($this->is_numeric($k) or $v === "NULL" )
-                    $field_query[]= $k."=".$v."";
-                elseif ($this->is_belongs_to($k) and is_object($v))
-                {
-                    $field_query[]= $k."=".$v->get()->id; // remember: it's a joiner object
-                }
-                elseif ($this->is_foreign($k))
-                {
-                    continue;
-                }
-                else
-                    $field_query[]= $k."='".$v."'";                    
+                    if ($this->is_belongs_to($k) and is_object($v))
+                    {
+                        // remember: it's a joiner object.
+                    }
+                    elseif ($this->is_numeric($k) or $v === "NULL" )
+                    {
+                        $field_query[]= $k."=".$v."";
+                    }
+                    elseif ($this->is_foreign($k))
+                    {
+                        // if it's otherwise foreign, ignore it.
+                    }
+                    else
+                        $field_query[]= $k."='".$v."'";         
+                }           
             }
             $sql.= implode(",", $field_query)." where ".PRIMARY_KEY."='".$this->fields[PRIMARY_KEY]."'";
         }
         else
-        {
+        {   
             unset($this->fields[PRIMARY_KEY]);
-            $field_query= array();
-            foreach($this->fields as $k=>$v)
+            $field_query= array();				
+            foreach($this->field_types as $k=>$v)
             {
-                if ($v === null or $v == '') $v= "NULL";
-                if ($this->is_numeric($k) or $v === "NULL" )
-                    $field_query[$k]= $v;
-                elseif ($this->is_belongs_to($k) and is_object($v))
+                if ($k != PRIMARY_KEY)
                 {
-                    $field_query[$k]= $v->id;
+                    $v= $this->fields[$k];
+                    
+                    if ($v === null or strlen($v) == 0) { $v= "NULL";  }
+                    if ($this->is_numeric($k) or $v === "NULL" )
+                        $field_query[$k]= $v;
+                    elseif ($this->is_belongs_to($k) and is_object($v))
+                    {
+                        $field_query[$k]= $v->id;
+                    }
+                    elseif ($this->is_foreign($k))
+                    {
+                        continue;
+                    }
+                    else
+                        $field_query[$k]= '"'.$v.'"';
                 }
-                elseif ($this->is_foreign($k))
-                {
-                    continue;
-                }
-                else
-                    $field_query[$k]= '"'.$v.'"';
             }
             
-            $sql= 'insert into '.classname_only(static::classname()).'('.PRIMARY_KEY.', '.implode(',', array_keys($field_query)).') values(null, '.implode(',',array_values($field_query)).')';
+            $sql= 'insert into '.classname_only(static::classname()).'('.PRIMARY_KEY.', '.implode(',', array_keys($field_query)).') values(null, '.implode(',',array_values($field_query)).');';
         }
         
         $this->debug(5, $sql);
@@ -475,10 +548,12 @@ class Model extends Ploof
 
         if (!$existing)
         {
-            $this->fields[PRIMARY_KEY]= DB::insert_id();
+			$id= DB::insert_id();
+			
+            $this->fields[PRIMARY_KEY]= $id;
             $this->debug(5, "Set pk to ".$this->fields[PRIMARY_KEY]);
         }
-        
+
         // think of $additional as a trigger.
         // this allows you to use a primary key that is not named like the others;
         //  to use it, override store() like:
@@ -487,9 +562,9 @@ class Model extends Ploof
         //  but can be used to migrate from an old table system.
         if ($additional)
         {
-            foreach($additional as $to=>$from)
+            foreach($additional as $from=>$to)
             {
-                $sql= "update ".classname_only(static::classname())." set ".$to."=".$from." where ".$from."=".$this->fields[PRIMARY_KEY];
+                $sql= "update ".classname_only(static::classname())." set ".$to."=".$from." where ".PRIMARY_KEY."=".$this->fields[PRIMARY_KEY];
                 $this->debug(5, "Performing additional trigger: ".$sql);
                 DB::query($sql);
             }
@@ -507,18 +582,7 @@ class Model extends Ploof
     {
         return json_encode($this->validates);
     } // end json_validates
-    
-    static function debug($level, $msg)
-    {
-        if ($level <= DEBUG_LEVEL)
-        {
-            echo "<pre>";
-            echo self::classname()."($level): ";
-            print_r($msg);
-            echo "</pre>";
-        }
-    }
-    
+        
     /**
      * Create class files based on database structure.
      *  This will not create files if they already exist.
@@ -527,11 +591,11 @@ class Model extends Ploof
     {
         $qry= DB::query("show tables");
         $classes= array();
-
-        while($table= \mysql_fetch_array($qry))
+        while($table= DB::fetch_array($qry))
         {   
             $table= $table[0];
-
+            //print("Generating ".$table."...\n");
+            
             // check for habtm:
             $split= explode(PLOOF_SEPARATOR, $table);
             $habtm = true;
@@ -564,17 +628,16 @@ class Model extends Ploof
             if ($habtm == false)
             {
                 $qry2= DB::query("show columns from ".$table);
-
-                while($column= mysql_fetch_array($qry2))
+                
+                while($column= DB::fetch_array($qry2))
                 {
                     $column= $column["Field"];
-
+                    
                     if (preg_match('/'.PK_SEPERATOR.PRIMARY_KEY.'$/', $column))
                     {
                         $foreign_table= str_replace( PK_SEPERATOR.PRIMARY_KEY,"",$column);
                         $classes[$table]['belongs_to'][]= $foreign_table;
                         $classes[$foreign_table]['has_many'][]= $table;
-                        
                     }
                 } // end foreach show columns
             } // end if !habtm
@@ -587,7 +650,6 @@ class Model extends Ploof
                 $file = "test/temp/".$class.".php";
             else
                 $file = "model/".$class.".php";
-
             if (file_exists($file) == false)
             {
                 $f= fopen($file, "w+");
@@ -606,6 +668,34 @@ class Model extends Ploof
             }
         }
     } // end generate_models
+    
+    /**
+     * Try and build a JSON encoded version of this object.
+     */
+    function to_json()
+    {
+        $cols = $this->get_fields();
+        $yarr = array();
+        foreach($cols as $k=>$v)
+        {
+            $yarr[$k]= $v;
+        }
+        
+        $yarr['classname']= classname_only(static::classname());
+
+        if (function_exists("json_encode"))
+            return json_encode($yarr);
+        else
+            throw new Exception("Native JSON doesn't exist!");
+    }
+    
+    /**
+     * Basic clone functionality -- basically clear the PK
+     */
+     function __clone()
+     {
+         $this->fields[PRIMARY_KEY]= null;
+     }
     
     /**
      * Get this objects static classname (PHP5.3 only)

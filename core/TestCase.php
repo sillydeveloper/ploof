@@ -3,40 +3,34 @@ namespace core;
 require_once 'PHPUnit/Framework.php';
 
 class TestCase extends \PHPUnit_Framework_TestCase
-{    
+{   
+    function __construct()
+    {
+        // this closure seems to cause problems for PHPUnit's serialize:
+        unset($GLOBALS['error_function']);
+        parent::__construct();
+    }
     function setUp()
     {
         if (classname_only(static::classname()) != "TestCase")
-        {
-            // let everyone know that we are in a test environment:
-            define('IN_UNIT_TESTING', 1);
-        
-            DB::query("drop database ".TEST_DATABASE_NAME);
-            DB::query("create database ".TEST_DATABASE_NAME);
-        
+        {       
             // TODO: Make this work with DB::query() properly... see trial run commented out below...
             $sql_fixture= "test/".SCHEMA."/fixtures/".classname_only(static::classname()).".sql";
             if (file_exists($sql_fixture))
             {
                 $catter= "cat $sql_fixture | mysql -u ".TEST_DATABASE_USER." --password=".TEST_DATABASE_PASS." -h ".TEST_DATABASE_HOST." ".TEST_DATABASE_NAME;
-        
                 `$catter`;
             }
         
-            /*
-            $query= file_get_contents("resource/schemas/".SCHEMA);
-            foreach(explode(";", $query) as $v)
+            if (SCHEMA == 'framework')
             {
-                `cat `
-                DB::query($v);
-            }    
-            */
-        
-            // wipe and generate classes:
-            `rm -f test/temp/*`;
-            Model::generate_models();
+                // wipe and generate classes:
+                `rm -f test/temp/*`;
+                Model::generate_models();
+            }
         }
     }
+
     
     function test_nothing()
     {

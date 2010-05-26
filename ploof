@@ -1,5 +1,5 @@
-#!/usr/local/bin/php
-<?
+#!/usr/bin/php
+<?php
 namespace core;
 
 include_once 'config/config.php';
@@ -9,7 +9,7 @@ include_once 'config/config.php';
 //--------------------------------------------------
 function initialize()
 {
-    DB::query("create table if not exists Versioning(id int not null primary key auto_increment, migration int, branch varchar(255))");
+    DB::query("create table if not exists Versioning(id int not null primary key auto_increment, migration int, branch varchar(255))");      
     
     DB::query("insert into Versioning values(null, 0, 'trunk')");
 }
@@ -49,6 +49,7 @@ function setup_patch_directory($version= "trunk")
 $patch_list= array(
         "./core"=>"./resource/updates/svn/core",
         "./config/config.default.php"=>"./resource/updates/svn/config/config.default.php",
+		"./config/config.ploof.build.php"=>"./resource/updates/svn/config/config.ploof.build.php",
         "./ploof"=>"./resource/updates/svn/ploof",
         "./public/index.php"=>"./resource/updates/svn/public/index.php",
         "./resource/schemas/init.sql"=>"./resource/updates/svn/resource/schemas/init.sql",
@@ -56,7 +57,7 @@ $patch_list= array(
         "./resource/bin",
         "./config/fun.php"=>"./resource/updates/svn/config/fun.php",
         "./resources/schemas"=>"./resources/updates/svn/resources/schemas",
-        "./test"=>"./resources/updates/svn/test"
+        "./test/framework"=>"./resources/updates/svn/test/framework"
     );
             
 function generate_patch($version= "trunk")
@@ -141,7 +142,7 @@ function migrate($branch= "trunk")
             print_r($last_db_number);
             if ($fnum > $last_db_number and $v != "." and $v != "..")
             {
-                exec("cat ".$path."/".$v." | mysql -u ".DATABASE_USER." ".DATABASE_NAME);
+                exec("cat ".$path."/".$v." | mysql -u ".DATABASE_USER." --password=".DATABASE_PASS." -h ".DATABASE_HOST." ".DATABASE_NAME);
             }
         } // end foreach
     } // end db_number vs file_number
