@@ -14,6 +14,11 @@ define("SESSION_PASSWORD", "password");
 define("SESSION_PASSWORD_SALT", false);
 
 /**
+ * Display errors.
+ */
+ini_set('display_errors', 1);
+
+/**
  * How verbose you want to debug (1-5). 5 will show everything.
  */
 define("DEBUG_LEVEL", 1);
@@ -33,7 +38,7 @@ define("DEFAULT_CONTROLLER", "Dashboard");
 /**
  * Uhh... Obvious hopefully.
  */
-define("DATABASE_USER", "root");
+define("DATABASE_USER", "");
 define("DATABASE_PASS", "");
 define("DATABASE_HOST", "");
 define("DATABASE_NAME", "");
@@ -45,7 +50,7 @@ define("DATABASE_NAME", "");
 define("TEST_DATABASE_USER", "");
 define("TEST_DATABASE_PASS", "");
 define("TEST_DATABASE_HOST", "");
-define("TEST_DATABASE_NAME", "");
+define("TEST_DATABASE_NAME", "ploof_fixtures");
 
 /**
  * Initial action to call on controllers
@@ -97,6 +102,9 @@ define("VIEW_EXTENSION", ".html");
  */
 if (!defined("IN_UNIT_TESTING"))
     define('IN_UNIT_TESTING', 0); 
+
+if (file_exists("config.application.php"))
+    require_once "config.application.php";
 
 require_once "application.php";
 require_once "fun.php";

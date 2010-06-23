@@ -4,7 +4,7 @@ namespace core;
 class DB extends Ploof
 {
     private static $db;
-    private $connect_id;
+    public $connect_id;
     
     private function __construct($username, $password, $host, $database)
     {
@@ -20,18 +20,17 @@ class DB extends Ploof
         }
     }
 
-    public static function getInstance()
+    public static function getInstance($db=DATABASE_NAME, $u=DATABASE_USER, $p=DATABASE_PASS, $h=DATABASE_HOST)
     {
         if (IN_UNIT_TESTING)
             self::$db = new DB(TEST_DATABASE_USER, TEST_DATABASE_PASS, TEST_DATABASE_HOST, TEST_DATABASE_NAME);
         elseif (empty(self::$db))
-            self::$db = new DB(DATABASE_USER, DATABASE_PASS, DATABASE_HOST, DATABASE_NAME);
+            self::$db = new DB($u, $p, $h, $db);
         return self::$db;
     }
     
     static function insert_id()
     {   
-        //$id= DB::query_first("LAST_INSERT_ID()");
         if (USE_MYSQLI)
             $id= \mysqli_insert_id(self::getInstance()->connect_id);
         else 

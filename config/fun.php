@@ -32,7 +32,7 @@ function __autoload($class_name)
 function match_or_link($url, $name)
 {
     if (url_matches($url)) 
-        return $name;
+        return "<a href='$url' class='menumatch'>$name</a>";
     else 
         return "<a href='$url'>$name</a>";
 }
@@ -73,6 +73,8 @@ function render_main()
     $controller= ($_REQUEST["controller"]) ? $_REQUEST["controller"] : DEFAULT_CONTROLLER;    
     $action = ($_REQUEST["action"]) ? $_REQUEST['action'] : DEFAULT_ACTION;
     $id = ($_REQUEST["id"]) ? $_REQUEST['id'] : null;
+    $_REQUEST["main_controller"]= $controller;
+    $_REQUEST["main_action"]= $action;
     render("/$controller/$action/$id");
 }
 
@@ -189,14 +191,15 @@ function form_select($object, $name, $options, $display=null, $class='input')
         if (is_object($o))
         {
             $html.= "<option value=\"$o->id\" ";
-            if ($object->$name == $o->id)
+            if (strcmp($object->$name, $o->id) == 0)
                 $html.= "selected='selected' ";
             $html.=">".$o->$display."</option>";
         }
         else
         {
             $html.= "<option value=\"$k\" ";
-            if ($object->$name == $k)
+		
+            if (strcmp($object->$name, $k) == 0)
                 $html.= "selected='selected' ";
             $html.=">".$o."</option>";
         }
@@ -208,10 +211,11 @@ function form_select($object, $name, $options, $display=null, $class='input')
 function form_select_simple($name, $options, $select=null, $class='input', $id=null)
 {
     $html="<select id='$id' class='$class' name='$name'>";
+ 
     foreach($options as $k=>$o)
     {
         $html.= "<option value=\"$k\"";
-        if ($select == $k)
+        if (strcmp($select, $k) == 0)
             $html.= "selected='selected' ";
         $html.=">".$o."</option>";
     }
@@ -219,16 +223,16 @@ function form_select_simple($name, $options, $select=null, $class='input', $id=n
     return $html;
 }
 
-function form_checkbox($object, $name, $value='', $label=null, $class='input')
+function form_checkbox($object, $name, $value=null, $label=null, $class='input')
 {
     $checked= false;
-    if ($object->$name == $value)
+    if ($object->$name === $value)
         $checked= "checked='checked'";
     
     $cname= classname_only($object::classname());
     $id= $cname."_".$object->id."_$name";
 
-    $html= "<label onClick='toggle_checkbox(\"$id\")'><input class='$class' id='$id' type='checkbox' name='_$name' value='".$value."' $checked />";
+    $html= "<label onClick='toggle_checkbox(\"$id\", \"$value\")'><input class='$class' id='$id' type='checkbox' name='_$name' value='".$value."' $checked />";
 
     if ($checked)
         $html.= "<input type='hidden' id='hidden_checkbox_$id' name='".fname($object, $name)."' value='".$object->$name."'/>";
@@ -245,7 +249,7 @@ function form_checkbox_simple($name, $value, $checked=false, $label=null, $class
     if ($checked)
         $checked= "checked='checked'";
     
-    $id= md5($name);
+    $id= md5($name."_".$value);
     
     $html= "<label onClick='toggle_checkbox(\"$id\")'><input class='$class' id='$id' type='checkbox' name='_$name' value='$value' $checked/>";
     

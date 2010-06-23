@@ -43,6 +43,7 @@ class Model extends Ploof
             while($row= DB::fetch_assoc($qry))            
             {   
                 $this->debug(5, $row);
+                // TODO: this duplicates the str_replace in __get()?
                 foreach($row as $k=>$v)
                 {
                     $this->fields[$k] = stripslashes($v);
@@ -84,7 +85,7 @@ class Model extends Ploof
      */
     public function is_numeric($field)
     {
-        $numeric= array("tinyint", "bigint", "int", "float", "double");
+        $numeric= array("decimal", "tinyint", "bigint", "int", "float", "double");
         return (array_search($this->get_field_type($field), $numeric) !== false);
     }
     
@@ -255,7 +256,10 @@ class Model extends Ploof
         if (array_key_exists($field_name, $this->field_types) and $this->field_types[$field_name] == "datetime")
             return format_date($this->fields[$field_name]);
             
-        return $this->fields[$field_name];
+        if (is_object($this->fields[$field_name]))
+            return $this->fields[$field_name];
+        else
+            return str_replace("\\'", "'", $this->fields[$field_name]); // remove sanitized escape
     }
     
     /**
@@ -285,9 +289,12 @@ class Model extends Ploof
      *  Find and overwrite, or create and store, an object of $classname
      *      with $values_array that has a relationship to $this. 
      *      Use store() on an object, save() on a relationship.
+     *      TODO: This should be moved into joiner, which deals with relationships...
      */
     function save($classname, $values_array)
     {
+        // we'll return whatever we create / add / update:
+        $return= null;
         if ($this->is_belongs_to($classname))
         {
             $this->debug(5, 'Saving '.$classname.' (belongs_to) with:');
@@ -308,6 +315,7 @@ class Model extends Ploof
                 $object->fields[PRIMARY_KEY]= null;
                 $object->populate_from($values_array[$classname]);
                 $object->store();
+                $return= $object;
                 
                 $lookup_field= $classname.PK_SEPERATOR.PRIMARY_KEY;
                 $this->$lookup_field= $object->id;
@@ -327,6 +335,7 @@ class Model extends Ploof
                 $this->debug(5, $classname.' exists, id '.$this->$classname->id);
                 $this->$classname->populate_from($values_array[$classname], 0);
                 $this->$classname->store();
+                $return= $this->$classname;
             }
             else
             {
@@ -338,7 +347,7 @@ class Model extends Ploof
                 $object->$lookup_field= $this->fields[PRIMARY_KEY];
                 $object->populate_from($values_array[$classname], 0);
                 $object->store();
-                
+                $return= $object;
                 $this->debug(5, $classname.' does not exist; adding id '.$this->$classname->id);
             }
         }    // end has_one
@@ -360,6 +369,7 @@ class Model extends Ploof
                     $obj= new $classname();
                     $obj->$lookup_field= $this->id;
                     $obj->store();
+                    $return= $obj;
                     $this->refresh($classname);
                 }
                 else
@@ -380,17 +390,19 @@ class Model extends Ploof
                                 $this->debug(5, 'Found '.$obj->id);
                                 $obj->populate_from($values_array[$classname], $i);
                                 $obj->store();
+                                $return[]= $obj;
                             }
                         }
                         else
                         {
                             $this->debug(5, 'Not found, creating');
-                            $this->$classname->add_array($values_array[$classname], $i);
+                            $return[]= $this->$classname->add_array($values_array[$classname], $i);
                         }
                     }
                 }
             }
         } // end has_many
+        return $return;
     } // end save()
     
     /**
@@ -404,7 +416,7 @@ class Model extends Ploof
             {   
                 if (array_key_exists($key, $this->fields) and $this->is_foreign($key) === false)
                 {
-                    $this->fields[$key]= ($index === null) ? $value : $value[$index];
+                    $this->fields[$key]= ($index === null) ? $this->sanitize($key, $value) : $this->sanitize($key, $value[$index]);
                 }
             }
         }
@@ -434,6 +446,7 @@ class Model extends Ploof
         if ($query === null or strlen($query) < 1)
         {
             $query= "select ".PRIMARY_KEY." from ".$classname;  
+            self::debug(5, $query);
             $result= DB::query($query);
         }
         else
@@ -463,6 +476,27 @@ class Model extends Ploof
         return $results;
     }
     
+    /**
+     * Sanitize something for mysql, if needed:
+     */
+    function sanitize($key, $val)
+    {
+        if (SANITIZE_INPUT)
+        { 
+            if (USE_MYSQLI)
+                $val= \mysqli_real_escape_string(DB::getInstance()->connect_id, $val);
+            else
+                $val= \mysql_real_escape_string($val);
+        }
+
+        /*if ($this->is_numeric($key))
+        {
+            $val= preg_replace("/[A-Za-z\$,_\%']/i", "", $val);
+        }*/
+        
+        return $val;
+    }
+    
     /** 
      * Store this object back into the database.
      */
@@ -477,9 +511,8 @@ class Model extends Ploof
             $this->fields["updated_on"]= date("Y-m-d H:i:s", time());
         
         $field_query= array();
+
         // set it up:
-                
-        
         if ($existing)
         {
             $sql= "update ".classname_only(static::classname())." set ";
@@ -500,14 +533,14 @@ class Model extends Ploof
                     }
                     elseif ($this->is_numeric($k) or $v === "NULL" )
                     {
-                        $field_query[]= $k."=".$v."";
+                        $field_query[]= $k."=".$this->sanitize($k, $v)."";
                     }
                     elseif ($this->is_foreign($k))
                     {
                         // if it's otherwise foreign, ignore it.
                     }
                     else
-                        $field_query[]= $k."='".$v."'";         
+                        $field_query[]= $k."='".$this->sanitize($k, $v)."'";         
                 }           
             }
             $sql.= implode(",", $field_query)." where ".PRIMARY_KEY."='".$this->fields[PRIMARY_KEY]."'";
@@ -524,17 +557,17 @@ class Model extends Ploof
                     
                     if ($v === null or strlen($v) == 0) { $v= "NULL";  }
                     if ($this->is_numeric($k) or $v === "NULL" )
-                        $field_query[$k]= $v;
+                        $field_query[$k]= $this->sanitize($k, $v);
                     elseif ($this->is_belongs_to($k) and is_object($v))
                     {
-                        $field_query[$k]= $v->id;
+                        $field_query[$k]= $this->sanitize($k, $v->id);
                     }
                     elseif ($this->is_foreign($k))
                     {
                         continue;
                     }
                     else
-                        $field_query[$k]= '"'.$v.'"';
+                        $field_query[$k]= '"'.$this->sanitize($k, $v).'"';
                 }
             }
             
@@ -564,7 +597,7 @@ class Model extends Ploof
         {
             foreach($additional as $from=>$to)
             {
-                $sql= "update ".classname_only(static::classname())." set ".$to."=".$from." where ".PRIMARY_KEY."=".$this->fields[PRIMARY_KEY];
+                $sql= "update ".classname_only(static::classname())." set ".$to."=".$this->sanitize($to, $from)." where ".PRIMARY_KEY."=".$this->fields[PRIMARY_KEY];
                 $this->debug(5, "Performing additional trigger: ".$sql);
                 DB::query($sql);
             }

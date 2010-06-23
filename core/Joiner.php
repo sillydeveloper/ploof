@@ -111,6 +111,8 @@ class Joiner extends Ploof
         }
         else
             $this->add_habtm($obj, $arr);
+
+		return $obj;
     }
     
     /**
@@ -132,6 +134,8 @@ class Joiner extends Ploof
         }
         else
             $this->add_habtm($obj, $arr);
+
+		return $obj;
     }
     
     private function add_habtm($obj, $arr)
@@ -161,7 +165,7 @@ class Joiner extends Ploof
                 {
                     if (($search_value === null and $o->$search_field === null) 
                         or ($o->$search_field == $search_value)
-                        or ($search_value and $o->$search_field and strstr($search_value, $o->$search_field) !== false))
+                        or ($search_value and $o->$search_field and strcmp($search_value, $o->$search_field) == 0))
                     {
                         $results[]= $o;
                     }
@@ -196,7 +200,15 @@ class Joiner extends Ploof
      */
     function get()
     {
-        return $this->objects[0];
+		$obj= $this->objects[0];
+		// TODO: Bad copy and paste out of find_object
+		if (!$obj and $this->parent->requires_a($this->child_class))
+        {
+            $c= $this->child_class;
+            $obj= new $c();
+            $this->add_object($obj);
+        }
+        return $obj;
     }
     
     /**

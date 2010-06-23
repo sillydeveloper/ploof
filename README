@@ -1,1 +1,56 @@
+PLOOF README
+    author(s): Andrew Ettinger
 
+MODEL MADNESS
+
+    STORE()
+        
+    AUTO HANDLING
+        Basically, if a table has [tablename]_id in it, ploof knows it's a relationship 
+        and you can access it like:
+            class foo()
+            {
+                protected $has_many= array('bar');
+            }
+        
+            $f= new foo();
+            foreach($f->bar->find() as $a_bar) { // do some stuff }
+    
+    JOINER
+        This handles all the relationship specialness - find(), find_object(), etc.
+
+    OVERRIDING
+        You can override the auto loader by having a function named get_[foo]()
+        Example:
+        
+            class foo()
+            {
+                protected $has_many= array('bar');
+                function get_bar()
+                {
+                    return bar::find('start_date < now()');
+                }
+            }
+    
+        Whatever is returned is used by the caching / lazy loader mechanism.
+
+
+CONTROLLER CRAZY
+    
+    REDIR
+        Pass in a GET or POST variable called 'redir' with a url to have the controller auto-route 
+        you once the render is complete
+    
+    ROUTE
+        Routable actions were intended to be used by things like add / delete / save
+    
+    ASSIGN
+        Assigns are made available to your view via $controller->assign("varname", $varvalue);
+        
+    MAIN_CONTROLLER AND MAIN_ACTION
+        If you need to know who the *topmost* call is coming from when the page loads,
+        $_REQUEST['main_controller'] and $_REQUEST['MAIN_ACTION'] are there to help.
+    
+
+VIEW... I DON'T HAVE ONE FOR VIEW
+    

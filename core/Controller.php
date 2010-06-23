@@ -50,6 +50,11 @@ class Controller extends Ploof
         // override to protect things.
     }
     
+    function preload($action)
+    {
+        // called before call(). override to do stuff before loading $action.
+    }
+    
     function redirect($url)
     {
         if (headers_sent())
@@ -57,18 +62,6 @@ class Controller extends Ploof
         else
             header("Location: $url");
         exit();
-    }
-    
-    function sanitize_inputs()
-    {
-        if (!USE_MYSQLI)
-        {
-            if (is_array($this->data))
-                foreach($this->data as $k=>$v)
-                {
-                     $this->data[$k]= \mysql_real_escape_string($v);
-                }
-        }
     }
     
     function assign($name, $value)
@@ -83,7 +76,6 @@ class Controller extends Ploof
     
     function call($action, $set_assigns=null, $id=null)
     {
-		echo '<!-- begin '.$this->classname().'::'.$action.' -->';
         $this->data= $_REQUEST["data"];
 
         if ($set_assigns)
@@ -97,9 +89,6 @@ class Controller extends Ploof
         if ($this->id === null and $id)
             $this->id= $id;
         
-        if (SANITIZE_INPUT)
-            $this->sanitize_inputs();
-
         try
         {
             if ($this->is_protected($action))
@@ -107,6 +96,8 @@ class Controller extends Ploof
             
             if (method_exists($this, $action))
             {
+                $this->preload($action);
+                
                 if ($_REQUEST["parent"] and $_REQUEST["parentid"])
                 {
                     $this->parent= $_REQUEST["parent"]::object_instance($_REQUEST["parentid"]);
@@ -118,21 +109,32 @@ class Controller extends Ploof
                     $this->debug(4, "Ajax detected");
                     $this->is_ajax= true;
                 }
+				else
+					echo '<!-- begin '.$this->classname().'::'.$action.' -->';
                     
                 $this->debug(4, "Calling action $action...");
                 $this->$action();
                 
-                if ($this->is_routable($action))
+                if ($_REQUEST['redir'])
+                {
+                    $this->debug(4, "redir command found, sending to ".$_REQUEST['redir']);
+                    Session::push_request();
+                    $this->redirect($_REQUEST['redir']);
+                }
+                elseif ($this->is_routable($action))
                 {
                     $this->debug(4, "Form content found for a routable action; using routes...");
                     $this->use_routes= true;
                     $this->route($action);
                 }
-                elseif (! $this->is_ajax)
+                
+                // if it isn't an ajax call, 
+                //  document it on the stack:
+                if (!$this->is_ajax)
                 {
                     Session::push_request();
                 }
-                
+                                
                 $this->debug(4, "Call complete.");   
             }   
             
@@ -161,8 +163,9 @@ class Controller extends Ploof
             print_r($e->getTraceAsString());
             print_r('</pre>');
             exit;
-        }        
-		echo '<!-- end '.$this->classname().'::'.$action.' -->';            
+        }  
+		if(!$this->is_ajax)      
+			echo '<!-- end '.$this->classname().'::'.$action.' -->';            
     } // end controller::call
     
     function is_protected($action)
@@ -178,8 +181,10 @@ class Controller extends Ploof
     
     function route($action)
     {
-        Session::set_message(Session::NOTICE, $this->get_routable_message($action));                        
-        $this->redirect(Session::pop_request());
+        Session::set_message(Session::NOTICE, $this->get_routable_message($action));
+        $last_url= Session::pop_request();
+        $last_url= preg_replace("/[\\?&]popdialog=([^&#]*)/", "", $last_url);
+        $this->redirect($last_url);
     }
     
     function is_routable($action)

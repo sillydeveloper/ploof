@@ -33,7 +33,7 @@ define("DEFAULT_CONTROLLER", "Dashboard");
 /**
  * Uhh... Obvious hopefully.
  */
-define("DATABASE_USER", "root");
+define("DATABASE_USER", "");
 define("DATABASE_PASS", "");
 define("DATABASE_HOST", "");
 define("DATABASE_NAME", "");

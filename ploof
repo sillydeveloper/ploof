@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/local/lsws/lsphp5/bin/php
 <?php
 namespace core;
 
@@ -49,14 +49,12 @@ function setup_patch_directory($version= "trunk")
 $patch_list= array(
         "./core"=>"./resource/updates/svn/core",
         "./config/config.default.php"=>"./resource/updates/svn/config/config.default.php",
-		"./config/config.ploof.build.php"=>"./resource/updates/svn/config/config.ploof.build.php",
         "./ploof"=>"./resource/updates/svn/ploof",
         "./public/index.php"=>"./resource/updates/svn/public/index.php",
         "./resource/schemas/init.sql"=>"./resource/updates/svn/resource/schemas/init.sql",
         "./README"=>"./resource/updates/svn/README",
         "./resource/bin",
         "./config/fun.php"=>"./resource/updates/svn/config/fun.php",
-        "./resources/schemas"=>"./resources/updates/svn/resources/schemas",
         "./test/framework"=>"./resources/updates/svn/test/framework"
     );
             
