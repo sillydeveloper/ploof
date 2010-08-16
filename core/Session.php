@@ -66,7 +66,7 @@ class Session extends Ploof
         session_destroy();
     }
     
-    static function push_request()
+    static function push_request()  /* Does this work when user can click 'back' button */
     {
         $sys= Session::get("PLOOF_ROUTES");
         if (is_array($sys)) 

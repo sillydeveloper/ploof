@@ -51,11 +51,10 @@ $patch_list= array(
         "./config/config.default.php"=>"./resource/updates/svn/config/config.default.php",
         "./ploof"=>"./resource/updates/svn/ploof",
         "./public/index.php"=>"./resource/updates/svn/public/index.php",
-        "./resource/schemas/init.sql"=>"./resource/updates/svn/resource/schemas/init.sql",
         "./README"=>"./resource/updates/svn/README",
-        "./resource/bin",
         "./config/fun.php"=>"./resource/updates/svn/config/fun.php",
-        "./test/framework"=>"./resources/updates/svn/test/framework"
+        "./test/framework"=>"./resources/updates/svn/test/framework",
+        "./public/js/ploof.js"=>"./resources/updates/svn/public/js/ploof.js"
     );
             
 function generate_patch($version= "trunk")
@@ -178,7 +177,7 @@ function patch_ploof($version= "trunk")
 //--------------------------------------------------
 function test($lib='application')
 {
-    passthru('phpunit --bootstrap '.BASE_INSTALL.'/config/config.php test/'.$lib);
+    passthru('phpunit --bootstrap '.BASE_INSTALL.'/config/test_config.php test/'.$lib);
 }
 
 //--------------------------------------------------

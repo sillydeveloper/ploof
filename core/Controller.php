@@ -113,8 +113,15 @@ class Controller extends Ploof
 					echo '<!-- begin '.$this->classname().'::'.$action.' -->';
                     
                 $this->debug(4, "Calling action $action...");
+                //print "<pre>"; walk_array($_SESSION); print "</pre>";
+                //print "<pre>"; print substr(var_export($_SESSION, true),1,100); print "</pre>";
+                //print "<pre>"; var_dump($_REQUEST); print "</pre>";
+                //print "<pre>"; var_dump($this->data); print "</pre>";
+                //exit();
                 $this->$action();
-                
+                //exit();
+                $this->debug(4, "action complete");
+
                 if ($_REQUEST['redir'])
                 {
                     $this->debug(4, "redir command found, sending to ".$_REQUEST['redir']);
@@ -146,7 +153,6 @@ class Controller extends Ploof
                 {
                     $$name= $value;
                 }
-            
                 if (file_exists("../view/".classname_only(static::classname())."/".$action.VIEW_EXTENSION))
                     include("../view/".classname_only(static::classname())."/".$action.VIEW_EXTENSION);
             }  

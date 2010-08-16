@@ -1,11 +1,159 @@
 <?
+function rep($str,$c)
+{
+    for ($i=0; $i<$c; $i++) $ret=$ret.$str;
+    return $ret;
+}
+
+function walk_object($o, $level)
+{
+    if (!$o) { print "nothing"; return; }
+    //print "debug_zval_dump = " . debug_zval_dump(&$o);
+    $vars = get_object_vars($o);
+    //var_dump( array_keys($vars));
+    //print "<pre>"; var_dump($vars); print "</pre>";
+    foreach ($vars as $k => $v)
+    {
+        $type = gettype($v);
+        if ($k == "fields" or $k == 'objects') 
+        {
+            walk_array($v, $level+1);
+        }
+//        if ($k == 'parent')
+//        {
+//            walk_object($v, $level+1);
+//        }
+        
+    }
+}
+    
+function walk_array($a, $level=1)
+{
+    if ($level > 12) return;
+    if (!is_array($a)) return;
+    foreach ($a as $k => $v)
+    {
+        $type = gettype($v);
+        if (is_object($v) )
+        {
+            print rep('&nbsp;',$level*2);
+            print "$k [$type] ". get_class($v);
+            //if ($k == 'id') print $v;
+            print "\n";
+        }
+        if (is_object($v)) 
+        {
+            walk_object($v, $level+1);
+        }
+    }
+}
+
+/**
+* Determines the Content-Type for a given file
+* 
+* @param string $file_name
+*/
+function parse_content_type($file_name)
+{
+    $ext = array_pop(explode(".", $file_name));
+
+    $supported_types = array('doc', 'pdf', 'ppt', 'png', 'jpg');
+    if (!in_array($ext, $supported_types))
+    {
+        throw new Exception('Unsupported extension: ' . $ext . ' from file name ' . $file_name);
+    }
+    return 'application/'.strtolower($ext);
+}
+    
+/**
+* Outputs a single file in response to HTTP get
+*     
+* @param string $os_file_name Full path file name for file
+* @param string $user_file_name File name displayed to the user
+*/
+function render_file($os_file_name, $user_file_name)
+{
+    if(!file_exists($os_file_name))
+        throw new ApplicationException("File $os_file_name Not found");
+
+    // header("Cache-control: none");
+    header("Pragma: private");
+    header("Cache-control: private, must-revalidate");
+    header("Content-Type: ".parse_content_type($os_file_name));
+    header('Content-Disposition: attachment; filename="'.$user_file_name.'"');
+    $content = file_get_contents ($os_file_name);
+    print($content);
+    exit;
+}
+
+
+/**
+* Returns a sum of $closure_function applied to all $elements
+* 
+* @param mixed $elements            array of objects or values
+* @param mixed $closure_function    annonymous function that accepts single parameter and return numeric value 
+*/
+function sum_closure($elements, $closure_function)
+{
+    $sum = 0;
+    foreach ($elements as $element) {
+        $sum += $closure_function($element);
+    }
+    return $sum;
+}
+
+/**
+* Sorts an array of objects, in place, using a user-defined sortkey function
+*     
+* @param array $objects Array of objects to be sorted in place
+* @param string $direction 'D' for descending, otherwise defaults to ascending sort
+* @param function $sortkey_function annonymous function that takes object as sole parameter and returns sortkey
+* 
+* Sortkey can return either a numeric or string, but must be the same for all objects in this sort
+*/
+function sort_by_method(&$objects, $direction='A', $sortkey_function)
+{
+    // Build array of pairs ('sortkey', 'object')
+    $meta_array = array();
+    foreach ($objects as $obj) $meta_array[] = array('sortkey'=>$sortkey_function($obj), 'object'=>$obj);
+    
+    // Sort array of pairs
+    if ($direction == 'D') 
+    {
+        usort($meta_array, function($a, $b)
+            { 
+                return ($a['sortkey']==$b['sortkey'] ? 0 : ($a['sortkey']<$b['sortkey'] ? 1 : -1)); 
+            } );
+    }
+    else 
+    {
+        usort($meta_array, function($a, $b)
+            { 
+                return ($a['sortkey']==$b['sortkey'] ? 0 : ($a['sortkey']<$b['sortkey'] ? -1 : 1)); 
+            } );
+    }
+    
+    // Flatten array of pairs back into original array of object
+    $objects = array();
+    foreach ($meta_array as $meta_obj) $objects[] = $meta_obj['object'];
+}
+            
 
 if (!function_exists("format_date"))
 {
     function format_date($d)
     {
-        if (!$d or strtotime($d) == 0) return "-";
+        if (!$d or strtotime($d) == 0) return "";
         return date("m/d/Y", strtotime($d));
+    }
+}
+
+if (!function_exists("format_date_sql"))
+{
+    function format_date_sql($d)
+    {
+        if (!$d or strtotime($d) == 0) return "";
+        return date("Y-m-d H:i", strtotime($d));
     }
 }
 
@@ -22,7 +170,7 @@ if (!function_exists("convert_controller_to_object_name"))
  */
 function __autoload($class_name) 
 {
-    require_once(str_replace("\\", "/", $class_name).".php");
+    include(str_replace("\\", "/", $class_name).".php");
 }
 
 /**
@@ -136,12 +284,14 @@ function get_query_string($url)
 //          FORM HELPERS
 //--------------------------------------------------
 
-function form_start($action)
+function form_start($action, $id=null)
 {
     if ($_REQUEST['ajax'])
-        $html= "<form method=POST class='ajax_form' action=\"$action\">";
+        $html= "<form method=POST class='ajax_form' action=\"$action\"";
     else
-        $html= "<form method=POST action=\"$action\">";
+        $html= "<form method=POST action=\"$action\"";
+        
+    $html.= ($id) ? " id='$id'>" : ">"; 
         
     $html.= "<input type='hidden' name='form_content' value='1'/>";
 
@@ -161,15 +311,31 @@ function form_end()
 /**
  * Create a text input field.
  */
-function form_text($object, $name, $title='', $class='input')
+function form_text($object, $name, $title=null, $class=null, $size=null)
 {
+    if ($title === null) $title = '';
+    if ($class === null) $class = 'input';
+    if ($size === null) $size = '';
     $cname= classname_only($object::classname());
-    return "<input id='".$cname."_".$object->id."_$name' type='text' class='$class' name='".fname($object, $name)."' value='".$object->$name."' title=\"$title\"/>";
+    return "<input id='".$cname."_".$object->id."_$name' type='text' class='$class' name='".fname($object, $name)."' value='".$object->$name."' title=\"$title\" size=\"$size\" />";
 }
 
-function form_text_simple($name, $value, $title='', $class='input', $id=null)
+function form_text_simple($name, $value, $title=null, $class=null, $id=null, $size=null)
 {
-    return "<input id='$id' type='text' class='$class' name='$name' value='$value' title=\"$title\"/>";
+    if ($title === null) $title = '';
+    if ($class === null) $class = 'input';
+    if ($id === null) $class = '';
+    if ($size === null) $size = '';
+    switch (strtolower($size))
+    {
+        case 'x-small': $size = 6; break;
+        case 'small': $size = 10; break;
+        case 'medium': $size = 20; break;
+        case 'large': $size = 30; break;
+        case 'x-large': $size = 40; break;
+        case 'xx-large': $size = 80; break;
+    }
+    return "<input id='$id' type='text' class='$class' name='$name' value='$value' title=\"$title\" size=\"$size\" />";
 }
 
 function form_hidden($object, $name)
@@ -223,6 +389,7 @@ function form_select_simple($name, $options, $select=null, $class='input', $id=n
     return $html;
 }
 
+
 function form_checkbox($object, $name, $value=null, $label=null, $class='input')
 {
     $checked= false;
@@ -232,14 +399,14 @@ function form_checkbox($object, $name, $value=null, $label=null, $class='input')
     $cname= classname_only($object::classname());
     $id= $cname."_".$object->id."_$name";
 
-    $html= "<label onClick='toggle_checkbox(\"$id\", \"$value\")'><input class='$class' id='$id' type='checkbox' name='_$name' value='".$value."' $checked />";
+    $html= "<input onchange='toggle_checkbox(\"$id\", \"$value\")' class='$class' id='$id' type='checkbox' name='_$name' value='".$value."' $checked />";
 
     if ($checked)
         $html.= "<input type='hidden' id='hidden_checkbox_$id' name='".fname($object, $name)."' value='".$object->$name."'/>";
     else
         $html.= "<input type='hidden' id='hidden_checkbox_$id' name='".fname($object, $name)."' value=''/>";
     
-    $html.= "</label>";
+
 
     return $html;
 }
@@ -268,15 +435,19 @@ function form_checkbox_simple($name, $value, $checked=false, $label=null, $class
     return $html;
 }
 
-function form_radio($object, $name, $values, $class='input')
+function form_radio($object, $name, $values, $class='input', $list_vertically=false)
 {
     $id= md5($name);
+    $id_ploof= classname_only($object->classname())."_".$object->id."_$name";
     $html= "<input type='hidden' id='hidden_radio_$id' name='".fname($object, $name)."' value='".$object->$name."'/>";
     
     foreach($values as $k=>$v)
     {
         $checked= ($object->$name == $k) ? "checked='checked'" : "";
-        $html.= "<input class='$class' type='radio' name='$k_$id' $checked value='$k' onMousedown='$(\"#hidden_radio_$id\").val(\"$k\")'> $v";
+        $option = "<input class='$class' type='radio' name='$k_$id' id='".$id_ploof."_$k' $checked value='$k' onMousedown='$(\"#hidden_radio_$id\").val(\"$k\")'> $v";
+        if ($list_vertically)
+            $option = "<span style='display:block;'>".$option."</span>";
+        $html.= $option;
     }
     return $html;
 }

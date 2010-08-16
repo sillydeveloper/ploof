@@ -10,7 +10,8 @@ class Ploof
             echo "<pre>";
             echo static::classname()."($level): ";
             print_r($msg);
-            echo "</pre>";
+            echo "</pre>
+            ";
         }
     }
     

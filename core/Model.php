@@ -15,7 +15,7 @@ class Model extends Ploof
     protected $has_and_belongs_to_many= null; 
     
     // TODO: auto validation
-    protected $validates= null;
+    //protected $validates= null;
     
     // TODO: an array of sort functions; ex:
     //  $sort_by= array('name'=>function($a, $b) 
@@ -86,7 +86,10 @@ class Model extends Ploof
     public function is_numeric($field)
     {
         $numeric= array("decimal", "tinyint", "bigint", "int", "float", "double");
-        return (array_search($this->get_field_type($field), $numeric) !== false);
+        $type = $this->get_field_type($field);
+        if (array_search($type, $numeric) !== false) return true;
+        if (strpos($type, "decimal") !== false) return true;  // e.g. "decimal(5,2)"
+        return false;
     }
     
     public function get_field_types()
@@ -282,7 +285,13 @@ class Model extends Ploof
             $this->fields[$field_name]->add_object($value);
         }
         else
+        {
+            // call the datetime handler if this is a datetime:
+            if (array_key_exists($field_name, $this->field_types) and $this->field_types[$field_name] == "datetime")
+                $value = format_date_sql($value);
+            
             $this->fields[$field_name]= $value;
+        }
     }
     
     /**
@@ -414,12 +423,44 @@ class Model extends Ploof
         {
             foreach($arr as $key=>$value)
             {   
-                if (array_key_exists($key, $this->fields) and $this->is_foreign($key) === false)
+                $this->debug(5, $key);
+                if (array_key_exists($key, $this->field_types) and $this->is_foreign($key) === false)
                 {
-                    $this->fields[$key]= ($index === null) ? $this->sanitize($key, $value) : $this->sanitize($key, $value[$index]);
+                    //$this->fields[$key]= ($index === null) ? $this->sanitize($key, $value) : $this->sanitize($key, $value[$index]);
+                    // use set to ensure datetimes are handled
+                    $this->__set($key, ($index === null) ? $this->sanitize($key, $value) : $this->sanitize($key, $value[$index]));
+                    $this->debug(5,"Populating $key as " . $this->fields[$key]);
                 }
             }
         }
+    }
+    
+    /**
+    * Find and return array of objects
+    * 
+    * SQL must return a single field that is the primary key of the table that represent this class
+    * Returns assoc array with primary key as key and object as value
+    * 
+    * @param $sql string SQL statement that selects primary keys
+    */
+    static function find_sql($sql)
+    {
+        self::debug(5, "find_sql using sql = ".$sql);
+        $res = DB::query($sql);
+        if (!$res) 
+        { 
+            self::debug(5, 'No result');
+            return array();
+        }
+
+        $classname= classname_only(static::classname());
+        $objects = array();
+        while ($row = DB::fetch_array($res))
+        {
+            $primary_key = $row[0];
+            $objects[$pk] = new $classname($primary_key);
+        }
+        return $objects;
     }
     
     /**
@@ -488,11 +529,12 @@ class Model extends Ploof
             else
                 $val= \mysql_real_escape_string($val);
         }
-
-        /*if ($this->is_numeric($key))
+        
+        if ($this->is_numeric($key) and $val != "NULL")
         {
             $val= preg_replace("/[A-Za-z\$,_\%']/i", "", $val);
-        }*/
+            
+        }
         
         return $val;
     }
@@ -595,12 +637,15 @@ class Model extends Ploof
         //  but can be used to migrate from an old table system.
         if ($additional)
         {
+            $sql= "update ".classname_only(static::classname())." set ";
+            $field_array= array();
             foreach($additional as $from=>$to)
             {
-                $sql= "update ".classname_only(static::classname())." set ".$to."=".$this->sanitize($to, $from)." where ".PRIMARY_KEY."=".$this->fields[PRIMARY_KEY];
-                $this->debug(5, "Performing additional trigger: ".$sql);
-                DB::query($sql);
+                $field_array[]= $to."=".$from;
             }
+            $sql.= implode(", ", $field_array)." where ".PRIMARY_KEY."=".$this->fields[PRIMARY_KEY];
+            $this->debug(5, "Performing additional trigger: ".$sql);
+            DB::query($sql);
         }
     } // end store
     
@@ -720,6 +765,14 @@ class Model extends Ploof
             return json_encode($yarr);
         else
             throw new Exception("Native JSON doesn't exist!");
+    }
+    
+    /**
+     *  Get the raw value of a field without any help from ploof.
+     */
+    function raw($field)
+    {
+        return $this->fields[$field];
     }
     
     /**

@@ -147,31 +147,59 @@ class Joiner extends Ploof
      * Returns an array of found objects. Pass in an array like array("column"=>"value"), e.g. array("id"=>2). 
      *  Pass null to return all.
      */
-    function find($where= null)
+    function find($where = null, $exclude = null)
     {
         $results= array();
         // return all:
-        if ($where == null)
+        if ($where == null and $exclude == null)
         {
             if ($this->is_habtm == false)
                 return $this->objects;    
         }
         
-        foreach($where as $search_field=>$search_value)
+        if ($this->is_habtm == false and $this->objects)
         {
-            if ($this->is_habtm == false and $this->objects)
+            foreach($this->objects as $k=>$o)
             {
-                foreach($this->objects as $k=>$o)
+                // Must match all values in where
+                $found_match = 0;
+                if ($where !== null)
                 {
-                    if (($search_value === null and $o->$search_field === null) 
-                        or ($o->$search_field == $search_value)
-                        or ($search_value and $o->$search_field and strcmp($search_value, $o->$search_field) == 0))
+                    foreach($where as $search_field=>$search_value)
                     {
-                        $results[]= $o;
-                    }
+                        if (($search_value === null and $o->$search_field === null) 
+                            or ($o->$search_field == $search_value)
+                            or ($search_value and $o->$search_field and strcmp($search_value, $o->$search_field) == 0))
+                        {
+                            $found_match++;
+                        }
+                    } // end foreach where
                 }
-            } // end if habtm
-        } // end foreach
+
+                // Must not have all values in exclude
+                $excluded = false;
+                if ($exclude !== null)
+                {
+                    $found_exclude = 0;
+                    foreach($exclude as $search_field=>$search_value)
+                    {
+                        if (($search_value === null and $o->$search_field === null) 
+                            or ($o->$search_field == $search_value)
+                            or ($search_value and $o->$search_field and strcmp($search_value, $o->$search_field) == 0))
+                        {
+                            $found_exclude++;
+                        }
+                    } // end foreach exclude
+                    if ($found_exclude == count($excluded)) $excluded = true;
+                }
+
+                if ($found_match == count($where) and !$excluded)
+                {
+                    $results[]= $o;
+                }
+                    
+            } // end foreach object
+        } // end if habtm
         
         return $results;
     }
