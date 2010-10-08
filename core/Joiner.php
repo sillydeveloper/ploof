@@ -156,7 +156,6 @@ class Joiner extends Ploof
             if ($this->is_habtm == false)
                 return $this->objects;    
         }
-        
         if ($this->is_habtm == false and $this->objects)
         {
             foreach($this->objects as $k=>$o)
@@ -167,9 +166,10 @@ class Joiner extends Ploof
                 {
                     foreach($where as $search_field=>$search_value)
                     {
-                        if (($search_value === null and $o->$search_field === null) 
-                            or ($o->$search_field == $search_value)
-                            or ($search_value and $o->$search_field and strcmp($search_value, $o->$search_field) == 0))
+                        $obj_value = $o->$search_field;
+                        if (($search_value === null and $obj_value === null) 
+                            or ($obj_value == $search_value)
+                            or ($search_value and $obj_value and strcmp($search_value, $obj_value) == 0))
                         {
                             $found_match++;
                         }
@@ -183,9 +183,10 @@ class Joiner extends Ploof
                     $found_exclude = 0;
                     foreach($exclude as $search_field=>$search_value)
                     {
-                        if (($search_value === null and $o->$search_field === null) 
-                            or ($o->$search_field == $search_value)
-                            or ($search_value and $o->$search_field and strcmp($search_value, $o->$search_field) == 0))
+                        $obj_value = $o->$search_field;
+                        if (($search_value === null and $obj_value === null) 
+                            or ($obj_value == $search_value)
+                            or ($search_value and $obj_value and strcmp($search_value, $obj_value) == 0))
                         {
                             $found_exclude++;
                         }
@@ -199,6 +200,16 @@ class Joiner extends Ploof
                 }
                     
             } // end foreach object
+            
+            if (count($results) < 1 and $this->parent->requires_a($this->child_class))
+            {
+                $c= $this->child_class;
+                $obj= new $c();
+                foreach($where as $k=>$v) $obj->$k= $v;
+                $obj= $this->add_object($obj);
+                $obj->store();
+                $results[]= $obj;
+            }
         } // end if habtm
         
         return $results;
@@ -212,12 +223,17 @@ class Joiner extends Ploof
         $search= $this->find($where);
         $obj= array_pop($search);
 
-        if (!$obj and $this->parent->requires_a($this->child_class))
+        if (!$obj->id and $this->parent->requires_a($this->child_class))
         {
             $c= $this->child_class;
             $obj= new $c();
             foreach($where as $k=>$v) $obj->$k= $v;
-            $this->add_object($obj);
+            $obj= $this->add_object($obj);
+            $obj->store();
+            
+            $this->debug(1, $where);
+            $this->debug(1, $obj);
+            
         }
         
         return $obj;
@@ -228,14 +244,15 @@ class Joiner extends Ploof
      */
     function get()
     {
-		$obj= $this->objects[0];
-		// TODO: Bad copy and paste out of find_object
-		if (!$obj and $this->parent->requires_a($this->child_class))
+        if (count($this->objects) < 1 and $this->parent->requires_a($this->child_class))
         {
             $c= $this->child_class;
             $obj= new $c();
             $this->add_object($obj);
         }
+            
+		$obj= $this->objects[0];
+		
         return $obj;
     }
     
@@ -257,5 +274,22 @@ class Joiner extends Ploof
         }
     }
     
+    /**
+    * Delete array of objects from joiner/cache and from database
+    * 
+    * @param array $objects Array of object to delete from joiner/cache and database (not assoc array)
+    */
+    function delete_objects($objects)
+    {
+        if (!is_array($objects)) return;
+        $ids = array();
+        foreach ($objects as $obj) 
+        {
+            if (!is_object($obj)) continue;
+            $ids[] = $obj->id;
+        }
+        $this->delete($ids);
+    }
+        
 }
 ?>

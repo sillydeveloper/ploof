@@ -30,16 +30,30 @@ class Model extends Ploof
     // array of classes that will be autocreated when asked for via find()
     protected $requires= null;
     
+    // array of properties to NOT cache. 
+    //  these will be ignored by __get() and store().
+    protected $no_cache= array();
+    
     function __construct($id=null)
     {
         if ($id)
         {
+            $this->load($id);
+            $this->set_field_types();
+        }
+        elseif (count($this->fields) < 1)
+        {
+            $this->set_field_types(true);
+        }   
+    }
+    
+    public function load($id)
+    {
+        if ($id)
+        {
             $sql= "select * from ".classname_only(static::classname())." where ".PRIMARY_KEY."=".$id;
-            
             $this->debug(5, "Loading: ". $sql);
-            
             $qry= DB::query($sql);
-            
             while($row= DB::fetch_assoc($qry))            
             {   
                 $this->debug(5, $row);
@@ -49,12 +63,7 @@ class Model extends Ploof
                     $this->fields[$k] = stripslashes($v);
                 }
             }
-            $this->set_field_types();
         }
-        elseif (count($this->fields) < 1)
-        {
-            $this->set_field_types(true);
-        }   
     }
     
     public function requires_a($classname)
@@ -78,6 +87,11 @@ class Model extends Ploof
     public function get_fields()
     {
         return $this->fields;
+    }
+    
+    public function has_field($var)
+    {
+        return array_key_exists($var, $this->fields);
     }
     
     /**
@@ -210,7 +224,7 @@ class Model extends Ploof
                 $lookup_id= $this->fields[PRIMARY_KEY];
                 $lookup_field= classname_only(static::classname()).PK_SEPERATOR.PRIMARY_KEY;
                 
-                $results= $field_name::find($lookup_field."='".$lookup_id."' limit 1");
+                $results= $field_name::find($lookup_field."='".$lookup_id."' order by id desc limit 1");
             }
         }
         
@@ -233,6 +247,13 @@ class Model extends Ploof
      */
     function __get($field_name)
     {
+        // if no_cache, then get from the database directly:
+        if (array_search($field_name, $this->no_cache) !== false)
+        {
+            $fetch= DB::fetch_array(DB::query('select '.$field_name.' from '.classname_only(static::classname()).' where id='.$this->id));
+            return $fetch[$field_name];
+        }
+        
         // lazy loading part.
         if ($this->is_foreign($field_name))
         {
@@ -256,13 +277,21 @@ class Model extends Ploof
         }
 
         // call the datetime handler if this is a datetime:
-        if (array_key_exists($field_name, $this->field_types) and $this->field_types[$field_name] == "datetime")
-            return format_date($this->fields[$field_name]);
+        if (array_key_exists($field_name, $this->field_types))
+        {
+            switch (strtolower($this->field_types[$field_name]))
+            {
+                case "date": // fall through
+                case "datetime": return format_date($this->fields[$field_name]);
+                case "float": // fall through
+                case "double": return format_float($this->fields[$field_name]);
+            }
+        }            
             
         if (is_object($this->fields[$field_name]))
             return $this->fields[$field_name];
         else
-            return str_replace("\\'", "'", $this->fields[$field_name]); // remove sanitized escape
+            return stripslashes($this->fields[$field_name]); // remove sanitized escape
     }
     
     /**
@@ -271,6 +300,14 @@ class Model extends Ploof
      */
     function __set($field_name, $value)
     {
+        // if no_cache, then get from the database directly:
+        if (array_search($field_name, $this->no_cache) !== false)
+        {
+            $sql= 'update '.classname_only(static::classname()).' set '.$field_name.'="'.$value.'" where id='.$this->id;
+            DB::query($sql);
+            return; 
+        }
+        
         if ($this->is_foreign($field_name))
         {
             if (is_object($this->fields[$field_name]) == false)
@@ -287,8 +324,10 @@ class Model extends Ploof
         else
         {
             // call the datetime handler if this is a datetime:
-            if (array_key_exists($field_name, $this->field_types) and $this->field_types[$field_name] == "datetime")
+            if (array_key_exists($field_name, $this->field_types) and $this->field_types[$field_name] == "datetime" and strlen($value) > 0)
+            {
                 $value = format_date_sql($value);
+            }
             
             $this->fields[$field_name]= $value;
         }
@@ -302,6 +341,8 @@ class Model extends Ploof
      */
     function save($classname, $values_array)
     {
+        if ( !is_array($values_array) ) return false;
+
         // we'll return whatever we create / add / update:
         $return= null;
         if ($this->is_belongs_to($classname))
@@ -480,7 +521,7 @@ class Model extends Ploof
     /**
      * Find and return an array of objects. Anything after "select * from Foo where" can be in your query.
      */
-    static function find($query=null)
+    static function find($query=null, $db=null)
     {
         $classname= classname_only(static::classname());
         
@@ -488,13 +529,19 @@ class Model extends Ploof
         {
             $query= "select ".PRIMARY_KEY." from ".$classname;  
             self::debug(5, $query);
-            $result= DB::query($query);
+            if ($db)
+                $result= $db::query($query);
+            else
+                $result= DB::query($query);
         }
         else
         {
             $query= "select ".PRIMARY_KEY." from ".$classname." where ".$query;
             self::debug(5, $query);
-            $result= DB::query($query);
+            if ($db)
+                $result= $db::query($query);
+            else
+                $result= DB::query($query);
         }
         
         $results= array();
@@ -533,7 +580,6 @@ class Model extends Ploof
         if ($this->is_numeric($key) and $val != "NULL")
         {
             $val= preg_replace("/[A-Za-z\$,_\%']/i", "", $val);
-            
         }
         
         return $val;
@@ -565,11 +611,16 @@ class Model extends Ploof
                 $v= $this->fields[$k];
                 if ($k != PRIMARY_KEY)
                 {
-                    if (!is_object($v) and !is_array($v) and ($v === null or strlen($v) == 0)) $v= "NULL";
+                    if (!is_object($v) and !is_array($v) and ($v === null or strlen($v) == 0)) 
+                        $v= "NULL";
              
                     if ($k == PRIMARY_KEY) continue;
                 
-                    if ($this->is_belongs_to($k) and is_object($v))
+                    if (array_search($k, $this->no_cache) !== false)
+                    {
+                        // if it's in a no-cache state, then don't update it.
+                    }
+                    elseif ($this->is_belongs_to($k) and is_object($v))
                     {
                         // remember: it's a joiner object.
                     }
@@ -598,7 +649,13 @@ class Model extends Ploof
                     $v= $this->fields[$k];
                     
                     if ($v === null or strlen($v) == 0) { $v= "NULL";  }
-                    if ($this->is_numeric($k) or $v === "NULL" )
+                    
+                    if (array_search($k, $this->no_cache) !== false)
+                    {
+                        // if it's in a no-cache state, then don't update it.
+                        continue;   
+                    }
+                    elseif ($this->is_numeric($k) or $v === "NULL" )
                         $field_query[$k]= $this->sanitize($k, $v);
                     elseif ($this->is_belongs_to($k) and is_object($v))
                     {

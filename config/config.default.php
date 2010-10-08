@@ -38,7 +38,7 @@ define("DEFAULT_CONTROLLER", "Dashboard");
 /**
  * Uhh... Obvious hopefully.
  */
-define("DATABASE_USER", "root");
+define("DATABASE_USER", "");
 define("DATABASE_PASS", "");
 define("DATABASE_HOST", "");
 define("DATABASE_NAME", "");
@@ -47,10 +47,10 @@ define("DATABASE_NAME", "");
  * Fixture database for unit tests. This database
  * WILL BE WIPED each time you run unit tests.
  */
-define("TEST_DATABASE_USER", "root");
+define("TEST_DATABASE_USER", "");
 define("TEST_DATABASE_PASS", "");
 define("TEST_DATABASE_HOST", "");
-define("TEST_DATABASE_NAME", "ploof_fixtures");
+define("TEST_DATABASE_NAME", "");
 
 /**
  * Initial action to call on controllers

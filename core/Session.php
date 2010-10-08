@@ -73,6 +73,11 @@ class Session extends Ploof
             array_push($sys, $_SERVER['REQUEST_URI']);
         else
             $sys= array($_SERVER['REQUEST_URI']);
+        
+        // keep the queue at 5 entries:
+        if (count($sys) > 5)
+            $sys= array_slice($sys, -5, 5);
+            
         Session::set("PLOOF_ROUTES", $sys);
     }
     

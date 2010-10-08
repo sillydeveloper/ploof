@@ -57,7 +57,7 @@ function parse_content_type($file_name)
 {
     $ext = array_pop(explode(".", $file_name));
 
-    $supported_types = array('doc', 'pdf', 'ppt', 'png', 'jpg');
+    $supported_types = array('doc', 'pdf', 'ppt', 'png', 'jpg', 'xls');
     if (!in_array($ext, $supported_types))
     {
         throw new Exception('Unsupported extension: ' . $ext . ' from file name ' . $file_name);
@@ -157,6 +157,19 @@ if (!function_exists("format_date_sql"))
     }
 }
 
+if (!function_exists("format_float"))
+{
+    function format_float($f)
+    {
+        if (!is_numeric($f)) return "";
+        if (is_string($f) and strpos($f,'e')!==false)
+        {
+            $f = sprintf('%F', $f);
+        }
+        return $f;
+    }
+}
+
 if (!function_exists("convert_controller_to_object_name"))
 {
     function convert_controller_to_object_name($name)
@@ -170,7 +183,7 @@ if (!function_exists("convert_controller_to_object_name"))
  */
 function __autoload($class_name) 
 {
-    include(str_replace("\\", "/", $class_name).".php");
+    include str_replace("\\", "/", $class_name).".php";
 }
 
 /**
@@ -218,6 +231,7 @@ function render($url, $assigns=null)
  */
 function render_main()
 {
+
     $controller= ($_REQUEST["controller"]) ? $_REQUEST["controller"] : DEFAULT_CONTROLLER;    
     $action = ($_REQUEST["action"]) ? $_REQUEST['action'] : DEFAULT_ACTION;
     $id = ($_REQUEST["id"]) ? $_REQUEST['id'] : null;
@@ -311,31 +325,52 @@ function form_end()
 /**
  * Create a text input field.
  */
+function form_text_size($size_name)
+{
+    $size = $size_name;
+    switch (strtolower($size_name))
+    {
+        case 'x-small': $size = 4; break;
+        case 'small': $size = 10; break;
+        case 'medium': $size = 20; break;
+        case 'large': $size = 30; break;
+        case 'x-large': $size = 45; break;
+        case 'xx-large': $size = 80; break;
+    }
+    return $size;
+}
+
 function form_text($object, $name, $title=null, $class=null, $size=null)
 {
     if ($title === null) $title = '';
     if ($class === null) $class = 'input';
     if ($size === null) $size = '';
+    $size = form_text_size($size);
+    
     $cname= classname_only($object::classname());
-    return "<input id='".$cname."_".$object->id."_$name' type='text' class='$class' name='".fname($object, $name)."' value='".$object->$name."' title=\"$title\" size=\"$size\" />";
+    return "<input id='".$cname."_".$object->id."_$name' type='text' class='$class' name='".fname($object, $name)."' value=\"".htmlentities($object->$name)."\" title=\"$title\" size=\"$size\" />";
+}
+
+function form_textarea($object, $name, $title=null, $class=null, $rows=null, $cols=null)
+{
+    if ($title === null) $title = '';
+    if ($class === null) $class = 'input';
+    if ($rows === null) $rows = 4;
+    if ($cols === null) $cols = 19;
+    
+    $cname= classname_only($object::classname());
+    return "<textarea id='".$cname."_".$object->id."_$name' class='$class' name='".fname($object, $name)."' title=\"$title\" rows=\"$rows\" cols=\"$cols\">" . htmlentities($object->$name) . "</textarea>";
 }
 
 function form_text_simple($name, $value, $title=null, $class=null, $id=null, $size=null)
 {
-    if ($title === null) $title = '';
+    $title= ($title === null) ? '' : 'title="'.$title.'"';
     if ($class === null) $class = 'input';
     if ($id === null) $class = '';
     if ($size === null) $size = '';
-    switch (strtolower($size))
-    {
-        case 'x-small': $size = 6; break;
-        case 'small': $size = 10; break;
-        case 'medium': $size = 20; break;
-        case 'large': $size = 30; break;
-        case 'x-large': $size = 40; break;
-        case 'xx-large': $size = 80; break;
-    }
-    return "<input id='$id' type='text' class='$class' name='$name' value='$value' title=\"$title\" size=\"$size\" />";
+    $size = form_text_size($size);
+    
+    return "<input id='$id' type='text' class='$class' name='$name' value=\"".htmlentities($value)."\" $title size=\"$size\" />";
 }
 
 function form_hidden($object, $name)
@@ -393,13 +428,14 @@ function form_select_simple($name, $options, $select=null, $class='input', $id=n
 function form_checkbox($object, $name, $value=null, $label=null, $class='input')
 {
     $checked= false;
+
     if ($object->$name === $value)
         $checked= "checked='checked'";
     
     $cname= classname_only($object::classname());
     $id= $cname."_".$object->id."_$name";
 
-    $html= "<input onchange='toggle_checkbox(\"$id\", \"$value\")' class='$class' id='$id' type='checkbox' name='_$name' value='".$value."' $checked />";
+    $html= "<input onchange='toggle_checkbox(\"$id\", \"$value\")' class='$class' id='$id' type='checkbox' name='$id' value='".$value."' $checked />";
 
     if ($checked)
         $html.= "<input type='hidden' id='hidden_checkbox_$id' name='".fname($object, $name)."' value='".$object->$name."'/>";
@@ -418,7 +454,7 @@ function form_checkbox_simple($name, $value, $checked=false, $label=null, $class
     
     $id= md5($name."_".$value);
     
-    $html= "<label onClick='toggle_checkbox(\"$id\")'><input class='$class' id='$id' type='checkbox' name='_$name' value='$value' $checked/>";
+    $html= "<label style='cursor: default;' onClick='toggle_checkbox(\"$id\")'><input class='$class' id='$id' type='checkbox' name='$id' value='$value' $checked/>";
     
     if ($checked)
         $html.="<input type='hidden' id='hidden_checkbox_$id' name='$name' value='".$value."'/>";
@@ -437,9 +473,10 @@ function form_checkbox_simple($name, $value, $checked=false, $label=null, $class
 
 function form_radio($object, $name, $values, $class='input', $list_vertically=false)
 {
-    $id= md5($name);
+    $id= md5($name."_".$object->id);
     $id_ploof= classname_only($object->classname())."_".$object->id."_$name";
-    $html= "<input type='hidden' id='hidden_radio_$id' name='".fname($object, $name)."' value='".$object->$name."'/>";
+    $hidden_val = ($object->$name == null) ? 0 : $object->$name;
+    $html= "<input type='hidden' id='hidden_radio_$id' name='".fname($object, $name)."' value='". $hidden_val  ."'/>";
     
     foreach($values as $k=>$v)
     {
