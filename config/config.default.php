@@ -1,9 +1,16 @@
 <?
-// TODO: Make it so you don't have to set this. It's annoying.
-define("BASE_INSTALL", "");
+/*
+ * Default base install is the directory above where this config file is stored
+ */
+define("BASE_INSTALL", realpath(__DIR__ . '/..')); 
 
-// TODO: Same as above
-set_include_path(get_include_path().PATH_SEPARATOR.BASE_INSTALL.PATH_SEPARATOR.BASE_INSTALL."/model".PATH_SEPARATOR.BASE_INSTALL."/controller".PATH_SEPARATOR.BASE_INSTALL."/view".PATH_SEPARATOR.BASE_INSTALL."/core".PATH_SEPARATOR.BASE_INSTALL."/test/temp");
+set_include_path(get_include_path().PATH_SEPARATOR.
+                 BASE_INSTALL.PATH_SEPARATOR.
+                 BASE_INSTALL."/model".PATH_SEPARATOR.
+                 BASE_INSTALL."/controller".PATH_SEPARATOR.
+                 BASE_INSTALL."/view".PATH_SEPARATOR.
+                 BASE_INSTALL."/core".PATH_SEPARATOR.
+                 BASE_INSTALL."/test/temp");
 
 /**
  * What object that a session attaches to
@@ -83,7 +90,7 @@ define("PRIMARY_KEY", "id");
 /**
  * The token that comes before id -- for example, User_id
  */
-define("PK_SEPERATOR", "_");
+define("PK_SEPARATOR", "_");
 
 /**
  * Table separator for HABTM
@@ -97,15 +104,10 @@ define("PLOOF_SEPARATOR", "__");
  */
 define("VIEW_EXTENSION", ".html");
 
-/**
- * TODO: This is dumb.
- */
-if (!defined("IN_UNIT_TESTING"))
-    define('IN_UNIT_TESTING', 0); 
+define('IN_UNIT_TESTING', 0); 
 
-if (file_exists("config.application.php"))
-    require_once "config.application.php";
-
+require_once "config.application.php";
 require_once "application.php";
+
 require_once "fun.php";
 ?>

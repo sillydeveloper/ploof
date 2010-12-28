@@ -64,9 +64,16 @@ class Controller extends Ploof
         exit();
     }
     
-    function assign($name, $value)
+    function assign($var, $value=null)
     {
-        $this->assigns[$name]= $value;
+        if ( is_array($var) && is_null($value) )
+        {
+            $this->assigns = array_merge($this->assigns, $var);
+        }
+        else
+        {
+            $this->assigns[$var]= $value;
+        }
     }
     
     function get_assign($name)
@@ -109,17 +116,13 @@ class Controller extends Ploof
                     $this->debug(4, "Ajax detected");
                     $this->is_ajax= true;
                 }
-				else
-					echo '<!-- begin '.$this->classname().'::'.$action.' -->';
+                else
+                {
+                    echo '<!-- begin '.$this->classname().'::'.$action.' -->';
+                }
                     
                 $this->debug(4, "Calling action $action...");
-                //print "<pre>"; walk_array($_SESSION); print "</pre>";
-                //print "<pre>"; print substr(var_export($_SESSION, true),1,100); print "</pre>";
-                //print "<pre>"; var_dump($_REQUEST); print "</pre>";
-                //print "<pre>"; var_dump($this->data); print "</pre>";
-                //exit();
                 $this->$action();
-                //exit();
                 $this->debug(4, "action complete");
 
                 if ($_REQUEST['redir'])
@@ -153,8 +156,12 @@ class Controller extends Ploof
                 {
                     $$name= $value;
                 }
-                if (file_exists("../view/".classname_only(static::classname())."/".$action.VIEW_EXTENSION))
-                    include("../view/".classname_only(static::classname())."/".$action.VIEW_EXTENSION);
+
+                $view_action = "../view/".classname_only(static::classname())."/".$action.VIEW_EXTENSION;
+                if (file_exists($view_action))
+                {
+                    include($view_action);
+                }
             }  
         }
         catch (\Exception $e)
@@ -170,9 +177,12 @@ class Controller extends Ploof
             print_r('</pre>');
             exit;
         }  
-		if(!$this->is_ajax)      
-			echo '<!-- end '.$this->classname().'::'.$action.' -->';            
-    } // end controller::call
+
+        if(!$this->is_ajax)      
+        {
+            echo '<!-- end '.$this->classname().'::'.$action.' -->';            
+        }
+    }
     
     function is_protected($action)
     {

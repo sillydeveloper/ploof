@@ -26,10 +26,10 @@ class Joiner extends Ploof
             $this->is_habtm= true;
             
             $lookup_id= $parent->id;
-            $lookup_field= $parent_class.PK_SEPERATOR.PRIMARY_KEY;  
+            $lookup_field= $parent_class.PK_SEPARATOR.PRIMARY_KEY;  
             
             $foreign_object= $child_class;
-            $foreign_key= $child_class.PK_SEPERATOR.PRIMARY_KEY;
+            $foreign_key= $child_class.PK_SEPARATOR.PRIMARY_KEY;
             
             $qry= DB::query("select * from ".$parent->get_join_table($field_name)." where ".$lookup_field."='".$lookup_id."'");
             
@@ -100,7 +100,7 @@ class Joiner extends Ploof
         if ($this->is_habtm == false)
         {
             $child_class= $this->child_class;
-            $parent_id_field= $this->parent_class.PK_SEPERATOR.PRIMARY_KEY;
+            $parent_id_field= $this->parent_class.PK_SEPARATOR.PRIMARY_KEY;
             
             $obj= new $child_class();
             $obj->populate_from($arr, $index);
@@ -125,7 +125,7 @@ class Joiner extends Ploof
     {
         if ($this->is_habtm == false)
         {    
-            $parent_id_field= $this->parent_class.PK_SEPERATOR.PRIMARY_KEY;
+            $parent_id_field= $this->parent_class.PK_SEPARATOR.PRIMARY_KEY;
             $obj->$parent_id_field= $this->parent->id;
             
             $obj->store();

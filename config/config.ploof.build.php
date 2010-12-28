@@ -78,7 +78,7 @@ define("PRIMARY_KEY", "id");
 /**
  * The token that comes before id -- for example, User_id
  */
-define("PK_SEPERATOR", "_");
+define("PK_SEPARATOR", "_");
 
 /**
  * Table separator for HABTM

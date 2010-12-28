@@ -201,7 +201,7 @@ class Model extends Ploof
         {
             if ($this->is_belongs_to($field_name))
             {
-                $lookup_id= $this->fields[$field_name.PK_SEPERATOR.PRIMARY_KEY];
+                $lookup_id= $this->fields[$field_name.PK_SEPARATOR.PRIMARY_KEY];
                 $lookup_field= PRIMARY_KEY;
             
                 $results= $field_name::find($lookup_field."='".$lookup_id."'");
@@ -210,7 +210,7 @@ class Model extends Ploof
             if ($this->is_has_many($field_name))
             {
                 $lookup_id= $this->fields[PRIMARY_KEY];
-                $lookup_field= classname_only(static::classname()).PK_SEPERATOR.PRIMARY_KEY;
+                $lookup_field= classname_only(static::classname()).PK_SEPARATOR.PRIMARY_KEY;
                 
                 $sql= $lookup_field."='".$lookup_id."' ".$order." ".$limit;
                 
@@ -222,7 +222,7 @@ class Model extends Ploof
             if ($this->is_has_one($field_name))
             {
                 $lookup_id= $this->fields[PRIMARY_KEY];
-                $lookup_field= classname_only(static::classname()).PK_SEPERATOR.PRIMARY_KEY;
+                $lookup_field= classname_only(static::classname()).PK_SEPARATOR.PRIMARY_KEY;
                 
                 $results= $field_name::find($lookup_field."='".$lookup_id."' order by id desc limit 1");
             }
@@ -367,7 +367,7 @@ class Model extends Ploof
                 $object->store();
                 $return= $object;
                 
-                $lookup_field= $classname.PK_SEPERATOR.PRIMARY_KEY;
+                $lookup_field= $classname.PK_SEPARATOR.PRIMARY_KEY;
                 $this->$lookup_field= $object->id;
                 $this->store();
                 
@@ -390,7 +390,7 @@ class Model extends Ploof
             else
             {
                 $this_class= classname_only(static::classname());
-                $lookup_field= $this_class.PK_SEPERATOR.PRIMARY_KEY;
+                $lookup_field= $this_class.PK_SEPARATOR.PRIMARY_KEY;
                 
                 $object= new $classname();
                 $object->fields[PRIMARY_KEY]= null;
@@ -410,7 +410,7 @@ class Model extends Ploof
             {
                 $this->debug(5, 'Currently '.count($this->$classname->find()).' exist; repopulating with new values...');
                 $this_class= classname_only(static::classname());
-                $lookup_field= $this_class.PK_SEPERATOR.PRIMARY_KEY;
+                $lookup_field= $this_class.PK_SEPARATOR.PRIMARY_KEY;
                 
                 if (!count($values_array))
                 {
@@ -768,9 +768,9 @@ class Model extends Ploof
                 {
                     $column= $column["Field"];
                     
-                    if (preg_match('/'.PK_SEPERATOR.PRIMARY_KEY.'$/', $column))
+                    if (preg_match('/'.PK_SEPARATOR.PRIMARY_KEY.'$/', $column))
                     {
-                        $foreign_table= str_replace( PK_SEPERATOR.PRIMARY_KEY,"",$column);
+                        $foreign_table= str_replace( PK_SEPARATOR.PRIMARY_KEY,"",$column);
                         $classes[$table]['belongs_to'][]= $foreign_table;
                         $classes[$foreign_table]['has_many'][]= $table;
                     }
