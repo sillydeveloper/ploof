@@ -2,7 +2,6 @@
 
 class Form
 {
-
     public function start($action, $id=null)
     {
         if ($_REQUEST['ajax'])
@@ -44,8 +43,8 @@ class Form
 
     public function text($object, $name, $attributes=array())
     {
-        $cname = classname_only($object::classname());
-        $html = "<input type='text' name='". fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name  . "' value='" . htmlentities($object->$name). "' "; 
+        $cname = Meta::classname_only($object::classname());
+        $html = "<input type='text' name='". $this->fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name  . "' value='" . htmlentities($object->$name). "' "; 
         foreach ( $attributes as $name=>$value )
          {
             if ( $name == 'size')
@@ -61,8 +60,8 @@ class Form
 
     public function textarea($object, $name, $attributes=array())
     {
-        $cname= classname_only($object::classname());
-        $html = "<textarea name='" . fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name . " ";
+        $cname= Meta::classname_only($object::classname());
+        $html = "<textarea name='" . $this->fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name . " ";
         foreach ( $attributes as $name=>$value )
          {
             if ( $name = 'cols' || $name == 'rows')
@@ -77,14 +76,13 @@ class Form
 
     public function hidden($object, $name)
     {
-        return "<input type='hidden' class='input' name='" . fname($object, $name) . "' value='" . $object->$name . "'/>";
+        return "<input type='hidden' class='input' name='" . $this->fname($object, $name) . "' value='" . $object->$name . "'/>";
     }
 
-    // LEFT OFF HERE
     public function select($object, $name, $options, $display=null, $class='input')
     {
-        $cname= classname_only($object::classname());
-        $html= "<select  id='".$cname."_".$object->id."_$name' class='$class' name='".fname($object, $name)."'>";
+        $cname= Meta::classname_only($object::classname());
+        $html= "<select id='".$cname."_".$object->id."_$name' class='$class' name='".$this->fname($object, $name)."'>";
         foreach($options as $k=>$o)
         {
             if (is_object($o))
@@ -130,17 +128,15 @@ class Form
         if ($object->$name === $value)
             $checked= "checked='checked'";
         
-        $cname= classname_only($object::classname());
+        $cname= Meta::classname_only($object::classname());
         $id= $cname."_".$object->id."_$name";
 
         $html= "<input onchange='toggle_checkbox(\"$id\", \"$value\")' class='$class' id='$id' type='checkbox' name='$id' value='".$value."' $checked />";
 
         if ($checked)
-            $html.= "<input type='hidden' id='hidden_checkbox_$id' name='".fname($object, $name)."' value='".$object->$name."'/>";
+            $html.= "<input type='hidden' id='hidden_checkbox_$id' name='".$this->fname($object, $name)."' value='".$object->$name."'/>";
         else
-            $html.= "<input type='hidden' id='hidden_checkbox_$id' name='".fname($object, $name)."' value=''/>";
-        
-
+            $html.= "<input type='hidden' id='hidden_checkbox_$id' name='".$this->fname($object, $name)."' value=''/>";
 
         return $html;
     }
@@ -172,9 +168,9 @@ class Form
     public function form_radio($object, $name, $values, $class='input', $list_vertically=false)
     {
         $id= md5($name."_".$object->id);
-        $id_ploof= classname_only($object->classname())."_".$object->id."_$name";
+        $id_ploof= Meta::classname_only($object->classname())."_".$object->id."_$name";
         $hidden_val = ($object->$name == null) ? 0 : $object->$name;
-        $html= "<input type='hidden' id='hidden_radio_$id' name='".fname($object, $name)."' value='". $hidden_val  ."'/>";
+        $html= "<input type='hidden' id='hidden_radio_$id' name='".$this->fname($object, $name)."' value='". $hidden_val  ."'/>";
         
         foreach($values as $k=>$v)
         {
@@ -206,7 +202,7 @@ class Form
     public function fname($object, $name)
     {
         if (!$object) throw new Exception("No object for fname");
-        $cname= classname_only($object::classname());
+        $cname= Meta::classname_only($object::classname());
         return "data[$cname][$name][]";
     }
 

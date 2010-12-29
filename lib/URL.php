@@ -2,7 +2,7 @@
 
 class URL {
 
-    public function get_url_parts($url)
+    public static function get_url_parts($url)
     {
 	$query_str= explode("?", $url);
 	return explode("/",substr($query_str[0], 1)); // trim the front slash and split
@@ -14,6 +14,17 @@ class URL {
 	return $query_str[1]; // trim the front slash and split
     }
 
+   /**
+    * Return name if 'current url' matches 'url', or <a href='url'>name</a>.
+    *  Useful for navigation systems.
+    */
+    public function match_or_link($url, $name)
+    {
+        if ($this->url_matches($url)) 
+            return "<a href='$url' class='menumatch'>$name</a>";
+        else 
+            return "<a href='$url'>$name</a>";
+    }
 
     public function parent_url()
     {

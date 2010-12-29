@@ -13,6 +13,14 @@ set_include_path(get_include_path().PATH_SEPARATOR.
                  BASE_INSTALL."/test/temp");
 
 /**
+ * Autoload classes
+ */
+function __autoload($class_name) 
+{
+    include str_replace("\\", "/", $class_name).".php";
+}
+
+/**
  * What object that a session attaches to
  */
 define("SESSION_OBJECT", "User");

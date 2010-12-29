@@ -213,6 +213,47 @@ class Controller extends Ploof
         return $this->routable_messages[$action];
     }
     
+    /**
+    * Render controller's action, using id and/or an array of assigns.
+    */
+    public function render($url, $assigns=null)
+    {
+        $split= URL::get_url_parts($url);
+        if (count($split) > 3)
+        {
+            $_REQUEST['parent']= $split[0];
+            $_REQUEST['parentid']= $split[1];
+            $controller= $split[2];
+            $action= $split[3];
+            $id= $split[4];
+        }
+        else
+        {
+            $controller= $split[0];
+            $action= $split[1];
+            $id= $split[2];
+        }
+        
+        if (!$id)
+            $id= $_REQUEST["id"];
+        
+        $controller_object= new $controller();
+        $controller_object->call($action, $assigns, $id);
+    }
+
+    /**
+    * Should be called in your layout where you want the main content pulled in.
+    */
+    public function render_main()
+    {
+        $controller= ($_REQUEST["controller"]) ? $_REQUEST["controller"] : DEFAULT_CONTROLLER;    
+        $action = ($_REQUEST["action"]) ? $_REQUEST['action'] : DEFAULT_ACTION;
+        $id = ($_REQUEST["id"]) ? $_REQUEST['id'] : null;
+        $_REQUEST["main_controller"]= $controller;
+        $_REQUEST["main_action"]= $action;
+        $this->render("/$controller/$action/$id");
+    }
+
     static function classname()
     {
         return __CLASS__;
