@@ -1,0 +1,10 @@
+<a href='/'>Back</a>
+<div>
+    <? if (count($tests) > 0) { ?>
+        <? foreach($tests as $test) { ?>
+            <a href='/TestRunner/run/<?=$test?>'><?=$test?></a>
+        <? }?>
+    <? } else { ?>
+        No tests found! 
+    <? } ?>
+</div>
