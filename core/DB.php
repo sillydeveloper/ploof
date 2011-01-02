@@ -1,12 +1,13 @@
 <?
 namespace core;
 
-class DB extends Ploof
+abstract class DB extends Ploof
 {
     private static $db;
     public $connect_id;
     
-    private function __construct($username, $password, $host, $database)
+    abstract function __construct($username, $password, $host, $database);
+    /*
     {
         if (USE_MYSQLI)
             $this->connect_id = \mysqli_connect($host, $username, $password, $database) or die("Could not connect to mysqli");
@@ -18,18 +19,19 @@ class DB extends Ploof
             else
                 mysql_select_db(DATABASE_NAME);
         }
-    }
+    }*/
 
-    public static function getInstance($db=DATABASE_NAME, $u=DATABASE_USER, $p=DATABASE_PASS, $h=DATABASE_HOST)
-    {
+    abstract static function get_instance($db=DATABASE_NAME, $u=DATABASE_USER, $p=DATABASE_PASS, $h=DATABASE_HOST);
+    /*{
         if (IN_UNIT_TESTING)
             self::$db = new DB(TEST_DATABASE_USER, TEST_DATABASE_PASS, TEST_DATABASE_HOST, TEST_DATABASE_NAME);
         elseif (empty(self::$db))
             self::$db = new DB($u, $p, $h, $db);
         return self::$db;
-    }
+    }*/
     
-    static function insert_id()
+    abstract static function insert_id();
+    /*
     {   
         if (USE_MYSQLI)
             $id= \mysqli_insert_id(self::getInstance()->connect_id);
@@ -38,9 +40,10 @@ class DB extends Ploof
         
         
         return $id;
-    }
+    } */
     
-    static function fetch_array($res)
+    abstract static function fetch_array($res);
+    /*
     {
         if ($res)
         {
@@ -50,9 +53,10 @@ class DB extends Ploof
                 return \mysql_fetch_array($res);
         }
         return false;
-    }
+    } */
     
-    static function fetch_assoc($res)
+    abstract static function fetch_assoc($res);
+    /*
     {
         if ($res)
         {
@@ -62,9 +66,10 @@ class DB extends Ploof
                 return \mysql_fetch_assoc($res);
         }
         return false;
-    }
+    } */
     
-    static function query_first($sql)
+    abstract static function query_first($sql);
+    /*
     {
         $res= DB::query($sql);
     
@@ -73,19 +78,27 @@ class DB extends Ploof
             return array_pop($result);
         
         return false;
-    }
+    }*/
     
-    public static function num_rows($res)
+    abstract static function num_rows($res);
+    /*
     {
         return mysqli_num_rows($res);
-    }
+    }*/
     
-    public static function query($sql)
+    abstract static function query($sql);
+    /*
     { 
         return self::getInstance()->run_sql($sql); 
-    }
+    }*/
     
-    public function run_sql($sql)
+    abstract static function insert($table, $data);
+    abstract static function is_valid_id($id);
+    abstract static function update($table, $data, $where);
+    abstract public function upsert($table, $insert_data, $update_data);
+    
+    //abstract function run_sql($sql)
+    /*
     {
         if (USE_MYSQLI)
             return \mysqli_query($this->connect_id, $sql);// or die("Could not execute query: \n".mysqli_error());
@@ -93,7 +106,7 @@ class DB extends Ploof
         {
             return \mysql_query($sql);// or die("Could not execute query: \n".mysql_error());
         }
-    }
+    }*/
 }
 
 ?>

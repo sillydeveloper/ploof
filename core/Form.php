@@ -2,7 +2,7 @@
 
 class Form
 {
-    public function start($action, $id=null)
+    public static start($action, $id=null)
     {
         if ($_REQUEST['ajax'])
             $html= "<form method=POST class='ajax_form' action='$action'";
@@ -21,12 +21,12 @@ class Form
         return $html;
     }
 
-    public function end()
+    public static end()
     {
         return "</form>";
     }
 
-    private function _text_size($size_name)
+    static function text_size($size_name)
     {
         $size = $size_name;
         switch (strtolower($size_name))
@@ -41,15 +41,15 @@ class Form
         return $size;
     }
 
-    public function text($object, $name, $attributes=array())
+    public static text($object, $name, $attributes=array())
     {
         $cname = Meta::classname_only($object::classname());
-        $html = "<input type='text' name='". $this->fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name  . "' value='" . htmlentities($object->$name). "' "; 
+        $html = "<input type='text' name='". Form::fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name  . "' value='" . htmlentities($object->$name). "' "; 
         foreach ( $attributes as $name=>$value )
          {
             if ( $name == 'size')
             {
-                $value = $this->_text_size($value);
+                $value = Form::text_size($value);
             }
             $html .= $name . "='" . $value . "' "; 
         }
@@ -58,15 +58,15 @@ class Form
         return $html; 
     }
 
-    public function textarea($object, $name, $attributes=array())
+    public static textarea($object, $name, $attributes=array())
     {
         $cname= Meta::classname_only($object::classname());
-        $html = "<textarea name='" . $this->fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name . " ";
+        $html = "<textarea name='" . Form::fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name . " ";
         foreach ( $attributes as $name=>$value )
          {
             if ( $name = 'cols' || $name == 'rows')
             {
-                $value = $this->_text_size($value);
+                $value = Form::text_size($value);
             }
             $html .= $name . "='" . $value . "' "; 
         }
@@ -74,15 +74,15 @@ class Form
         return $html;
     }
 
-    public function hidden($object, $name)
+    public static hidden($object, $name)
     {
-        return "<input type='hidden' class='input' name='" . $this->fname($object, $name) . "' value='" . $object->$name . "'/>";
+        return "<input type='hidden' class='input' name='" . Form::fname($object, $name) . "' value='" . $object->$name . "'/>";
     }
 
-    public function select($object, $name, $options, $display=null, $class='input')
+    public static select($object, $name, $options, $display=null, $class='input')
     {
         $cname= Meta::classname_only($object::classname());
-        $html= "<select id='".$cname."_".$object->id."_$name' class='$class' name='".$this->fname($object, $name)."'>";
+        $html= "<select id='".$cname."_".$object->id."_$name' class='$class' name='".Form::fname($object, $name)."'>";
         foreach($options as $k=>$o)
         {
             if (is_object($o))
@@ -105,7 +105,7 @@ class Form
         return $html;
     }
 
-    public function form_select_simple($name, $options, $select=null, $class='input', $id=null)
+    public static form_select_simple($name, $options, $select=null, $class='input', $id=null)
     {
         $html="<select id='$id' class='$class' name='$name'>";
     
@@ -121,7 +121,7 @@ class Form
     }
 
 
-    public function form_checkbox($object, $name, $value=null, $label=null, $class='input')
+    public static form_checkbox($object, $name, $value=null, $label=null, $class='input')
     {
         $checked= false;
 
@@ -134,14 +134,14 @@ class Form
         $html= "<input onchange='toggle_checkbox(\"$id\", \"$value\")' class='$class' id='$id' type='checkbox' name='$id' value='".$value."' $checked />";
 
         if ($checked)
-            $html.= "<input type='hidden' id='hidden_checkbox_$id' name='".$this->fname($object, $name)."' value='".$object->$name."'/>";
+            $html.= "<input type='hidden' id='hidden_checkbox_$id' name='".Form::fname($object, $name)."' value='".$object->$name."'/>";
         else
-            $html.= "<input type='hidden' id='hidden_checkbox_$id' name='".$this->fname($object, $name)."' value=''/>";
+            $html.= "<input type='hidden' id='hidden_checkbox_$id' name='".Form::fname($object, $name)."' value=''/>";
 
         return $html;
     }
 
-    public function form_checkbox_simple($name, $value, $checked=false, $label=null, $class='input', $id=null)
+    public static form_checkbox_simple($name, $value, $checked=false, $label=null, $class='input', $id=null)
     {
         if ($checked)
             $checked= "checked='checked'";
@@ -165,12 +165,12 @@ class Form
         return $html;
     }
 
-    public function form_radio($object, $name, $values, $class='input', $list_vertically=false)
+    public static form_radio($object, $name, $values, $class='input', $list_vertically=false)
     {
         $id= md5($name."_".$object->id);
         $id_ploof= Meta::classname_only($object->classname())."_".$object->id."_$name";
         $hidden_val = ($object->$name == null) ? 0 : $object->$name;
-        $html= "<input type='hidden' id='hidden_radio_$id' name='".$this->fname($object, $name)."' value='". $hidden_val  ."'/>";
+        $html= "<input type='hidden' id='hidden_radio_$id' name='".Form::fname($object, $name)."' value='". $hidden_val  ."'/>";
         
         foreach($values as $k=>$v)
         {
@@ -183,7 +183,7 @@ class Form
         return $html;
     }
 
-    public function form_radio_simple($name, $value, $checked, $class='input', $id=null)
+    public static form_radio_simple($name, $value, $checked, $class='input', $id=null)
     {
         if ($checked)
             $checked= "checked='checked'";
@@ -199,7 +199,7 @@ class Form
     /**
     * Get the form name for an object / value.
     */
-    public function fname($object, $name)
+    public static fname($object, $name)
     {
         if (!$object) throw new Exception("No object for fname");
         $cname= Meta::classname_only($object::classname());

@@ -1,4 +1,4 @@
-#!/usr/local/lsws/lsphp5/bin/php
+#!/usr/bin/php
 <?php
 namespace core;
 
@@ -10,7 +10,6 @@ include_once 'config/config.php';
 function initialize()
 {
     DB::query("create table if not exists Versioning(id int not null primary key auto_increment, migration int, branch varchar(255))");      
-    
     DB::query("insert into Versioning values(null, 0, 'trunk')");
 }
 

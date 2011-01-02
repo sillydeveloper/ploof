@@ -180,11 +180,12 @@ if (!function_exists("convert_controller_to_object_name"))
 
 /**
  * Autoload classes
- */
+ 
 function __autoload($class_name) 
 {
     include str_replace("\\", "/", $class_name).".php";
 }
+*/
 
 /**
  * Return name if 'current url' matches 'url', or <a href='url'>name</a>.
@@ -300,26 +301,12 @@ function get_query_string($url)
 
 function form_start($action, $id=null)
 {
-    if ($_REQUEST['ajax'])
-        $html= "<form method=POST class='ajax_form' action=\"$action\"";
-    else
-        $html= "<form method=POST action=\"$action\"";
-        
-    $html.= ($id) ? " id='$id'>" : ">"; 
-        
-    $html.= "<input type='hidden' name='form_content' value='1'/>";
-
-    if ($_REQUEST["parent"])
-    {
-        $html.= "<input type='hidden' name='".$_REQUEST['parent']::object()."_id' value='".$_REQUEST['parentid']."'/>";
-    }
-    
-    return $html;
+    return Form::start($action, $id);
 }
 
 function form_end()
 {
-    return "</form>";
+    return Form::end();
 }
 
 /**
@@ -327,28 +314,12 @@ function form_end()
  */
 function form_text_size($size_name)
 {
-    $size = $size_name;
-    switch (strtolower($size_name))
-    {
-        case 'x-small': $size = 4; break;
-        case 'small': $size = 10; break;
-        case 'medium': $size = 20; break;
-        case 'large': $size = 30; break;
-        case 'x-large': $size = 45; break;
-        case 'xx-large': $size = 80; break;
-    }
-    return $size;
+    return Form::text_size($size_name);
 }
 
 function form_text($object, $name, $title=null, $class=null, $size=null)
 {
-    if ($title === null) $title = '';
-    if ($class === null) $class = 'input';
-    if ($size === null) $size = '';
-    $size = form_text_size($size);
-    
-    $cname= classname_only($object::classname());
-    return "<input id='".$cname."_".$object->id."_$name' type='text' class='$class' name='".fname($object, $name)."' value=\"".htmlentities($object->$name)."\" title=\"$title\" size=\"$size\" />";
+    return Form::text($object, $name, array('title'=>$title, 'class'=>$class, 'size'=>$size));
 }
 
 function form_textarea($object, $name, $title=null, $class=null, $rows=null, $cols=null)

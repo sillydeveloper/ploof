@@ -28,19 +28,35 @@ class File
     */
     public function render($os_file_name, $user_file_name)
     {
-	if(!file_exists($os_file_name))
+    	if(!file_exists($os_file_name))
         {
-	    throw new ApplicationException("File $os_file_name Not found");
+    	    throw new ApplicationException("File $os_file_name Not found");
         }
 
-	// header("Cache-control: none");
-	header("Pragma: private");
-	header("Cache-control: private, must-revalidate");
-	header("Content-Type: ". $this->parse_content_type($os_file_name));
-	header('Content-Disposition: attachment; filename="'.$user_file_name.'"');
-	$content = file_get_contents ($os_file_name);
-	print($content);
-	exit;
+    	// header("Cache-control: none");
+    	header("Pragma: private");
+    	header("Cache-control: private, must-revalidate");
+    	header("Content-Type: ". $this->parse_content_type($os_file_name));
+    	header('Content-Disposition: attachment; filename="'.$user_file_name.'"');
+    	$content = file_get_contents ($os_file_name);
+    	print($content);
+    	exit;
+    }
+    
+    static function list_files($directory,$exempt = array('.','..','.ds_store','.git'),$files = array()) 
+    { 
+        $handle = opendir($directory); 
+        while(false !== ($resource = readdir($handle))) { 
+            if(!in_array(strtolower($resource),$exempt)) { 
+                if(is_dir($directory.$resource.'/')) 
+                    array_merge($files, 
+                        self::list_files($directory.$resource.'/',$exempt,$files)); 
+                else 
+                    $files[] = $directory.$resource; 
+            } 
+        } 
+        closedir($handle); 
+        return $files; 
     }
 
 }

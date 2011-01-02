@@ -1,7 +1,7 @@
 <?
 namespace core;
 
-class MySQLi extends Ploof
+class MySQLi extends core\DB
 {
     private static $db;
     public $connect_id;
