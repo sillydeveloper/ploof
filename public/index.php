@@ -16,7 +16,7 @@ if (!$_REQUEST["ajax"])
 else
 {
     $action= ($_REQUEST["action"]) ? $_REQUEST["action"] : DEFAULT_ACTION;
-    render("/$controller/$action/".$_REQUEST["id"]);
+    Controller::render("/$controller/$action/".$_REQUEST["id"]);
 }
 
 

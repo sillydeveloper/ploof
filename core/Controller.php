@@ -156,7 +156,7 @@ class Controller extends Ploof
                 {
                     $$name= $value;
                 }
-
+                
                 $view_action = "../view/".classname_only(static::classname())."/".$action.VIEW_EXTENSION;
                 if (file_exists($view_action))
                 {
@@ -216,7 +216,7 @@ class Controller extends Ploof
     /**
     * Render controller's action, using id and/or an array of assigns.
     */
-    public function render($url, $assigns=null)
+    public static function render($url, $assigns=null)
     {
         $split= URL::get_url_parts($url);
         if (count($split) > 3)
@@ -244,14 +244,14 @@ class Controller extends Ploof
     /**
     * Should be called in your layout where you want the main content pulled in.
     */
-    public function render_main()
+    public static function render_main()
     {
         $controller= ($_REQUEST["controller"]) ? $_REQUEST["controller"] : DEFAULT_CONTROLLER;    
         $action = ($_REQUEST["action"]) ? $_REQUEST['action'] : DEFAULT_ACTION;
         $id = ($_REQUEST["id"]) ? $_REQUEST['id'] : null;
         $_REQUEST["main_controller"]= $controller;
         $_REQUEST["main_action"]= $action;
-        $this->render("/$controller/$action/$id");
+        Controller::render("/$controller/$action/$id");
     }
 
     static function classname()

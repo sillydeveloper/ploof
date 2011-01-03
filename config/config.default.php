@@ -115,7 +115,5 @@ define("VIEW_EXTENSION", ".html");
 define('IN_UNIT_TESTING', 0); 
 
 require_once "config.application.php";
-require_once "application.php";
-
 require_once "fun.php";
 ?>

@@ -10,42 +10,42 @@ function rep($str,$c)
 
 function parse_content_type($file_name)
 {
-    return File::parse_content_type($file_name);
+    return core\File::parse_content_type($file_name);
 }
 
 function render_file($os_file_name, $user_file_name)
 {
-    File::render($os_file_name, $user_file_name);
+    core\File::render($os_file_name, $user_file_name);
 }
 
 function sum_closure($elements, $closure_function)
 {
-    return Math::sum_closure($elements, $closure_function);
+    return core\Math::sum_closure($elements, $closure_function);
 }
 
 function sort_by_method(&$objects, $direction='A', $sortkey_function)
 {
-    return Sort::by_method($objects $direction, $sortkey_function);
+    return core\Sort::by_method($objects, $direction, $sortkey_function);
 }
 
 function format_date($d)
 {
-    return Format::date($d);
+    return core\Format::date($d);
 }
 
 function format_date_sql($d)
 {
-    return Format::date_sql($d);
+    return core\Format::date_sql($d);
 }
 
 function format_float($f)
 {
-    return Format::float($f);
+    return core\Format::float($f);
 }
 
 function convert_controller_to_object_name($name)
 {
-    return Meta::convert_controller_to_object_name($name);
+    return core\Meta::convert_controller_to_object_name($name);
 }
 
 /**
@@ -54,7 +54,7 @@ function convert_controller_to_object_name($name)
  */
 function match_or_link($url, $name)
 {
-    return URL::match_or_link($url, $name);
+    return core\URL::match_or_link($url, $name);
 }
 
 /**
@@ -62,7 +62,7 @@ function match_or_link($url, $name)
  */
 function render($url, $assigns=null)
 {
-    Controller::render($url, $assigns);
+    core\Controller::render($url, $assigns);
 }
 
 /**
@@ -70,7 +70,7 @@ function render($url, $assigns=null)
  */
 function render_main()
 {
-    Controller::render_main();
+    core\Controller::render_main();
 }
 
 /** 
@@ -78,7 +78,7 @@ function render_main()
  */
 function classname_only($classname)
 {
-    return Meta::classname_only($classname_only);
+    return core\Meta::classname_only($classname);
 }
 
 /** 
@@ -86,7 +86,7 @@ function classname_only($classname)
  */
 function namespace_only($classname)
 {
-    return Meta::namespace_only($classname);
+    return core\Meta::namespace_only($classname);
 }
 
 /**
@@ -94,7 +94,7 @@ function namespace_only($classname)
  */
 function url_matches($url_to_match_against_uri)
 {
-    return URL::url_matches($url_to_match_against_uri);
+    return core\URL::url_matches($url_to_match_against_uri);
 }       
 
 
@@ -103,12 +103,12 @@ function url_matches($url_to_match_against_uri)
  */
 function get_url_parts($url)
 {
-    return URL::get_url_parts($url);
+    return core\URL::get_url_parts($url);
 }
 
 function get_query_string($url)
 {
-    return URL::get_query_string($url);
+    return core\URL::get_query_string($url);
 }
 
 //--------------------------------------------------
@@ -117,12 +117,12 @@ function get_query_string($url)
 
 function form_start($action, $id=null)
 {
-    return Form::start($action, $id);
+    return core\Form::start($action, $id);
 }
 
 function form_end()
 {
-    return Form::end();
+    return core\Form::end();
 }
 
 /**
@@ -130,17 +130,17 @@ function form_end()
  */
 function form_text_size($size_name)
 {
-    return Form::text_size($size_name);
+    return core\Form::text_size($size_name);
 }
 
 function form_text($object, $name, $title=null, $class=null, $size=null)
 {
-    return Form::text($object, $name, array('title'=>$title, 'class'=>$class, 'size'=>$size));
+    return core\Form::text($object, $name, array('title'=>$title, 'class'=>$class, 'size'=>$size));
 }
 
 function form_textarea($object, $name, $title=null, $class=null, $rows=null, $cols=null)
 {
-    return Form::textarea($object, $name, array('title'=>$title, 'class'=>$class, 'rows'=>$rows, 'cols'=>$cols));
+    return core\Form::textarea($object, $name, array('title'=>$title, 'class'=>$class, 'rows'=>$rows, 'cols'=>$cols));
 }
 
 function form_text_simple($name, $value, $title=null, $class=null, $id=null, $size=null)
