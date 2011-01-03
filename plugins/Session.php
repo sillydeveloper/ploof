@@ -1,7 +1,7 @@
 <?php
-namespace core;
+namespace plugins;
 
-class Session extends Ploof
+class Session extends core\AbstractDB
 {
 
    /**

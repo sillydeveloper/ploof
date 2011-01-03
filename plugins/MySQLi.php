@@ -1,7 +1,7 @@
 <?
-namespace core;
+namespace plugins;
 
-class MySQLi extends core\DB
+class MySQLi extends core\AbstractDB
 {
     private static $db;
     public $connect_id;

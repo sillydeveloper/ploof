@@ -1,7 +1,7 @@
 <?php
-namespace core;
+namespace plugins;
 
-class PDO_MySQL extends Ploof 
+class PDO_MySQL extends core\AbstractDB 
 {
    
    /**

@@ -30,7 +30,7 @@ class File
     {
     	if(!file_exists($os_file_name))
         {
-    	    throw new ApplicationException("File $os_file_name Not found");
+    	    throw new exception\PloofException("File $os_file_name Not found");
         }
 
     	// header("Cache-control: none");

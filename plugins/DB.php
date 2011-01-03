@@ -1,5 +1,5 @@
 <?php
-namespace core;
+namespace plugins;
 
 class DB extends Ploof 
 {

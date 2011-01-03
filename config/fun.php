@@ -1,144 +1,32 @@
 <?
+// NOTE: This file will be DEPRECATED.
+
 function rep($str,$c)
 {
     for ($i=0; $i<$c; $i++) $ret=$ret.$str;
     return $ret;
 }
 
-function walk_object($o, $level)
-{
-    if (!$o) { print "nothing"; return; }
-    //print "debug_zval_dump = " . debug_zval_dump(&$o);
-    $vars = get_object_vars($o);
-    //var_dump( array_keys($vars));
-    //print "<pre>"; var_dump($vars); print "</pre>";
-    foreach ($vars as $k => $v)
-    {
-        $type = gettype($v);
-        if ($k == "fields" or $k == 'objects') 
-        {
-            walk_array($v, $level+1);
-        }
-//        if ($k == 'parent')
-//        {
-//            walk_object($v, $level+1);
-//        }
-        
-    }
-}
-    
-function walk_array($a, $level=1)
-{
-    if ($level > 12) return;
-    if (!is_array($a)) return;
-    foreach ($a as $k => $v)
-    {
-        $type = gettype($v);
-        if (is_object($v) )
-        {
-            print rep('&nbsp;',$level*2);
-            print "$k [$type] ". get_class($v);
-            //if ($k == 'id') print $v;
-            print "\n";
-        }
-        if (is_object($v)) 
-        {
-            walk_object($v, $level+1);
-        }
-    }
-}
-
-/**
-* Determines the Content-Type for a given file
-* 
-* @param string $file_name
-*/
 function parse_content_type($file_name)
 {
-    $ext = array_pop(explode(".", $file_name));
-
-    $supported_types = array('doc', 'pdf', 'ppt', 'png', 'jpg', 'xls');
-    if (!in_array($ext, $supported_types))
-    {
-        throw new Exception('Unsupported extension: ' . $ext . ' from file name ' . $file_name);
-    }
-    return 'application/'.strtolower($ext);
+    return File::parse_content_type($file_name);
 }
-    
-/**
-* Outputs a single file in response to HTTP get
-*     
-* @param string $os_file_name Full path file name for file
-* @param string $user_file_name File name displayed to the user
-*/
+
 function render_file($os_file_name, $user_file_name)
 {
-    if(!file_exists($os_file_name))
-        throw new ApplicationException("File $os_file_name Not found");
-
-    // header("Cache-control: none");
-    header("Pragma: private");
-    header("Cache-control: private, must-revalidate");
-    header("Content-Type: ".parse_content_type($os_file_name));
-    header('Content-Disposition: attachment; filename="'.$user_file_name.'"');
-    $content = file_get_contents ($os_file_name);
-    print($content);
-    exit;
+    File::render($os_file_name, $user_file_name);
 }
 
-
-/**
-* Returns a sum of $closure_function applied to all $elements
-* 
-* @param mixed $elements            array of objects or values
-* @param mixed $closure_function    annonymous function that accepts single parameter and return numeric value 
-*/
 function sum_closure($elements, $closure_function)
 {
-    $sum = 0;
-    foreach ($elements as $element) {
-        $sum += $closure_function($element);
-    }
-    return $sum;
+    return Math::sum_closure($elements, $closure_function);
 }
 
-/**
-* Sorts an array of objects, in place, using a user-defined sortkey function
-*     
-* @param array $objects Array of objects to be sorted in place
-* @param string $direction 'D' for descending, otherwise defaults to ascending sort
-* @param function $sortkey_function annonymous function that takes object as sole parameter and returns sortkey
-* 
-* Sortkey can return either a numeric or string, but must be the same for all objects in this sort
-*/
 function sort_by_method(&$objects, $direction='A', $sortkey_function)
 {
-    // Build array of pairs ('sortkey', 'object')
-    $meta_array = array();
-    foreach ($objects as $obj) $meta_array[] = array('sortkey'=>$sortkey_function($obj), 'object'=>$obj);
-    
-    // Sort array of pairs
-    if ($direction == 'D') 
-    {
-        usort($meta_array, function($a, $b)
-            { 
-                return ($a['sortkey']==$b['sortkey'] ? 0 : ($a['sortkey']<$b['sortkey'] ? 1 : -1)); 
-            } );
-    }
-    else 
-    {
-        usort($meta_array, function($a, $b)
-            { 
-                return ($a['sortkey']==$b['sortkey'] ? 0 : ($a['sortkey']<$b['sortkey'] ? -1 : 1)); 
-            } );
-    }
-    
-    // Flatten array of pairs back into original array of object
-    $objects = array();
-    foreach ($meta_array as $meta_obj) $objects[] = $meta_obj['object'];
+    return Sort::by_method($objects $direction, $sortkey_function);
 }
             
-
 if (!function_exists("format_date"))
 {
     function format_date($d)
@@ -177,15 +65,6 @@ if (!function_exists("convert_controller_to_object_name"))
         return substr($name, 0, strlen($name)-1);
     }
 }
-
-/**
- * Autoload classes
- 
-function __autoload($class_name) 
-{
-    include str_replace("\\", "/", $class_name).".php";
-}
-*/
 
 /**
  * Return name if 'current url' matches 'url', or <a href='url'>name</a>.
@@ -324,13 +203,15 @@ function form_text($object, $name, $title=null, $class=null, $size=null)
 
 function form_textarea($object, $name, $title=null, $class=null, $rows=null, $cols=null)
 {
+    return Form::textarea($object, $name, array('title'=>$title, 'class'=>$class, 'rows'=>$rows, 'cols'=>$cols));
+    /*
     if ($title === null) $title = '';
     if ($class === null) $class = 'input';
     if ($rows === null) $rows = 4;
     if ($cols === null) $cols = 19;
     
     $cname= classname_only($object::classname());
-    return "<textarea id='".$cname."_".$object->id."_$name' class='$class' name='".fname($object, $name)."' title=\"$title\" rows=\"$rows\" cols=\"$cols\">" . htmlentities($object->$name) . "</textarea>";
+    return "<textarea id='".$cname."_".$object->id."_$name' class='$class' name='".fname($object, $name)."' title=\"$title\" rows=\"$rows\" cols=\"$cols\">" . htmlentities($object->$name) . "</textarea>";*/
 }
 
 function form_text_simple($name, $value, $title=null, $class=null, $id=null, $size=null)
