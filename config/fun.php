@@ -1,5 +1,6 @@
 <?
-// NOTE: This file will be DEPRECATED.
+// NOTE: This file will be DEPRECATED. You are highly advised NOT to use these methods; instead
+//  use the objects they reference.
 
 function rep($str,$c)
 {
@@ -26,44 +27,25 @@ function sort_by_method(&$objects, $direction='A', $sortkey_function)
 {
     return Sort::by_method($objects $direction, $sortkey_function);
 }
-            
-if (!function_exists("format_date"))
+
+function format_date($d)
 {
-    function format_date($d)
-    {
-        if (!$d or strtotime($d) == 0) return "";
-        return date("m/d/Y", strtotime($d));
-    }
+    return Format::date($d);
 }
 
-if (!function_exists("format_date_sql"))
+function format_date_sql($d)
 {
-    function format_date_sql($d)
-    {
-        if (!$d or strtotime($d) == 0) return "";
-        return date("Y-m-d H:i", strtotime($d));
-    }
+    return Format::date_sql($d);
 }
 
-if (!function_exists("format_float"))
+function format_float($f)
 {
-    function format_float($f)
-    {
-        if (!is_numeric($f)) return "";
-        if (is_string($f) and strpos($f,'e')!==false)
-        {
-            $f = sprintf('%F', $f);
-        }
-        return $f;
-    }
+    return Format::float($f);
 }
 
-if (!function_exists("convert_controller_to_object_name"))
+function convert_controller_to_object_name($name)
 {
-    function convert_controller_to_object_name($name)
-    {
-        return substr($name, 0, strlen($name)-1);
-    }
+    return Meta::convert_controller_to_object_name($name);
 }
 
 /**
@@ -72,10 +54,7 @@ if (!function_exists("convert_controller_to_object_name"))
  */
 function match_or_link($url, $name)
 {
-    if (url_matches($url)) 
-        return "<a href='$url' class='menumatch'>$name</a>";
-    else 
-        return "<a href='$url'>$name</a>";
+    return URL::match_or_link($url, $name);
 }
 
 /**
@@ -83,27 +62,7 @@ function match_or_link($url, $name)
  */
 function render($url, $assigns=null)
 {
-    $split= get_url_parts($url);
-    if (count($split) > 3)
-    {
-        $_REQUEST['parent']= $split[0];
-        $_REQUEST['parentid']= $split[1];
-        $controller= $split[2];
-        $action= $split[3];
-        $id= $split[4];
-    }
-    else
-    {
-        $controller= $split[0];
-        $action= $split[1];
-        $id= $split[2];
-    }
-    
-    if (!$id)
-        $id= $_REQUEST["id"];
-    
-    $controller_object= new $controller();
-    $controller_object->call($action, $assigns, $id);
+    Controller::render($url, $assigns);
 }
 
 /**
@@ -111,13 +70,7 @@ function render($url, $assigns=null)
  */
 function render_main()
 {
-
-    $controller= ($_REQUEST["controller"]) ? $_REQUEST["controller"] : DEFAULT_CONTROLLER;    
-    $action = ($_REQUEST["action"]) ? $_REQUEST['action'] : DEFAULT_ACTION;
-    $id = ($_REQUEST["id"]) ? $_REQUEST['id'] : null;
-    $_REQUEST["main_controller"]= $controller;
-    $_REQUEST["main_action"]= $action;
-    render("/$controller/$action/$id");
+    Controller::render_main();
 }
 
 /** 
@@ -125,7 +78,7 @@ function render_main()
  */
 function classname_only($classname)
 {
-    return preg_replace("/([A-Za-z0-9]*\\\\)/", "", $classname);
+    return Meta::classname_only($classname_only);
 }
 
 /** 
@@ -133,7 +86,7 @@ function classname_only($classname)
  */
 function namespace_only($classname)
 {
-    return preg_replace("/(\\\\[A-Za-z0-9]*)$/", "", $classname);
+    return Meta::namespace_only($classname);
 }
 
 /**
@@ -141,21 +94,7 @@ function namespace_only($classname)
  */
 function url_matches($url_to_match_against_uri)
 {
-    $url= $url_to_match_against_uri;
-    $uri= $_SERVER['REQUEST_URI'];
-    
-    if ($url=="/")
-        return ($uri=="/");
-    
-    list($url_con, $url_act, $url_id) = get_url_parts($url);
-    list($uri_con, $uri_act, $uri_id) = get_url_parts($uri);
-        
-    if ($url_con and $url_act and $url_id)
-        return  get_url_parts($url) == get_url_parts($uri);
-    if ($url_con and $url_act)
-        return ($url_con == $uri_con and $url_act == $uri_act);
-    if ($url_con)
-        return ($url_con == $uri_con);
+    return URL::url_matches($url_to_match_against_uri);
 }       
 
 
@@ -164,14 +103,12 @@ function url_matches($url_to_match_against_uri)
  */
 function get_url_parts($url)
 {
-    $query_str= explode("?", $url);
-    return explode("/",substr($query_str[0], 1)); // trim the front slash and split
+    return URL::get_url_parts($url);
 }
 
 function get_query_string($url)
 {
-    $query_str= explode("?", $url);
-    return $query_str[1]; // trim the front slash and split
+    return URL::get_query_string($url);
 }
 
 //--------------------------------------------------
@@ -204,14 +141,6 @@ function form_text($object, $name, $title=null, $class=null, $size=null)
 function form_textarea($object, $name, $title=null, $class=null, $rows=null, $cols=null)
 {
     return Form::textarea($object, $name, array('title'=>$title, 'class'=>$class, 'rows'=>$rows, 'cols'=>$cols));
-    /*
-    if ($title === null) $title = '';
-    if ($class === null) $class = 'input';
-    if ($rows === null) $rows = 4;
-    if ($cols === null) $cols = 19;
-    
-    $cname= classname_only($object::classname());
-    return "<textarea id='".$cname."_".$object->id."_$name' class='$class' name='".fname($object, $name)."' title=\"$title\" rows=\"$rows\" cols=\"$cols\">" . htmlentities($object->$name) . "</textarea>";*/
 }
 
 function form_text_simple($name, $value, $title=null, $class=null, $id=null, $size=null)
