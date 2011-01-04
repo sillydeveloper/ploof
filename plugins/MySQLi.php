@@ -3,18 +3,28 @@ namespace plugins;
 
 class MySQLi extends core\AbstractDB
 {
-    private static $db;
+   /**
+    *  The db handle. 
+    *
+    *  @var object
+    *  @access private
+    */
+    private $_dbh;
+
     public $connect_id;
     
     public function __construct($host, $database, $username, $password)
     {
-        $this->connect_id = \mysqli_connect($host, $username, $password, $database) or die("Could not connect to mysqli");
+        $this->_dbh = new mysqli($host, $username, $password, $database);
+        if ($this->_dbh->connect_error) {
+            //die('Connect Error (' . $this->_dbh->connect_errno . ') ' . $this->_dbh->connect_error);
+            // How to handle error reporting?
+        }
     }
 
     public function insert_id()
     {   
-        $id= \mysqli_insert_id($this->connect_id);
-        return $id;
+        return $this->_dbh->insert_id;
     }
     
     public function fetch_array($res)
@@ -51,15 +61,32 @@ class MySQLi extends core\AbstractDB
         return mysqli_num_rows($res);
     }
     
-    public static function query($sql)
+    public static function query($sql, $parameters=null)
     { 
-        return $this->run_sql($sql); 
+        $statement = $this->_dbh->stmt_init();
+        $statement->prepare($sql);
+        if ( is_array($parameters) ) 
+        {
+            foreach ( $parameters as $field => &$value ) 
+            {
+                $statement->bindParam(':' . $field, $value);
+            }
+        }
+        try 
+        {
+            $statement->execute();
+    	}
+        catch ( PDOException $e ) 
+        {
+            // How to handle error reporting?
+            $this->_affected_rows = 0;
+            return false;
+        }
+    
+    	$this->_affected_rows = $statement->rowCount();
+    	return $statement;
     }
     
-    public function run_sql($sql)
-    {
-        return \mysqli_query($this->connect_id, $sql);// or die("Could not execute query: \n".mysqli_error());
-    }
 }
 
 ?>

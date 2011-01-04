@@ -3,8 +3,7 @@ namespace core;
 
 abstract class DB extends Ploof
 {
-    private static $db;
-    public $connect_id;
+    private $_dbh;
     
     abstract function __construct($username, $password, $host, $database);
     /*
@@ -21,28 +20,11 @@ abstract class DB extends Ploof
         }
     }*/
 
-    abstract static function get_instance($db=DATABASE_NAME, $u=DATABASE_USER, $p=DATABASE_PASS, $h=DATABASE_HOST);
-    /*{
-        if (IN_UNIT_TESTING)
-            self::$db = new DB(TEST_DATABASE_USER, TEST_DATABASE_PASS, TEST_DATABASE_HOST, TEST_DATABASE_NAME);
-        elseif (empty(self::$db))
-            self::$db = new DB($u, $p, $h, $db);
-        return self::$db;
-    }*/
+    abstract public function affected_rows();
     
-    abstract static function insert_id();
-    /*
-    {   
-        if (USE_MYSQLI)
-            $id= \mysqli_insert_id(self::getInstance()->connect_id);
-        else 
-            $id= \mysql_insert_id();
-        
-        
-        return $id;
-    } */
-    
-    abstract static function fetch_array($res);
+    abstract public function close();
+
+    abstract static function fetch($res);
     /*
     {
         if ($res)
@@ -55,7 +37,7 @@ abstract class DB extends Ploof
         return false;
     } */
     
-    abstract static function fetch_assoc($res);
+    abstract static function fetch_all($res);
     /*
     {
         if ($res)
@@ -67,6 +49,32 @@ abstract class DB extends Ploof
         }
         return false;
     } */
+
+    abstract static function insert($table, $data);
+    abstract public function insert_id();
+    /*
+    {   
+        if (USE_MYSQLI)
+            $id= \mysqli_insert_id(self::getInstance()->connect_id);
+        else 
+            $id= \mysql_insert_id();
+        
+        
+        return $id;
+    } */
+    abstract static function is_valid_id($id);
+    
+    abstract static function num_rows();
+    /*
+    {
+        return mysqli_num_rows($res);
+    }*/
+
+    abstract static function query($sql);
+    /*
+    { 
+        return self::getInstance()->run_sql($sql); 
+    }*/
     
     abstract static function query_first($sql);
     /*
@@ -79,21 +87,7 @@ abstract class DB extends Ploof
         
         return false;
     }*/
-    
-    abstract static function num_rows($res);
-    /*
-    {
-        return mysqli_num_rows($res);
-    }*/
-    
-    abstract static function query($sql);
-    /*
-    { 
-        return self::getInstance()->run_sql($sql); 
-    }*/
-    
-    abstract static function insert($table, $data);
-    abstract static function is_valid_id($id);
+
     abstract static function update($table, $data, $where);
     abstract public function upsert($table, $insert_data, $update_data);
     
