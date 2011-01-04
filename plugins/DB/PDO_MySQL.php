@@ -1,9 +1,8 @@
 <?php
 namespace plugins;
 
-class DB extends Ploof 
+class PDO_MySQL extends core\AbstractDB 
 {
-   
    /**
     *  The db handle. 
     *
@@ -21,18 +20,38 @@ class DB extends Ploof
     private $_affected_rows = 0;
 
    /**
-    *  Constructor.
-    * 
-    *  @access private
+    *  Connects and selects database.
+    *
+    *  @access public
     *  @return void
     */
-    public function __construct() 
+    public function __construct($host, $database, $username, $password) 
     {
-        $this->_connect();
+        $dsn = 'mysql:host=' . $host . ';dbname=' . $database; 
+        try 
+        {
+            $this->_dbh = new PDO($dsn, $username, $password);
+            $this->_dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        }
+        catch ( PDOException $e ) 
+        {
+            // How to handle error reporting?
+        }
     }
 
    /**
-    *  Close the connection.
+    *  Returns the number of rows affected by the last DELETE, INSERT, or UPDATE query.
+    *
+    *  @access public
+    *  @return int
+    */
+    public function affected_rows() 
+    {
+    	return $this->_affected_rows;
+    }
+
+   /**
+    *  Closes the connection.
     *
     *  @access public
     *  @return void
@@ -42,38 +61,6 @@ class DB extends Ploof
         $this->_dbh = null;
     }
     
-   /**
-    *  Connect and select database.
-    *
-    *  @access private
-    *  @return bool
-    */
-    private function _connect() 
-    {
-        if ( IN_UNIT_TESTING )
-        {
-            $dsn = 'mysql:host=' . TEST_DATABASE_HOST . ';dbname=' . TEST_DATABASE_NAME; 
-            $db_user = TEST_DATABASE_USER;
-            $db_pass = TEST_DATABASE_PASS;
-        }
-        else
-        {
-            $dsn = 'mysql:host=' . DATABASE_HOST . ';dbname=' . DATABASE_NAME; 
-            $db_user = DATABASE_USER;
-            $db_pass = DATABASE_PASS;
-        }
-        try 
-        {
-            $this->_dbh = new PDO($dsn, $db_user, $db_pass);
-            $this->_dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        }
-        catch ( PDOException $e ) 
-        {
-            // How to handle error reporting?
-        }
-        return true;
-    }
-
    /**
     *  Fetches the next row from a result set.
     *
@@ -103,7 +90,7 @@ class DB extends Ploof
     }
 
    /**
-    *  Returns an array containing all of the result set rows.
+    *  Returns a single column from the next row of a result set or false if there are no more rows.
     *
     *  @param PDOStatement $statement    The PDOStatement object from which to fetch rows.
     *  @param int $column_number         Zero-index number of the column to retrieve from the row.
@@ -116,23 +103,12 @@ class DB extends Ploof
     }
 
    /**
-    *  Returns the number of rows affected by the last DELETE, INSERT, or UPDATE query.
-    *
-    *  @access public
-    *  @return int
-    */
-    public function get_row_count() 
-    {
-    	return $this->_affected_rows;
-    }
-
-   /**
     *  Inserts data by means of an array.
     *
     *  @param string $table         The SQL table to be inserted into.
     *  @param array $data           The array containing the MySQL fields and values.
     *  @access public
-    *  @return int                  The lastInsertID.
+    *  @return bool
     */
     public function insert($table, $data) 
     {
@@ -161,6 +137,17 @@ class DB extends Ploof
         }
 
     	$this->_affected_rows = $statement->rowCount();
+        return true;
+    }
+
+   /**
+    *  Returns the ID of the last inserted row or sequence value.
+    *
+    *  @access public
+    *  @return int
+    */
+    public function insert_id()
+    {
         return $this->_dbh->lastInsertId();
     }
 
@@ -178,6 +165,19 @@ class DB extends Ploof
             return false;
         }
         return true;
+    }
+
+   /**
+    *  Returns the number of rows affected by the last SELECT query.
+    *
+    *  @access public
+    *  @return int       
+    */
+    public function num_rows()
+    {
+        $statement = $this->query('SELECT FOUND_ROWS()');
+        $rows = $this->fetch_column($statement);
+        return $rows;
     }
 
    /**
@@ -309,7 +309,7 @@ class DB extends Ploof
     *  @param array $insert_data      The array containing the MySQL fields and values for the INSERT clause.
     *  @param array $update_data      The array containing the MySQL fields and values for the UPDATE clause.
     *  @access public
-    *  @return int                    The lastInsertID.
+    *  @return bool 
     */
     public function upsert($table, $insert_data, $update_data) 
     {
@@ -346,7 +346,7 @@ class DB extends Ploof
         }
 
     	$this->_affected_rows = $statement->rowCount();
-        return $this->_dbh->lastInsertId();
+        return true; 
     }
 }
 

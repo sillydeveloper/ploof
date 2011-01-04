@@ -3,104 +3,130 @@ namespace core;
 
 abstract class DB extends Ploof
 {
+   /**
+    *  The db handle. 
+    *
+    *  @var object
+    *  @access private
+    */
     private $_dbh;
     
-    abstract function __construct($username, $password, $host, $database);
-    /*
-    {
-        if (USE_MYSQLI)
-            $this->connect_id = \mysqli_connect($host, $username, $password, $database) or die("Could not connect to mysqli");
-        else
-        {
-            $this->connect_id = \mysql_connect($host, $username, $password) or die("Could not connect to mysql");
-            if (IN_UNIT_TESTING)
-                mysql_select_db(TEST_DATABASE_NAME);
-            else
-                mysql_select_db(DATABASE_NAME);
-        }
-    }*/
+   /**
+    *  Connects and selects database.
+    *
+    *  @access public
+    *  @return void
+    */
+    abstract public function __construct($host, $database, $username, $password);
 
+   /**
+    *  Returns the number of rows affected by the last DELETE, INSERT, or UPDATE query.
+    *
+    *  @access public
+    *  @return int
+    */
     abstract public function affected_rows();
     
+   /**
+    *  Closes the connection.
+    *
+    *  @access public
+    *  @return void
+    */
     abstract public function close();
 
-    abstract static function fetch($res);
-    /*
-    {
-        if ($res)
-        {
-            if (USE_MYSQLI)
-                return \mysqli_fetch_array($res);
-            else
-                return \mysql_fetch_array($res);
-        }
-        return false;
-    } */
+   /**
+    *  Fetches the next row from a result set.
+    *
+    *  @param $res                  The SQL result set from which to fetch rows.
+    *  @access public
+    *  @return mixed
+    */
+    abstract public function fetch($res);
     
-    abstract static function fetch_all($res);
-    /*
-    {
-        if ($res)
-        {
-            if (USE_MYSQLI)
-                return \mysqli_fetch_assoc($res);
-            else
-                return \mysql_fetch_assoc($res);
-        }
-        return false;
-    } */
+   /**
+    *  Returns an array containing all of the result set rows.
+    *
+    *  @param $res                  The SQL result set from which to fetch rows.
+    *  @access public
+    *  @return mixed
+    */
+    abstract public function fetch_all($res);
 
-    abstract static function insert($table, $data);
+   /**
+    *  Inserts data by means of an array.
+    *
+    *  @param string $table         The SQL table to be inserted into.
+    *  @param array $data           The array containing the fields and values ($field => $value).
+    *  @access public
+    *  @return bool
+    */
+    abstract public function insert($table, $data);
+
+   /**
+    *  Returns the ID of the last inserted row or sequence value.
+    *
+    *  @access public
+    *  @return int
+    */
     abstract public function insert_id();
-    /*
-    {   
-        if (USE_MYSQLI)
-            $id= \mysqli_insert_id(self::getInstance()->connect_id);
-        else 
-            $id= \mysql_insert_id();
-        
-        
-        return $id;
-    } */
-    abstract static function is_valid_id($id);
-    
-    abstract static function num_rows();
-    /*
-    {
-        return mysqli_num_rows($res);
-    }*/
 
-    abstract static function query($sql);
-    /*
-    { 
-        return self::getInstance()->run_sql($sql); 
-    }*/
+   /**
+    *  Checks that index is a valid, positive integer.
+    *  
+    *  @param int $id               The integer to be checked.
+    *  @access public          
+    *  @return bool
+    */ 
+    abstract public function is_valid_id($id);
     
-    abstract static function query_first($sql);
-    /*
-    {
-        $res= DB::query($sql);
-    
-        $result= DB::fetch_array($res);            
-        if (is_array($result))
-            return array_pop($result);
-        
-        return false;
-    }*/
+   /**
+    *  Returns the number of rows affected by the last SELECT query.
+    *
+    *  @access public
+    *  @return int       
+    */
+    abstract public function num_rows();
 
-    abstract static function update($table, $data, $where);
+   /**
+    *  Executes SQL query.
+    *
+    *  @param string $sql           The SQL query to be executed.
+    *  @access public
+    *  @return resource       
+    */
+    abstract public function query($sql);
+    
+   /**
+    *  Executes SQL query and returns the first row of the results.
+    *
+    *  @param string $sql           The SQL query to be executed.
+    *  @access public
+    *  @return mixed       
+    */
+    abstract public function query_first($sql);
+
+   /**
+    *  Updates query by means of an array.
+    *
+    *  @param string $table         The SQL table to be updated.
+    *  @param array $data           The array containing the fields and values ($field => $value).
+    *  @param string $where         The WHERE clause of the SQL query.
+    *  @access public
+    *  @return bool 
+    */
+    abstract public function update($table, $data, $where);
+
+   /**
+    *  Inserts or updates (if exists) data by means of an array.
+    *
+    *  @param string $table         The SQL table to be inserted into.
+    *  @param array $insert_data    The array containing the fields and values ($field => $value) for the INSERT clause.
+    *  @param array $update_data    The array containing the fields and values ($field => $value) for the UPDATE clause. 
+    *  @access public
+    *  @return bool 
+    */
     abstract public function upsert($table, $insert_data, $update_data);
-    
-    //abstract function run_sql($sql)
-    /*
-    {
-        if (USE_MYSQLI)
-            return \mysqli_query($this->connect_id, $sql);// or die("Could not execute query: \n".mysqli_error());
-        else
-        {
-            return \mysql_query($sql);// or die("Could not execute query: \n".mysql_error());
-        }
-    }*/
 }
 
 ?>
