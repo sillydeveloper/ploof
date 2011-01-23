@@ -20,6 +20,22 @@ class PDO_MySQL extends core\AbstractDB
     private $_affected_rows = 0;
 
    /**
+    *  The result set associated with a prepared statement.
+    *
+    *  @var PDOStatement
+    *  @access private
+    */
+    private $_statement;
+
+   /**
+    *  Controls how the rows will be returned.
+    *
+    *  @var string
+    *  @access private
+    */
+    private $_fetch_style = 'assoc';
+
+   /**
     *  Connects and selects database.
     *
     *  @access public
@@ -62,44 +78,38 @@ class PDO_MySQL extends core\AbstractDB
     }
     
    /**
-    *  Fetches the next row from a result set.
+    *  Fetches the next row from the result set in memory (i.e., the one
+    *  that was created after running query()).
     *
-    *  @param PDOStatement $statement    The PDOStatement object from which to fetch rows.
-    *  @param string $fetch_style        Controls how the rows will be returned.
     *  @access public
     *  @return mixed
     */
-    public function fetch($statement, $fetch_style='assoc') 
+    public function fetch() 
     {
-        $fetch_style = $this->_set_fetch_mode($fetch_style); 
-        return $statement->fetch($fetch_style);
+        return $this->_statement->fetch($this->_fetch_style);
     }
 
    /**
     *  Returns an array containing all of the result set rows.
     *
-    *  @param PDOStatement $statement    The PDOStatement object from which to fetch rows.
-    *  @param string $fetch_style        Controls how the rows will be returned.
     *  @access public
     *  @return mixed
     */
-    public function fetch_all($statement, $fetch_style='assoc') 
+    public function fetch_all() 
     {
-        $fetch_style = $this->_set_fetch_mode($fetch_style); 
-        return $statement->fetchAll($fetch_style);
+        return $this->_statement->fetchAll($this->_fetch_style);
     }
 
    /**
     *  Returns a single column from the next row of a result set or false if there are no more rows.
     *
-    *  @param PDOStatement $statement    The PDOStatement object from which to fetch rows.
     *  @param int $column_number         Zero-index number of the column to retrieve from the row.
     *  @access public
     *  @return mixed
     */
-    public function fetch_column($statement, $column_number=0) 
+    public function fetch_column($column_number=0) 
     {
-        return $statement->fetchColumn($column_number);
+        return $this->_statement->fetchColumn($column_number);
     }
 
    /**
@@ -175,8 +185,8 @@ class PDO_MySQL extends core\AbstractDB
     */
     public function num_rows()
     {
-        $statement = $this->query('SELECT FOUND_ROWS()');
-        $rows = $this->fetch_column($statement);
+        $this->query('SELECT FOUND_ROWS()');
+        $rows = $this->fetch_column();
         return $rows;
     }
 
@@ -186,7 +196,7 @@ class PDO_MySQL extends core\AbstractDB
     *  @param string $sql           The SQL query to be executed.
     *  @param array $parameters     An array containing the parameters to be bound.
     *  @access public
-    *  @return PDOStatement       
+    *  @return bool 
     */
     public function query($sql, $parameters=null) 
     {
@@ -210,7 +220,8 @@ class PDO_MySQL extends core\AbstractDB
         }
     
     	$this->_affected_rows = $statement->rowCount();
-    	return $statement;
+        $this->_statement = $statement;
+    	return true;
     }
 
    /**
@@ -218,14 +229,13 @@ class PDO_MySQL extends core\AbstractDB
     *
     *  @param string $sql                The SQL query to be executed.
     *  @param array $parameters          An array containing the parameters to be bound.
-    *  @param string $fetch_style        Controls how the row will be returned.
     *  @access public
     *  @return mixed       
     */
-    public function query_first($sql, $parameters=null, $fetch_style='assoc') 
+    public function query_first($sql, $parameters=null) 
     {
-        $statement = $this->query($sql . ' LIMIT 1', $parameters);
-        return $this->fetch($statement, $fetch_style);
+        $this->query($sql . ' LIMIT 1', $parameters);
+        return $this->fetch();
     }
 
    /**
@@ -235,7 +245,7 @@ class PDO_MySQL extends core\AbstractDB
     *  @access private
     *  @return int 
     */
-    private function _set_fetch_mode($fetch_style) 
+    public function set_fetch_mode($fetch_style) 
     {
         switch ( $fetch_style ) 
         {
@@ -264,7 +274,7 @@ class PDO_MySQL extends core\AbstractDB
                 $fetch_style = PDO::FETCH_ASSOC;
                 break;
         }
-        return $fetch_style;
+        $this->_fetch_style = $fetch_style;
     }
 
    /**
