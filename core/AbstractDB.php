@@ -63,14 +63,13 @@ abstract class DB extends Ploof
     abstract public function fetch_all();
 
    /**
-    *  Inserts data by means of an array.
+    *  Inserts an object into the database. 
     *
-    *  @param string $table         The SQL table to be inserted into.
-    *  @param array $data           The array containing the fields and values ($field => $value).
+    *  @param obj $obj              The object to be inserted. 
     *  @access public
     *  @return bool
     */
-    abstract public function insert($table, $data);
+    abstract public function insert($obj);
 
    /**
     *  Returns the ID of the last inserted row or sequence value.
@@ -87,7 +86,14 @@ abstract class DB extends Ploof
     *  @access public          
     *  @return bool
     */ 
-    abstract public function is_valid_id($id);
+    public function is_valid_id($id)
+    {
+        if ( !is_int($value) || $value < 1 ) 
+        {
+            return false;
+        }
+        return true;
+    }
     
    /**
     *  Returns the number of rows affected by the last SELECT query.
@@ -116,26 +122,23 @@ abstract class DB extends Ploof
     abstract public function query_first($sql);
 
    /**
-    *  Updates query by means of an array.
+    *  Updates an object in the database.
     *
-    *  @param string $table         The SQL table to be updated.
-    *  @param array $data           The array containing the fields and values ($field => $value).
+    *  @param obj $obj              The object to be updated.
     *  @param string $where         The WHERE clause of the SQL query.
     *  @access public
     *  @return bool 
     */
-    abstract public function update($table, $data, $where);
+    abstract public function update($obj, $where = '1');
 
    /**
-    *  Inserts or updates (if exists) data by means of an array.
+    *  Inserts or updates (if exists) an object in the database.
     *
-    *  @param string $table         The SQL table to be inserted into.
-    *  @param array $insert_data    The array containing the fields and values ($field => $value) for the INSERT clause.
-    *  @param array $update_data    The array containing the fields and values ($field => $value) for the UPDATE clause. 
+    *  @param obj $obj                The object to be upserted.
     *  @access public
     *  @return bool 
     */
-    abstract public function upsert($table, $insert_data, $update_data);
+    abstract public function upsert($obj);
 }
 
 ?>

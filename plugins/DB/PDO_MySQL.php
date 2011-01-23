@@ -160,22 +160,6 @@ class PDO_MySQL extends core\AbstractDB
     }
 
    /**
-    *  Checks that index is a valid, positive integer.
-    *  
-    *  @param int $value      The integer to be checked.
-    *  @access public          
-    *  @return bool
-    */ 
-    public function is_valid_id($value) 
-    {
-        if ( !is_int($value) || $value < 1 ) 
-        {
-            return false;
-        }
-        return true;
-    }
-
-   /**
     *  Returns the number of rows affected by the last SELECT query.
     *
     *  @access public
@@ -276,12 +260,12 @@ class PDO_MySQL extends core\AbstractDB
     }
 
    /**
-    * Updates an object in the database.
+    *  Updates an object in the database.
     *
-    * @param obj $obj              The object to be updated.
-    * @param string $where         The WHERE clause of the SQL query.
-    * @access public
-    * @return bool 
+    *  @param obj $obj              The object to be updated.
+    *  @param string $where         The WHERE clause of the SQL query.
+    *  @access public
+    *  @return bool 
     */
     public function update($obj, $where = '1') 
     {
@@ -316,7 +300,7 @@ class PDO_MySQL extends core\AbstractDB
    /**
     *  Inserts or updates (if exists) an object in the database.
     *
-    *  @param obj $obj                The object to be inserted.
+    *  @param obj $obj                The object to be upserted.
     *  @access public
     *  @return bool 
     */
