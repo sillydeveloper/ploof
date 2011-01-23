@@ -113,32 +113,30 @@ class PDO_MySQL extends core\AbstractDB
     }
 
    /**
-    *  Inserts data by means of an array.
+    *  Inserts an object into the database. 
     *
-    *  @param string $table         The SQL table to be inserted into.
-    *  @param array $data           The array containing the MySQL fields and values.
+    *  @param obj $obj        The object to be inserted. 
     *  @access public
     *  @return bool
     */
-    public function insert($table, $data) 
+    public function insert($obj) 
     {
+        $table = $this->classname_only($obj);
+        $properties = get_object_vars($obj);
+
     	$sql = 'INSERT INTO `' . $table . '` ';
         
-    	$fields = ''; 
-        $values = '';
-    	foreach ( $data as $key => $val ) 
-        {
-    		$fields .= '`' . $key . '`, ';
-            $values .= ':' . $key . ', ';
-    	}
+        $property_names = array_keys($properties);
+    	$fields = '`' . implode('`, `', $property_names) . '`';
+        $values = ':' . implode(', :', $property_names);
     
-    	$sql .= '(' . rtrim($fields, ', ') . ') VALUES (' . rtrim($values, ', ') . ')';
+    	$sql .= '(' . $fields . ') VALUES (' . $values . ')';
 
     	$statement = $this->_dbh->prepare($sql);
 
         try 
         {
-            $statement->execute($data);
+            $statement->execute($properties);
     	}
         catch ( PDOException $e ) 
         {
@@ -278,21 +276,24 @@ class PDO_MySQL extends core\AbstractDB
     }
 
    /**
-    * Updates query by means of an array.
+    * Updates an object in the database.
     *
-    * @param string $table         The SQL table to be updated.
-    * @param array $data           The array containing the MySQL fields and values.
+    * @param obj $obj              The object to be updated.
     * @param string $where         The WHERE clause of the SQL query.
     * @access public
     * @return bool 
     */
-    public function update($table, $data, $where = '1') 
+    public function update($obj, $where = '1') 
     {
+        $table = $this->classname_only($obj);
+        $properties = get_object_vars($obj);
+
     	$sql = 'UPDATE `' . $table . '` SET ';
     
-    	foreach ( $data as $key => $val ) 
+        $property_names = array_keys($properties);
+    	foreach ( $property_names as $name ) 
         {
-            $sql .= '`' . $key . '`=:' . $key . ', ';
+            $sql .= '`' . $name . '`=:' . $name . ', ';
     	}
     
     	$sql = rtrim($sql, ', ') . ' WHERE ' . $where;
@@ -300,7 +301,7 @@ class PDO_MySQL extends core\AbstractDB
 
         try 
         {
-            $statement->execute($data);
+            $statement->execute($properties);
     	}
         catch ( PDOException $e ) 
         {
@@ -313,36 +314,31 @@ class PDO_MySQL extends core\AbstractDB
     }
 
    /**
-    *  Inserts or updates (if exists) data by means of an array.
+    *  Inserts or updates (if exists) an object in the database.
     *
-    *  @param string $table           The SQL table to be inserted into.
-    *  @param array $insert_data      The array containing the MySQL fields and values for the INSERT clause.
-    *  @param array $update_data      The array containing the MySQL fields and values for the UPDATE clause.
+    *  @param obj $obj                The object to be inserted.
     *  @access public
     *  @return bool 
     */
-    public function upsert($table, $insert_data, $update_data) 
+    public function upsert($obj) 
     {
+        $table = $this->classname_only($obj);
+        $properties = get_object_vars($obj);
+
     	$sql = 'INSERT INTO `' . $table . '` ';
         
-    	$fields = ''; 
-        $values = '';
-    	foreach ( $insert_data as $key => $val ) 
-        {
-            $fields .= '`' . $key . '`, ';
-            $values .= ':' . $key . ', ';
-    	}
+        $property_names = array_keys($properties);
+    	$fields = '`' . implode('`, `', $property_names) . '`';
+        $values = ':' . implode(', :', $property_names);
     
-    	$sql .= '(' . rtrim($fields, ', ') . ') VALUES (' . rtrim($values, ', ') . ')';
-
         $sql .= ' ON DUPLICATE KEY UPDATE `' . PRIMARY_KEY . '`=LAST_INSERT_ID(`' . PRIMARY_KEY . '`), ';
-        foreach ( $update_data as $key=> $val) 
-        {
-            $sql .= '`' . $key . '`=:update_data_' . $key . ', ';
-            $insert_data['update_data_' . $key] = $val;
-        }
-        $sql = rtrim($sql, ', ');
 
+    	foreach ( $property_names as $name ) 
+        {
+            $sql .= '`' . $name . '`=:' . $name . ', ';
+    	}
+
+        $sql = rtrim($sql, ', ');
     	$statement = $this->_dbh->prepare($sql);
 
         try 

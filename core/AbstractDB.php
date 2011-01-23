@@ -27,6 +27,17 @@ abstract class DB extends Ploof
     */
     abstract public function affected_rows();
     
+   /** 
+    *  Returns the classname without the namespace. 
+    *
+    *  @param object|string  $obj    Object or classname from which to retrieve name 
+    *  @return string
+    */
+    public function classname_only($obj)
+    {
+        return core\Meta::classname_only($obj);
+    }
+
    /**
     *  Closes the connection.
     *
@@ -38,20 +49,18 @@ abstract class DB extends Ploof
    /**
     *  Fetches the next row from a result set.
     *
-    *  @param $res                  The SQL result set from which to fetch rows.
     *  @access public
     *  @return mixed
     */
-    abstract public function fetch($res);
+    abstract public function fetch();
     
    /**
     *  Returns an array containing all of the result set rows.
     *
-    *  @param $res                  The SQL result set from which to fetch rows.
     *  @access public
     *  @return mixed
     */
-    abstract public function fetch_all($res);
+    abstract public function fetch_all();
 
    /**
     *  Inserts data by means of an array.
@@ -93,7 +102,7 @@ abstract class DB extends Ploof
     *
     *  @param string $sql           The SQL query to be executed.
     *  @access public
-    *  @return resource       
+    *  @return bool       
     */
     abstract public function query($sql);
     
