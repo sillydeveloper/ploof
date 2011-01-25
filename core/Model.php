@@ -74,16 +74,20 @@ class Model extends Ploof
         return (array_search($classname, $this->requires) !== false);
     }
     
-    private function set_field_types($nullify= false)
+    private function set_field_types($nullify= false, $db= null)
     {
-        $qry= $this->db->get_columns(Meta::classname_only(static::classname()));
-        //DB::query("show columns from ".classname_only(static::classname()));
-        while($row= DB::fetch_assoc($qry))
+        if ($db) $this->db= $db;
+        if ($this->db)
         {
-            if ($nullify)
-                $this->fields[$row["Field"]]= null;
+            $qry= $this->db->get_columns(Meta::classname_only(static::classname()));
+            //DB::query("show columns from ".classname_only(static::classname()));
+            while($row= DB::fetch_assoc($qry))
+            {
+                if ($nullify)
+                    $this->fields[$row["Field"]]= null;
                 
-            $this->field_types[$row["Field"]]= preg_replace("/\(([0-9])*\)/", "", $row["Type"]);
+                $this->field_types[$row["Field"]]= preg_replace("/\(([0-9])*\)/", "", $row["Type"]);
+            }
         }
     }
     
@@ -100,8 +104,9 @@ class Model extends Ploof
     /**
      * Check and see if a field is a numeric type; dates are not numeric.
      */
-    public function is_numeric($field)
+    public function is_numeric($field, $db= null)
     {
+        if ($db) $this->db= $db;
         $type = $this->get_field_type($field);
         return $this->db->is_numeric($type);
         

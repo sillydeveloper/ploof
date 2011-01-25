@@ -24,7 +24,7 @@ abstract class AbstractDB extends Ploof
     // find in table where_array (used by core)
     abstract function find($table, $where_array);
     abstract function show_tables();
-    abstract function show_columns($table);
+    abstract function get_columns($table);
     abstract function is_numeric($field_type);
     abstract function query($sql);
 }

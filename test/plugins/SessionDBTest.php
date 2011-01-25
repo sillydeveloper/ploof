@@ -16,7 +16,21 @@ class SessionDBTest extends \core\TestCase
         $this->assertEquals(\core\Session::get('SessionDBTypes'), $init_types, 'Types dont match on init');
     }
     
-    
-    
+    function test_load()
+    {
+        $init_values= array('Parents'=>array(
+                            array('id'=>1, 'phrase'=>'Just dont understand'),
+                            array('id'=>2, 'phrase'=>'Yes we do')
+                        )
+                    );
+                    
+        $init_types= array('Parents'=>array('id'=>'int', 'phrase'=>'char'));                        
+        
+        $db= new \plugins\DB\SessionDB($init_values, $init_types);
+        
+        $return= $db->load('Parents', 2);
+        
+        $this->assertEquals($return, array('id'=>2, 'phrase'=>'Yes we do'), 'Wrong return values');
+    }
 }
 ?>

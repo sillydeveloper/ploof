@@ -27,7 +27,6 @@ class SessionDB extends \core\AbstractDB
         \core\Session::set('SessionDBTypes', $init_types);
     }
     
-    //  this is the simplified loader used by core.
     function load($table, $id)
     {
         return array_pop($this->find($table, array(PRIMARY_KEY=>$id)));
@@ -60,7 +59,7 @@ class SessionDB extends \core\AbstractDB
         return array_keys(\core\Session::get('SessionDBValues'));
     }
     
-    function show_columns($table)
+    function get_columns($table)
     {
         $db= \core\Session::get('SessionDBValues');
         return array_keys(array_pop($db[$table]));
