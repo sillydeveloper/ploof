@@ -40,7 +40,6 @@ class SessionDB extends \core\AbstractDB
         $db= \core\Session::get('SessionDBValues');
         
         $table_data= $db[$table];
-        $this->debug(1, $table);
         foreach($table_data as $td)
         {
             foreach($where_array as $key=>$value)

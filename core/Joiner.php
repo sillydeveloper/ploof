@@ -229,11 +229,7 @@ class Joiner extends Ploof
             $obj= new $c();
             foreach($where as $k=>$v) $obj->$k= $v;
             $obj= $this->add_object($obj);
-            $obj->store();
-            
-            $this->debug(1, $where);
-            $this->debug(1, $obj);
-            
+            $obj->store();            
         }
         
         return $obj;

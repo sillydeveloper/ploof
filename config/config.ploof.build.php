@@ -1,9 +1,24 @@
 <?
-// TODO: Make it so you don't have to set this. It's annoying.
-define("BASE_INSTALL", "");
+/*
+ * Default base install is the directory above where this config file is stored
+ */
+define("BASE_INSTALL", realpath(__DIR__ . '/..')); 
 
-// TODO: Same as above
-set_include_path(get_include_path().PATH_SEPARATOR.BASE_INSTALL.PATH_SEPARATOR.BASE_INSTALL."/model".PATH_SEPARATOR.BASE_INSTALL."/controller".PATH_SEPARATOR.BASE_INSTALL."/view".PATH_SEPARATOR.BASE_INSTALL."/core".PATH_SEPARATOR.BASE_INSTALL."/test/temp");
+set_include_path(get_include_path().PATH_SEPARATOR.
+                 BASE_INSTALL.PATH_SEPARATOR.
+                 BASE_INSTALL."/model".PATH_SEPARATOR.
+                 BASE_INSTALL."/controller".PATH_SEPARATOR.
+                 BASE_INSTALL."/view".PATH_SEPARATOR.
+                 BASE_INSTALL."/core".PATH_SEPARATOR.
+                 BASE_INSTALL."/test/temp");
+
+/**
+ * Autoload classes
+ */
+function __autoload($class_name) 
+{
+    include str_replace("\\", "/", $class_name).".php";
+}
 
 /**
  * What object that a session attaches to
@@ -12,6 +27,11 @@ define("SESSION_OBJECT", "User");
 define("SESSION_KEY", "username");
 define("SESSION_PASSWORD", "password");
 define("SESSION_PASSWORD_SALT", false);
+
+/**
+ * Display errors.
+ */
+ini_set('display_errors', 1);
 
 /**
  * How verbose you want to debug (1-5). 5 will show everything.
@@ -42,10 +62,10 @@ define("DATABASE_NAME", "");
  * Fixture database for unit tests. This database
  * WILL BE WIPED each time you run unit tests.
  */
-define("TEST_DATABASE_USER", "@TEST_DATABASE_USER");
-define("TEST_DATABASE_PASS", "@TEST_DATABASE_PASS");
-define("TEST_DATABASE_HOST", "@TEST_DATABASE_HOST");
-define("TEST_DATABASE_NAME", "@TEST_DATABASE_NAME");
+define("TEST_DATABASE_USER", "");
+define("TEST_DATABASE_PASS", "");
+define("TEST_DATABASE_HOST", "");
+define("TEST_DATABASE_NAME", "");
 
 /**
  * Initial action to call on controllers
@@ -92,12 +112,8 @@ define("PLOOF_SEPARATOR", "__");
  */
 define("VIEW_EXTENSION", ".html");
 
-/**
- * TODO: This is dumb.
- */
-if (!defined("IN_UNIT_TESTING"))
-    define('IN_UNIT_TESTING', 0); 
+define('IN_UNIT_TESTING', 0); 
 
-require_once "application.php";
+#require_once "config.application.php";
 require_once "fun.php";
 ?>
