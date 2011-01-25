@@ -20,6 +20,22 @@ class PDO_MySQL extends core\AbstractDB
     private $_affected_rows = 0;
 
    /**
+    *  The result set associated with a prepared statement.
+    *
+    *  @var PDOStatement
+    *  @access private
+    */
+    private $_statement;
+
+   /**
+    *  Controls how the rows will be returned.
+    *
+    *  @var string
+    *  @access private
+    */
+    private $_fetch_style = 'assoc';
+
+   /**
     *  Connects and selects database.
     *
     *  @access public
@@ -62,73 +78,65 @@ class PDO_MySQL extends core\AbstractDB
     }
     
    /**
-    *  Fetches the next row from a result set.
+    *  Fetches the next row from the result set in memory (i.e., the one
+    *  that was created after running query()).
     *
-    *  @param PDOStatement $statement    The PDOStatement object from which to fetch rows.
-    *  @param string $fetch_style        Controls how the rows will be returned.
     *  @access public
     *  @return mixed
     */
-    public function fetch($statement, $fetch_style='assoc') 
+    public function fetch() 
     {
-        $fetch_style = $this->_set_fetch_mode($fetch_style); 
-        return $statement->fetch($fetch_style);
+        return $this->_statement->fetch($this->_fetch_style);
     }
 
    /**
     *  Returns an array containing all of the result set rows.
     *
-    *  @param PDOStatement $statement    The PDOStatement object from which to fetch rows.
-    *  @param string $fetch_style        Controls how the rows will be returned.
     *  @access public
     *  @return mixed
     */
-    public function fetch_all($statement, $fetch_style='assoc') 
+    public function fetch_all() 
     {
-        $fetch_style = $this->_set_fetch_mode($fetch_style); 
-        return $statement->fetchAll($fetch_style);
+        return $this->_statement->fetchAll($this->_fetch_style);
     }
 
    /**
     *  Returns a single column from the next row of a result set or false if there are no more rows.
     *
-    *  @param PDOStatement $statement    The PDOStatement object from which to fetch rows.
     *  @param int $column_number         Zero-index number of the column to retrieve from the row.
     *  @access public
     *  @return mixed
     */
-    public function fetch_column($statement, $column_number=0) 
+    public function fetch_column($column_number=0) 
     {
-        return $statement->fetchColumn($column_number);
+        return $this->_statement->fetchColumn($column_number);
     }
 
    /**
-    *  Inserts data by means of an array.
+    *  Inserts an object into the database. 
     *
-    *  @param string $table         The SQL table to be inserted into.
-    *  @param array $data           The array containing the MySQL fields and values.
+    *  @param obj $obj        The object to be inserted. 
     *  @access public
     *  @return bool
     */
-    public function insert($table, $data) 
+    public function insert($obj) 
     {
+        $table = $this->classname_only($obj);
+        $properties = get_object_vars($obj);
+
     	$sql = 'INSERT INTO `' . $table . '` ';
         
-    	$fields = ''; 
-        $values = '';
-    	foreach ( $data as $key => $val ) 
-        {
-    		$fields .= '`' . $key . '`, ';
-            $values .= ':' . $key . ', ';
-    	}
+        $property_names = array_keys($properties);
+    	$fields = '`' . implode('`, `', $property_names) . '`';
+        $values = ':' . implode(', :', $property_names);
     
-    	$sql .= '(' . rtrim($fields, ', ') . ') VALUES (' . rtrim($values, ', ') . ')';
+    	$sql .= '(' . $fields . ') VALUES (' . $values . ')';
 
     	$statement = $this->_dbh->prepare($sql);
 
         try 
         {
-            $statement->execute($data);
+            $statement->execute($properties);
     	}
         catch ( PDOException $e ) 
         {
@@ -152,22 +160,6 @@ class PDO_MySQL extends core\AbstractDB
     }
 
    /**
-    *  Checks that index is a valid, positive integer.
-    *  
-    *  @param int $value      The integer to be checked.
-    *  @access public          
-    *  @return bool
-    */ 
-    public function is_valid_id($value) 
-    {
-        if ( !is_int($value) || $value < 1 ) 
-        {
-            return false;
-        }
-        return true;
-    }
-
-   /**
     *  Returns the number of rows affected by the last SELECT query.
     *
     *  @access public
@@ -175,8 +167,8 @@ class PDO_MySQL extends core\AbstractDB
     */
     public function num_rows()
     {
-        $statement = $this->query('SELECT FOUND_ROWS()');
-        $rows = $this->fetch_column($statement);
+        $this->query('SELECT FOUND_ROWS()');
+        $rows = $this->fetch_column();
         return $rows;
     }
 
@@ -186,7 +178,7 @@ class PDO_MySQL extends core\AbstractDB
     *  @param string $sql           The SQL query to be executed.
     *  @param array $parameters     An array containing the parameters to be bound.
     *  @access public
-    *  @return PDOStatement       
+    *  @return bool 
     */
     public function query($sql, $parameters=null) 
     {
@@ -210,7 +202,8 @@ class PDO_MySQL extends core\AbstractDB
         }
     
     	$this->_affected_rows = $statement->rowCount();
-    	return $statement;
+        $this->_statement = $statement;
+    	return true;
     }
 
    /**
@@ -218,14 +211,13 @@ class PDO_MySQL extends core\AbstractDB
     *
     *  @param string $sql                The SQL query to be executed.
     *  @param array $parameters          An array containing the parameters to be bound.
-    *  @param string $fetch_style        Controls how the row will be returned.
     *  @access public
     *  @return mixed       
     */
-    public function query_first($sql, $parameters=null, $fetch_style='assoc') 
+    public function query_first($sql, $parameters=null) 
     {
-        $statement = $this->query($sql . ' LIMIT 1', $parameters);
-        return $this->fetch($statement, $fetch_style);
+        $this->query($sql . ' LIMIT 1', $parameters);
+        return $this->fetch();
     }
 
    /**
@@ -235,7 +227,7 @@ class PDO_MySQL extends core\AbstractDB
     *  @access private
     *  @return int 
     */
-    private function _set_fetch_mode($fetch_style) 
+    public function set_fetch_mode($fetch_style) 
     {
         switch ( $fetch_style ) 
         {
@@ -264,25 +256,28 @@ class PDO_MySQL extends core\AbstractDB
                 $fetch_style = PDO::FETCH_ASSOC;
                 break;
         }
-        return $fetch_style;
+        $this->_fetch_style = $fetch_style;
     }
 
    /**
-    * Updates query by means of an array.
+    *  Updates an object in the database.
     *
-    * @param string $table         The SQL table to be updated.
-    * @param array $data           The array containing the MySQL fields and values.
-    * @param string $where         The WHERE clause of the SQL query.
-    * @access public
-    * @return bool 
+    *  @param obj $obj              The object to be updated.
+    *  @param string $where         The WHERE clause of the SQL query.
+    *  @access public
+    *  @return bool 
     */
-    public function update($table, $data, $where = '1') 
+    public function update($obj, $where = '1') 
     {
+        $table = $this->classname_only($obj);
+        $properties = get_object_vars($obj);
+
     	$sql = 'UPDATE `' . $table . '` SET ';
     
-    	foreach ( $data as $key => $val ) 
+        $property_names = array_keys($properties);
+    	foreach ( $property_names as $name ) 
         {
-            $sql .= '`' . $key . '`=:' . $key . ', ';
+            $sql .= '`' . $name . '`=:' . $name . ', ';
     	}
     
     	$sql = rtrim($sql, ', ') . ' WHERE ' . $where;
@@ -290,7 +285,7 @@ class PDO_MySQL extends core\AbstractDB
 
         try 
         {
-            $statement->execute($data);
+            $statement->execute($properties);
     	}
         catch ( PDOException $e ) 
         {
@@ -303,36 +298,31 @@ class PDO_MySQL extends core\AbstractDB
     }
 
    /**
-    *  Inserts or updates (if exists) data by means of an array.
+    *  Inserts or updates (if exists) an object in the database.
     *
-    *  @param string $table           The SQL table to be inserted into.
-    *  @param array $insert_data      The array containing the MySQL fields and values for the INSERT clause.
-    *  @param array $update_data      The array containing the MySQL fields and values for the UPDATE clause.
+    *  @param obj $obj                The object to be upserted.
     *  @access public
     *  @return bool 
     */
-    public function upsert($table, $insert_data, $update_data) 
+    public function upsert($obj) 
     {
+        $table = $this->classname_only($obj);
+        $properties = get_object_vars($obj);
+
     	$sql = 'INSERT INTO `' . $table . '` ';
         
-    	$fields = ''; 
-        $values = '';
-    	foreach ( $insert_data as $key => $val ) 
-        {
-            $fields .= '`' . $key . '`, ';
-            $values .= ':' . $key . ', ';
-    	}
+        $property_names = array_keys($properties);
+    	$fields = '`' . implode('`, `', $property_names) . '`';
+        $values = ':' . implode(', :', $property_names);
     
-    	$sql .= '(' . rtrim($fields, ', ') . ') VALUES (' . rtrim($values, ', ') . ')';
-
         $sql .= ' ON DUPLICATE KEY UPDATE `' . PRIMARY_KEY . '`=LAST_INSERT_ID(`' . PRIMARY_KEY . '`), ';
-        foreach ( $update_data as $key=> $val) 
-        {
-            $sql .= '`' . $key . '`=:update_data_' . $key . ', ';
-            $insert_data['update_data_' . $key] = $val;
-        }
-        $sql = rtrim($sql, ', ');
 
+    	foreach ( $property_names as $name ) 
+        {
+            $sql .= '`' . $name . '`=:' . $name . ', ';
+    	}
+
+        $sql = rtrim($sql, ', ');
     	$statement = $this->_dbh->prepare($sql);
 
         try 
