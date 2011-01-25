@@ -2,7 +2,7 @@
 namespace plugins\DB;
 
 // stores data in an array in the session:
-//  table=>key=>value
+//  table=>(row=>(key=>value))
 //  
 //
 class SessionDB extends \core\AbstractDB
@@ -21,22 +21,24 @@ class SessionDB extends \core\AbstractDB
     *  @access public
     *  @return void
     */
-    public function __construct($init= array())
+    public function __construct($init_values= array(), $init_types= array())
     {
-        \core\Session::set('SessionDB', $init);
+        \core\Session::set('SessionDBValues', $init_values);
+        \core\Session::set('SessionDBTypes', $init_types);
     }
     
-    // where array: array('key'=>'value')
-    //  this is the simplified loader used by the model.
+    //  this is the simplified loader used by core.
     function load($table, $id)
     {
         return array_pop($this->find($table, array(PRIMARY_KEY=>$id)));
     }
     
+    // where array: array('key'=>'value')
+    //  this is the simplified finder used by core.
     function find($table, $where_array)
     {
         $results= array();
-        $db= \core\Session::get('SessionDB');
+        $db= \core\Session::get('SessionDBValues');
         
         $table_data= $db[$table];
         $this->debug(1, $table);
@@ -55,16 +57,20 @@ class SessionDB extends \core\AbstractDB
     
     function show_tables()
     {
-        
+        return array_keys(\core\Session::get('SessionDBValues'));
     }
+    
     function show_columns($table)
     {
-        
+        $db= \core\Session::get('SessionDBValues');
+        return array_keys(array_pop($db[$table]));
     }
+    
     function is_numeric($field_type)
     {
         
     }
+    
     function query($sql)
     {
         

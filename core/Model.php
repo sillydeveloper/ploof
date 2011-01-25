@@ -32,9 +32,11 @@ class Model extends Ploof
     // array of properties to NOT cache. 
     //  these will be ignored by __get() and store().
     protected $no_cache= array();
-    
-    function __construct($id= null)
+        
+    function __construct($id= null, $db= null)
     {
+        if ($db) $this->set_db($db);
+        
         if ($this->db)
         {
             if ($id)
@@ -48,7 +50,7 @@ class Model extends Ploof
             }   
         }
     }
-    
+        
     public function set_db($db)
     {
         $this->db= $db;
@@ -74,7 +76,8 @@ class Model extends Ploof
     
     private function set_field_types($nullify= false)
     {
-        $qry= DB::query("show columns from ".classname_only(static::classname()));
+        $qry= $this->db->get_columns(Meta::classname_only(static::classname()));
+        //DB::query("show columns from ".classname_only(static::classname()));
         while($row= DB::fetch_assoc($qry))
         {
             if ($nullify)
@@ -99,11 +102,13 @@ class Model extends Ploof
      */
     public function is_numeric($field)
     {
-        $numeric= array("decimal", "tinyint", "bigint", "int", "float", "double");
         $type = $this->get_field_type($field);
-        if (array_search($type, $numeric) !== false) return true;
-        if (strpos($type, "decimal") !== false) return true;  // e.g. "decimal(5,2)"
-        return false;
+        return $this->db->is_numeric($type);
+        
+        //$numeric= array("decimal", "tinyint", "bigint", "int", "float", "double");
+        //if (array_search($type, $numeric) !== false) return true;
+        //if (strpos($type, "decimal") !== false) return true;  // e.g. "decimal(5,2)"
+        //return false;
     }
     
     public function get_field_types()

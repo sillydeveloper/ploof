@@ -1,7 +1,4 @@
 <?
-// TODO: make this not required in each test file:
-define("SCHEMA", "framework");
-
 // note this also tests a lot of joiner too:
 class ModelTest extends \core\TestCase
 {    
@@ -9,8 +6,8 @@ class ModelTest extends \core\TestCase
     {
         $session_db= new \plugins\DB\SessionDB(
             array('Model'=>array(
-                    array('id'=>1, 'name'=>'Marcy'),
-                    array('id'=>2, 'name'=>'Jack')
+                    array('id'=>array('int', 1), 'name'=>array('char', 'Marcy')),
+                    array('id'=>array('int', 2), 'name'=>array('char', 'Jack'))
                     )
                 )
             );
@@ -28,7 +25,9 @@ class ModelTest extends \core\TestCase
         $model= new core\Model();
         $model->set_db($session_db);
         //core\Ploof::debug(1, $model);
-        /*
+        
+    }
+    /*
         // act like an incoming form:
         $a= array('belongsto'=>array('name'=>array(0=>'f', 1=>'g')));
         
@@ -44,9 +43,8 @@ class ModelTest extends \core\TestCase
         $this->assertEquals(2, count($hm->belongsto->find()), 'Wrong count for hasmany save() (new object)');
         $hm->refresh('belongsto');
         $this->assertEquals(2, count($hm->belongsto->find()), 'Wrong count for hasmany save() (new object) after refresh');
-        */
-    }
-    /*
+
+
     function test_delete()
     {
         $hm= new hasmany(1);
