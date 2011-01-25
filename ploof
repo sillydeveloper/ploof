@@ -2,7 +2,11 @@
 <?php
 namespace core;
 
-include_once 'config/config.php';
+include_once 'core/Meta.php';
+// check and see if they have a custom config, or include the build config by default:
+$has_custom_config_file= Meta::include_if_found('config/config.php');
+if (!$has_custom_config_file)
+    Meta::include_if_found('config/config.ploof.build.php');
 
 //--------------------------------------------------
 //          INITIALIZE
@@ -20,14 +24,6 @@ function generate_models()
 {
     Model::generate_models();
 } // end generate models
-
-//--------------------------------------------------
-//          HSS
-//--------------------------------------------------
-function hss()
-{
-    exec("./resource/bin/hss public/css/ploof.hss");
-}
 
 //--------------------------------------------------
 //          UPDATE
@@ -168,7 +164,7 @@ function patch_ploof($version= "trunk")
         exec("diff -rupN -x .svn $v $k >> ./resource/updates/patch_ploof.patch");
     }
     
-    print "Please send ./resource/updates/patch_ploof.patch to frugalprogrammer@gmail.com!\n";
+    print "Please send ./resource/updates/patch_ploof.patch to sillydeveloper@gmail.com!\n";
 }
 
 //--------------------------------------------------
@@ -176,7 +172,10 @@ function patch_ploof($version= "trunk")
 //--------------------------------------------------
 function test($lib='application')
 {
-    passthru('phpunit --bootstrap '.BASE_INSTALL.'/config/config.build.php test/'.$lib);
+    if ($has_custom_config_file)
+        passthru('phpunit --bootstrap '.BASE_INSTALL.'/config/config.php test/'.$lib);
+    else
+        passthru('phpunit --bootstrap '.BASE_INSTALL.'/config/config.ploof.build.php test/'.$lib);
 }
 
 //--------------------------------------------------
@@ -186,12 +185,11 @@ if ($argc < 2)
 {
     print "usage: ploof [command]\n\n";
     print "Commands: \n";
-    print "test.................... run unit tests (application is default)\n";
-    print "hss..................... recreate css from hss file\n";
+    print "install................. a command line installer (won't overwrite existing configs)";
+    print "test.................... run unit tests (/test/application is default)\n";
     print "migrate................. migrate your database to the current migration\n";
     print "migration............... create a new migration in resource/migrations\n";
     print "generate_models......... generate classfiles from your database\n";
-    print "initialize.............. initialize your database\n";
     print "update.................. update via diff; you can optionally supply a version to update to (trunk is default)\n";
     print "clean................... clean various detritus that can build up\n";
     print "migration............... create a migration; optionally add the branch for this migration\n";

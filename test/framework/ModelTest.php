@@ -1,5 +1,4 @@
 <?
-// note this also tests a lot of joiner too:
 class ModelTest extends \core\TestCase
 {    
     function test_load()

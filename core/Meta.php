@@ -29,7 +29,30 @@ class Meta
     */
     public static function namespace_only($classname)
     {
-	return preg_replace("/(\\\\[A-Za-z0-9]*)$/", "", $classname);
+	    return preg_replace("/(\\\\[A-Za-z0-9]*)$/", "", $classname);
+    }
+    
+    /**
+     * Include $file if it is found in the path,
+     *  and return whether or not it was included.
+     */
+    function include_if_found($file)
+    {
+        $includables = explode(PATH_SEPARATOR, get_include_path());
+        foreach ($includables as $path) 
+        {
+            if (substr($path, -1) == DIRECTORY_SEPARATOR) 
+                $fullpath = $path.$file;
+            else
+                $fullpath = $path.DIRECTORY_SEPARATOR.$file;
+
+            if (file_exists($fullpath)) 
+            {
+                include_once $fullpath;
+                return true;
+            }
+        }
+        return false;
     }
 
 }

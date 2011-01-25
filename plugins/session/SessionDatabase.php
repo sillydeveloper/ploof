@@ -1,7 +1,7 @@
 <?php
-namespace plugins;
+namespace plugins\Session;
 
-class Session extends core\AbstractDB
+class SessionDatabase extends core\AbstractSession
 {
 
    /**
