@@ -6,8 +6,12 @@ class ModelTest extends \core\TestCase
     {
         $session_db= new \plugins\DB\SessionDB(
             array('Model'=>array(
-                    array('id'=>array('int', 1), 'name'=>array('char', 'Marcy')),
-                    array('id'=>array('int', 2), 'name'=>array('char', 'Jack'))
+                        array('id'=>1, 'name'=>'Marcy'),
+                        array('id'=>2, 'name'=>'Jack')
+                    )
+                ),
+            array('Model'=>array(
+                        array('id'=>'int', 'name'=>'char')
                     )
                 )
             );
