@@ -1,5 +1,5 @@
 <?php
-namespace plugins;
+namespace plugins\DB;
 
 class PDO_MySQL extends core\AbstractDB 
 {
