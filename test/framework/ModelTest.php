@@ -5,8 +5,30 @@ define("SCHEMA", "framework");
 // note this also tests a lot of joiner too:
 class ModelTest extends \core\TestCase
 {    
-    function test_save_has_many()
+    function test_load()
     {
+        $session_db= new \plugins\DB\SessionDB(
+            array('Model'=>array(
+                    array('id'=>1, 'name'=>'Marcy'),
+                    array('id'=>2, 'name'=>'Jack')
+                    )
+                )
+            );
+            
+        $model= new core\Model();
+        $model->set_db($session_db);
+        $model->load(1);
+        $fields= $model->get_fields();
+        $this->assertEquals('Marcy', $fields['name']);
+    }
+    
+    function test_set_db()
+    {
+        $session_db= new \plugins\DB\SessionDB();
+        $model= new core\Model();
+        $model->set_db($session_db);
+        //core\Ploof::debug(1, $model);
+        /*
         // act like an incoming form:
         $a= array('belongsto'=>array('name'=>array(0=>'f', 1=>'g')));
         
@@ -22,9 +44,9 @@ class ModelTest extends \core\TestCase
         $this->assertEquals(2, count($hm->belongsto->find()), 'Wrong count for hasmany save() (new object)');
         $hm->refresh('belongsto');
         $this->assertEquals(2, count($hm->belongsto->find()), 'Wrong count for hasmany save() (new object) after refresh');
-        
+        */
     }
-    
+    /*
     function test_delete()
     {
         $hm= new hasmany(1);
@@ -108,7 +130,7 @@ class ModelTest extends \core\TestCase
         $bt= new belongsto();
         $bt->store();
         $this->assertEquals(3, $bt->id, "Could not store a new model");
-    }
+    }*/
     
     static function classname()
     {

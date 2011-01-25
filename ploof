@@ -176,7 +176,7 @@ function patch_ploof($version= "trunk")
 //--------------------------------------------------
 function test($lib='application')
 {
-    passthru('phpunit --bootstrap '.BASE_INSTALL.'/config/test_config.php test/'.$lib);
+    passthru('phpunit --bootstrap '.BASE_INSTALL.'/config/config.php test/'.$lib);
 }
 
 //--------------------------------------------------

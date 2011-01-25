@@ -3,6 +3,8 @@ namespace core;
 
 class Model extends Ploof
 {
+    protected $db= null;
+    
     // storage area for database field values 
     protected $fields= null;
     
@@ -13,9 +15,6 @@ class Model extends Ploof
     protected $has_one= null;
     protected $belongs_to= null;
     protected $has_and_belongs_to_many= null; 
-    
-    // TODO: auto validation
-    //protected $validates= null;
     
     // TODO: an array of sort functions; ex:
     //  $sort_by= array('name'=>function($a, $b) 
@@ -34,34 +33,35 @@ class Model extends Ploof
     //  these will be ignored by __get() and store().
     protected $no_cache= array();
     
-    function __construct($id=null)
+    function __construct($id= null)
     {
-        if ($id)
+        if ($this->db)
         {
-            $this->load($id);
-            $this->set_field_types();
+            if ($id)
+            {
+                $this->load($id);
+                $this->set_field_types();
+            }
+            elseif (count($this->fields) < 1)
+            {
+                $this->set_field_types(true);
+            }   
         }
-        elseif (count($this->fields) < 1)
-        {
-            $this->set_field_types(true);
-        }   
+    }
+    
+    public function set_db($db)
+    {
+        $this->db= $db;
     }
     
     public function load($id)
     {
-        if ($id)
+        if ($id and $this->db)
         {
-            $sql= "select * from ".classname_only(static::classname())." where ".PRIMARY_KEY."=".$id;
-            $this->debug(5, "Loading: ". $sql);
-            $qry= DB::query($sql);
-            while($row= DB::fetch_assoc($qry))            
+            $data= $this->db->load(Meta::classname_only(static::classname()), $id);
+            foreach($data as $key=>$value)
             {   
-                $this->debug(5, $row);
-                // TODO: this duplicates the str_replace in __get()?
-                foreach($row as $k=>$v)
-                {
-                    $this->fields[$k] = stripslashes($v);
-                }
+                $this->fields[$key] = stripslashes($value);
             }
         }
     }
