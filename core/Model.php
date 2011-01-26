@@ -192,6 +192,7 @@ class Model extends Ploof
      */
     function refresh($field_name, $sort_fun=null, $order=null, $limit=null)
     {   
+        //static::$db->
         $joiner= false;
         
         // Check to see if we need to override the getter by calling a different
@@ -206,7 +207,7 @@ class Model extends Ploof
         {   
             // joiner handles everything for habtm since it has to load
             //  and know about extra fields in the join table.
-            $joiner= new Joiner($this, classname_only(static::classname()), $field_name);
+            $joiner= new Joiner($this, static::cname(), $field_name);
         }
         else 
         {
@@ -215,40 +216,40 @@ class Model extends Ploof
                 $lookup_id= $this->fields[$field_name.PK_SEPARATOR.PRIMARY_KEY];
                 $lookup_field= PRIMARY_KEY;
             
-                $results= $field_name::find($lookup_field."='".$lookup_id."'");
+                $results= $field_name::find(array($lookup_field=>$lookup_id));
             }
         
             if ($this->is_has_many($field_name))
             {
                 $lookup_id= $this->fields[PRIMARY_KEY];
-                $lookup_field= classname_only(static::classname()).PK_SEPARATOR.PRIMARY_KEY;
+                $lookup_field= static::cname().PK_SEPARATOR.PRIMARY_KEY;
                 
-                $sql= $lookup_field."='".$lookup_id."' ".$order." ".$limit;
+                //$sql= $lookup_field."='".$lookup_id."' ".$order." ".$limit;
                 
-                $this->debug(5, $field_name." sql=".$sql);
+                //$this->debug(5, $field_name." sql=".$sql);
                 
-                $results= $field_name::find($sql);
+                $results= $field_name::find(array($lookup_field=>$lookup_id));
             }
             
             if ($this->is_has_one($field_name))
             {
                 $lookup_id= $this->fields[PRIMARY_KEY];
-                $lookup_field= classname_only(static::classname()).PK_SEPARATOR.PRIMARY_KEY;
+                $lookup_field= static::cname().PK_SEPARATOR.PRIMARY_KEY;
                 
-                $results= $field_name::find($lookup_field."='".$lookup_id."' order by id desc limit 1");
+                $results= $field_name::find(array($lookup_field=>$lookup_id));
             }
         }
         
         if ($sort_fun)
             usort($results, $sort_fun);
         
-        if (!$joiner)
-        {
-            $joiner= new Joiner();
-            $joiner->set_objects($results);
-            $joiner->set_parent($this, classname_only(static::classname()));
-            $joiner->set_child_class($field_name);         
-        }
+        //if (!$joiner)
+        //{
+        //    $joiner= new Joiner();
+        //    $joiner->set_objects($results);
+        //    $joiner->set_parent($this, classname_only(static::classname()));
+        //    $joiner->set_child_class($field_name);         
+        //}
         
         $this->fields[$field_name]= $joiner;
     }
@@ -261,33 +262,42 @@ class Model extends Ploof
         // if no_cache, then get from the database directly:
         if (array_search($field_name, $this->no_cache) !== false)
         {
-            // access database directly:
+            // access database directly, bypass any cache access:
             $fields= static::$db->get_database()->load(static::cname(), $this->id);
-            
-            //DB::fetch_array(DB::query('select '.$field_name.' from '.classname_only(static::classname()).' where id='.$this->id));
             return $fields[$field_name];
         }
         
-        // lazy loading part.
+        $results= null;
+        
         if ($this->is_foreign($field_name))
         {
             $this->debug(5, "Found foreign: ".$field_name);
-            if (array_key_exists($field_name, $this->fields) == false or is_object($this->fields[$field_name]) == false or ENABLE_OBJECT_CACHE == 0)
+            
+            if ($this->is_belongs_to($field_name))
             {
-                $this->debug(5, "Refreshing ".$field_name. " (ENABLE_OBJET_CACHE=".ENABLE_OBJECT_CACHE.")");
-                $this->refresh($field_name);
+                $lookup_id= $this->fields[$field_name.PK_SEPARATOR.PRIMARY_KEY];
+                $lookup_field= PRIMARY_KEY;
+
+                $results= $field_name::find_object(array($lookup_field=>$lookup_id));
             }
-            else
+
+            if ($this->is_has_many($field_name))
             {
-                $this->debug(5, "No refresh for ".$field_name);
+                $lookup_id= $this->fields[PRIMARY_KEY];
+                $lookup_field= static::cname().PK_SEPARATOR.PRIMARY_KEY;
+                
+                // return a dummy object?
+                // TODO: andrew doesn't like this. 
+                $results= new $field_name();
             }
-        }
-        
-        if (is_object($this->fields[$field_name]) and ($this->is_belongs_to($field_name) or $this->is_has_one($field_name)))
-        {
-            $this->debug(5, "Found is_belongs_to or is_has_one, returning get() for ".$field_name);
-            // return the joiner's get, because there is only one:
-            return $this->fields[$field_name]->get();
+
+            if ($this->is_has_one($field_name))
+            {
+                $lookup_id= $this->fields[PRIMARY_KEY];
+                $lookup_field= static::cname().PK_SEPARATOR.PRIMARY_KEY;
+
+                $results= $field_name::find_object(array($lookup_field=>$lookup_id));
+            }
         }
 
         // call the datetime handler if this is a datetime:
@@ -302,8 +312,8 @@ class Model extends Ploof
             }
         }            
             
-        if (is_object($this->fields[$field_name]))
-            return $this->fields[$field_name];
+        if ($results)
+            return $results;
         else
             return stripslashes($this->fields[$field_name]); // remove sanitized escape
     }
@@ -317,8 +327,6 @@ class Model extends Ploof
         // if no_cache, then get from the database directly:
         if (array_search($field_name, $this->no_cache) !== false)
         {
-            //$sql= 'update '.classname_only(static::classname()).' set '.$field_name.'="'.$value.'" where id='.$this->id;
-            //DB::query($sql);
             $this->fields[$field_name]= $value;
             static::$db->get_database()->store(static::cname(), $this->fields);
             return; 
@@ -480,7 +488,6 @@ class Model extends Ploof
         {
             foreach($arr as $key=>$value)
             {   
-                $this->debug(5, $key);
                 if (array_key_exists($key, $this->field_types) and $this->is_foreign($key) === false)
                 {
                     //$this->fields[$key]= ($index === null) ? $this->sanitize($key, $value) : $this->sanitize($key, $value[$index]);
@@ -510,7 +517,7 @@ class Model extends Ploof
             return array();
         }
 
-        $classname= classname_only(static::classname());
+        $classname= static::cname();
         $objects = array();
         while ($row = DB::fetch_array($res))
         {
@@ -525,7 +532,7 @@ class Model extends Ploof
      */
     static function find_object($query)
     {
-        $classname= classname_only(static::classname());
+        $classname= static::cname();
         $results= $classname::find($query);
 
         if ($results)
@@ -539,8 +546,17 @@ class Model extends Ploof
      */
     static function find($query=null)
     {
-        
-        return static::$db->find(Meta::classname_only(static::classname()), $query);
+        $returns= array();
+        $classname= static::cname();   
+        $results= static::$db->find(static::cname(), $query);
+        if (is_array($results))
+        {
+            foreach($results as $key=>$object_data)
+            {
+                $returns[]= new $classname($object_data[PRIMARY_KEY]);
+            }
+        }
+        return $returns;
         
         /*
         $classname= classname_only(static::classname());

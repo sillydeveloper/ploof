@@ -1,4 +1,6 @@
 <?
+set_include_path(get_include_path().PATH_SEPARATOR."test/framework/fixtures");
+
 class ModelTest extends core\TestCase
 {    
     protected $db;
@@ -33,8 +35,21 @@ class ModelTest extends core\TestCase
 
     function test_find()
     {
-        $results= core\Model::find();
-        $this->assertEquals(count($this->session_db->find('Model')), count($results));
+        $session_db= new plugins\DB\SessionDB(
+            array('NoCache'=>array(
+                        array('id'=>1, 'name'=>'Marcy'),
+                        array('id'=>2, 'name'=>'Jack')
+                    )
+                ),
+            array('NoCache'=>array('id'=>'int', 'name'=>'char'))
+            );
+        $db= new core\DB($session_db);
+        NoCache::set_db($db);
+        $results= NoCache::find();
+        $this->assertEquals(count($this->session_db->find('NoCache')), count($results));
+        
+        $results= NoCache::find(array('id'=>1));
+        $this->assertEquals(count($this->session_db->find('NoCache', array('id'=>1))), count($results));
     }
     
     function test_requires_a()
@@ -50,9 +65,9 @@ class ModelTest extends core\TestCase
         $this->assertEquals($this->session_db->get_columns('Model'), $model->get_field_types());
     }
     
-    function test_no_cache_get()
+    function test_no_cache_set_and_get()
     {
-        test\framework\fixtures\NoCache::set_db(new \core\DB(
+        $db_check= new \core\DB(
                 new \plugins\DB\SessionDB(
                     array('NoCache'=>array(
                                 array('id'=>1, 'name'=>'Marcy'),
@@ -61,12 +76,44 @@ class ModelTest extends core\TestCase
                         ),
                     array('NoCache'=>array('id'=>'int', 'name'=>'char'))
                 )
+        );
+        NoCache::set_db($db_check);
+        
+        $model= new NoCache(1);
+        $model->name= 'bar';
+        $data= $db_check->load('NoCache', 1);
+        $this->assertEquals('bar', $data['name']);
+    }
+    
+    function test_foreign_get()
+    {
+        $database= new \plugins\DB\SessionDB(
+            array(
+                'HasMany'=>array(
+                        array('id'=>1, 'name'=>'Marcy'),
+                        array('id'=>2, 'name'=>'Jack')
+                ),
+                'BelongsTo'=>array(
+                        array('id'=>1, 'name'=>'Tom', 'HasMany_id'=>1),
+                        array('id'=>2, 'name'=>'Craig', 'HasMany_id'=>1)
+                )
+            ),
+            array(
+                'HasMany'=>array('id'=>'int', 'name'=>'char'),
+                'BelongsTo'=>array('id'=>'int', 'name'=>'char', 'HasMany_id'=>'int'),
             )
         );
+        $db_check= new \core\DB($database);
+        HasMany::set_db($db_check);
+        BelongsTo::set_db($db_check);
         
-        $model= new test\framework\fixtures\NoCache(1);
-        $model->name= 'bar';
-        $this->assertEquals('bar', $model->name);
+        $model= new HasMany(1);
+        $belongs_to= $model->BelongsTo->find();
+        $this->assertEquals(2, count($belongs_to));
+
+        $model= new BelongsTo(1);
+        $has_many= $model->HasMany;
+        $this->assertEquals(1, $has_many->id);
     }
     
     /*

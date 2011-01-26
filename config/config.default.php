@@ -17,7 +17,7 @@ set_include_path(get_include_path().PATH_SEPARATOR.
  */
 function __autoload($class_name) 
 {
-    include str_replace("\\", "/", $class_name).".php";
+    include_once str_replace("\\", "/", $class_name).".php";
 }
 
 /**
