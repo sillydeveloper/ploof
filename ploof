@@ -172,6 +172,8 @@ function patch_ploof($version= "trunk")
 //--------------------------------------------------
 function test($lib='application')
 {
+	global $has_custom_config_file;
+
     if ($has_custom_config_file)
         passthru('phpunit --bootstrap '.BASE_INSTALL.'/config/config.php test/'.$lib);
     else
