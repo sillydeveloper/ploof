@@ -2,7 +2,7 @@
 
 class Form
 {
-    public static start($action, $id=null)
+    public static function start($action, $id=null)
     {
         if ($_REQUEST['ajax'])
             $html= "<form method=POST class='ajax_form' action='$action'";
@@ -21,12 +21,12 @@ class Form
         return $html;
     }
 
-    public static end()
+    public static function end()
     {
         return "</form>";
     }
 
-    static function text_size($size_name)
+    public static function text_size($size_name)
     {
         $size = $size_name;
         switch (strtolower($size_name))
@@ -41,7 +41,7 @@ class Form
         return $size;
     }
 
-    public static text($object, $name, $attributes=array())
+    public static function text($object, $name, $attributes=array())
     {
         $cname = Meta::classname_only($object::classname());
         $html = "<input type='text' name='". Form::fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name  . "' value='" . htmlentities($object->$name). "' "; 
@@ -58,7 +58,7 @@ class Form
         return $html; 
     }
 
-    public static textarea($object, $name, $attributes=array())
+    public static function textarea($object, $name, $attributes=array())
     {
         $cname= Meta::classname_only($object::classname());
         $html = "<textarea name='" . Form::fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name . " ";
@@ -74,12 +74,12 @@ class Form
         return $html;
     }
 
-    public static hidden($object, $name)
+    public static function hidden($object, $name)
     {
         return "<input type='hidden' class='input' name='" . Form::fname($object, $name) . "' value='" . $object->$name . "'/>";
     }
 
-    public static select($object, $name, $options, $display=null, $class='input')
+    public static function select($object, $name, $options, $display=null, $class='input')
     {
         $cname= Meta::classname_only($object::classname());
         $html= "<select id='".$cname."_".$object->id."_$name' class='$class' name='".Form::fname($object, $name)."'>";
@@ -105,7 +105,7 @@ class Form
         return $html;
     }
 
-    public static form_select_simple($name, $options, $select=null, $class='input', $id=null)
+    public static function form_select_simple($name, $options, $select=null, $class='input', $id=null)
     {
         $html="<select id='$id' class='$class' name='$name'>";
     
@@ -121,7 +121,7 @@ class Form
     }
 
 
-    public static form_checkbox($object, $name, $value=null, $label=null, $class='input')
+    public static function form_checkbox($object, $name, $value=null, $label=null, $class='input')
     {
         $checked= false;
 
@@ -141,7 +141,7 @@ class Form
         return $html;
     }
 
-    public static form_checkbox_simple($name, $value, $checked=false, $label=null, $class='input', $id=null)
+    public static function form_checkbox_simple($name, $value, $checked=false, $label=null, $class='input', $id=null)
     {
         if ($checked)
             $checked= "checked='checked'";
@@ -165,7 +165,7 @@ class Form
         return $html;
     }
 
-    public static form_radio($object, $name, $values, $class='input', $list_vertically=false)
+    public static function form_radio($object, $name, $values, $class='input', $list_vertically=false)
     {
         $id= md5($name."_".$object->id);
         $id_ploof= Meta::classname_only($object->classname())."_".$object->id."_$name";
@@ -183,7 +183,7 @@ class Form
         return $html;
     }
 
-    public static form_radio_simple($name, $value, $checked, $class='input', $id=null)
+    public static function form_radio_simple($name, $value, $checked, $class='input', $id=null)
     {
         if ($checked)
             $checked= "checked='checked'";
@@ -199,7 +199,7 @@ class Form
     /**
     * Get the form name for an object / value.
     */
-    public static fname($object, $name)
+    public static function fname($object, $name)
     {
         if (!$object) throw new Exception("No object for fname");
         $cname= Meta::classname_only($object::classname());

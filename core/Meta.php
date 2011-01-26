@@ -36,7 +36,7 @@ class Meta
      * Include $file if it is found in the path,
      *  and return whether or not it was included.
      */
-    function include_if_found($file)
+    public static function include_if_found($file)
     {
         $includables = explode(PATH_SEPARATOR, get_include_path());
         foreach ($includables as $path) 
