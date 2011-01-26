@@ -1,7 +1,7 @@
 <?php
 namespace plugins\DB;
 
-class PDO_MySQL extends core\AbstractDB 
+class PDO_MySQL extends core\AbstractDatabase 
 {
    /**
     *  The db handle. 

@@ -1,35 +1,55 @@
 <?
-class ModelTest extends \core\TestCase
+class ModelTest extends core\TestCase
 {    
-    function test_load()
+    protected $db;
+    protected $session_db;
+    
+    function setUp()
     {
-        $session_db= new \plugins\DB\SessionDB(
+        $session_db= new plugins\DB\SessionDB(
             array('Model'=>array(
                         array('id'=>1, 'name'=>'Marcy'),
                         array('id'=>2, 'name'=>'Jack')
                     )
                 ),
-            array('Model'=>array(
-                        array('id'=>'int', 'name'=>'char')
-                    )
-                )
+            array('Model'=>array('id'=>'int', 'name'=>'char'))
             );
-            
-        $model= new core\Model();
-        $model->set_db($session_db);
-        $model->load(1);
-        $fields= $model->get_fields();
-        $this->assertEquals('Marcy', $fields['name']);
+        $this->db= new core\DB($session_db);
+        $this->session_db= $session_db;
+        core\Model::set_db($this->db);
     }
     
     function test_set_db()
     {
-        $session_db= new \plugins\DB\SessionDB();
-        $model= new core\Model();
-        $model->set_db($session_db);
-        //core\Ploof::debug(1, $model);
-        
+        $this->assertNotEquals(core\Model::get_db(), null, 'Model::db not being set');
     }
+    
+    function test_load()
+    {
+        $model= new core\Model(2);
+        $fields= $model->get_fields();
+        $this->assertEquals('Jack', $fields['name'], "Can't find Jack!");
+    }
+
+    function test_find()
+    {
+        $results= core\Model::find();
+        $this->assertEquals(count($this->session_db->find('Model')), count($results));
+    }
+    
+    function test_requires_a()
+    {
+        $model= new test\framework\fixtures\Requires();
+        $this->assertEquals(true, $model->requires_a('Requirement'));
+        $this->assertEquals(false, $model->requires_a('SomethingNotRequired'));
+    }
+    
+    function test_set_field_types()
+    {
+        $model= new core\Model(1);
+        $this->assertEquals($this->session_db->get_columns('Model'), $model->get_field_types());
+    }
+    
     /*
         // act like an incoming form:
         $a= array('belongsto'=>array('name'=>array(0=>'f', 1=>'g')));

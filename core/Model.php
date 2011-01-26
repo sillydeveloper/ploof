@@ -3,7 +3,7 @@ namespace core;
 
 class Model extends Ploof
 {
-    protected $db= null;
+    static protected $db;
     
     // storage area for database field values 
     protected $fields= null;
@@ -35,9 +35,9 @@ class Model extends Ploof
         
     function __construct($id= null, $db= null)
     {
-        if ($db) $this->set_db($db);
+        if ($db) Model::set_db($db);
         
-        if ($this->db)
+        if (static::$db)
         {
             if ($id)
             {
@@ -51,16 +51,20 @@ class Model extends Ploof
         }
     }
         
-    public function set_db($db)
+    public static function set_db($db)
     {
-        $this->db= $db;
+        static::$db= $db;
     }
+    public static function get_db()
+    {
+        return static::$db;
+    }    
     
     public function load($id)
     {
-        if ($id and $this->db)
+        if ($id and static::$db)
         {
-            $data= $this->db->load(Meta::classname_only(static::classname()), $id);
+            $data= static::$db->load(Meta::classname_only(static::classname()), $id);
             foreach($data as $key=>$value)
             {   
                 $this->fields[$key] = stripslashes($value);
@@ -74,19 +78,17 @@ class Model extends Ploof
         return (array_search($classname, $this->requires) !== false);
     }
     
-    private function set_field_types($nullify= false, $db= null)
+    function set_field_types($nullify= false)
     {
-        if ($db) $this->db= $db;
-        if ($this->db)
+        if (static::$db)
         {
-            $qry= $this->db->get_columns(Meta::classname_only(static::classname()));
-            //DB::query("show columns from ".classname_only(static::classname()));
-            while($row= DB::fetch_assoc($qry))
+            $columns= static::$db->get_columns(Meta::classname_only(static::classname()));
+            foreach($columns as $col_name=>$col_type)
             {
                 if ($nullify)
-                    $this->fields[$row["Field"]]= null;
+                    $this->fields[$col_name]= null;
                 
-                $this->field_types[$row["Field"]]= preg_replace("/\(([0-9])*\)/", "", $row["Type"]);
+                $this->field_types[$col_name]= preg_replace("/\(([0-9])*\)/", "", $col_type);
             }
         }
     }
@@ -104,11 +106,10 @@ class Model extends Ploof
     /**
      * Check and see if a field is a numeric type; dates are not numeric.
      */
-    public function is_numeric($field, $db= null)
+    public function is_numeric($field)
     {
-        if ($db) $this->db= $db;
         $type = $this->get_field_type($field);
-        return $this->db->is_numeric($type);
+        return static::$db->is_numeric($type);
         
         //$numeric= array("decimal", "tinyint", "bigint", "int", "float", "double");
         //if (array_search($type, $numeric) !== false) return true;
@@ -529,10 +530,14 @@ class Model extends Ploof
     }
     
     /**
-     * Find and return an array of objects. Anything after "select * from Foo where" can be in your query.
+     * Find and return an array of objects.
      */
-    static function find($query=null, $db=null)
+    static function find($query=null)
     {
+        
+        return static::$db->find(Meta::classname_only(static::classname()), $query);
+        
+        /*
         $classname= classname_only(static::classname());
         
         if ($query === null or strlen($query) < 1)
@@ -572,6 +577,7 @@ class Model extends Ploof
             }
         }
         return $results;
+        */
     }
     
     /**

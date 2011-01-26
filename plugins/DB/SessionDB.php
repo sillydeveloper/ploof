@@ -5,7 +5,7 @@ namespace plugins\DB;
 //  table=>(row=>(key=>value))
 //  
 //
-class SessionDB extends \core\AbstractDB
+class SessionDB extends \core\AbstractDatabase
 {
    /**
     *  The db handle. 
@@ -34,12 +34,16 @@ class SessionDB extends \core\AbstractDB
     
     // where array: array('key'=>'value')
     //  this is the simplified finder used by core.
-    function find($table, $where_array)
+    function find($table, $where_array=null)
     {
         $results= array();
         $db= \core\Session::get('SessionDBValues');
         
         $table_data= $db[$table];
+        
+        if (!$where_array)
+            return $table_data;
+            
         foreach($table_data as $td)
         {
             foreach($where_array as $key=>$value)
@@ -60,9 +64,19 @@ class SessionDB extends \core\AbstractDB
     
     function get_columns($table)
     {
-        $db= \core\Session::get('SessionDBValues');
-        return array_keys(array_pop($db[$table]));
+        $db= \core\Session::get('SessionDBTypes');
+        return $db[$table];
     }
+    
+    function delete($table, $id)
+    {
+        
+    }
+    function store($table, $data)
+    {
+        
+    }
+    
     
     function is_numeric($field_type)
     {
