@@ -35,7 +35,7 @@ class Model extends Ploof
         
     function __construct($id= null, $db= null)
     {
-        if ($db) Model::set_db($db);
+        if ($db) static::set_db($db);
         
         if (static::$db)
         {
@@ -261,8 +261,11 @@ class Model extends Ploof
         // if no_cache, then get from the database directly:
         if (array_search($field_name, $this->no_cache) !== false)
         {
-            $fetch= DB::fetch_array(DB::query('select '.$field_name.' from '.classname_only(static::classname()).' where id='.$this->id));
-            return $fetch[$field_name];
+            // access database directly:
+            $fields= static::$db->get_database()->load(static::cname(), $this->id);
+            
+            //DB::fetch_array(DB::query('select '.$field_name.' from '.classname_only(static::classname()).' where id='.$this->id));
+            return $fields[$field_name];
         }
         
         // lazy loading part.
@@ -314,8 +317,10 @@ class Model extends Ploof
         // if no_cache, then get from the database directly:
         if (array_search($field_name, $this->no_cache) !== false)
         {
-            $sql= 'update '.classname_only(static::classname()).' set '.$field_name.'="'.$value.'" where id='.$this->id;
-            DB::query($sql);
+            //$sql= 'update '.classname_only(static::classname()).' set '.$field_name.'="'.$value.'" where id='.$this->id;
+            //DB::query($sql);
+            $this->fields[$field_name]= $value;
+            static::$db->get_database()->store(static::cname(), $this->fields);
             return; 
         }
         
@@ -854,6 +859,11 @@ class Model extends Ploof
      function __clone()
      {
          $this->fields[PRIMARY_KEY]= null;
+     }
+     
+     function cname()
+     {
+         return Meta::classname_only(static::classname());
      }
     
     /**

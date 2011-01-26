@@ -50,6 +50,25 @@ class ModelTest extends core\TestCase
         $this->assertEquals($this->session_db->get_columns('Model'), $model->get_field_types());
     }
     
+    function test_no_cache_get()
+    {
+        test\framework\fixtures\NoCache::set_db(new \core\DB(
+                new \plugins\DB\SessionDB(
+                    array('NoCache'=>array(
+                                array('id'=>1, 'name'=>'Marcy'),
+                                array('id'=>2, 'name'=>'Jack')
+                            )
+                        ),
+                    array('NoCache'=>array('id'=>'int', 'name'=>'char'))
+                )
+            )
+        );
+        
+        $model= new test\framework\fixtures\NoCache(1);
+        $model->name= 'bar';
+        $this->assertEquals('bar', $model->name);
+    }
+    
     /*
         // act like an incoming form:
         $a= array('belongsto'=>array('name'=>array(0=>'f', 1=>'g')));

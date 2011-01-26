@@ -22,6 +22,16 @@ class DB extends AbstractDatabase
         $this->cache= $cache;
     }
     
+    function get_database()
+    {
+        return $this->db;
+    }
+    
+    function get_cache()
+    {
+        return $this->cache;
+    }
+    
     // by contract to AbstractDatabase:
     function load($table, $id)
     {
@@ -53,7 +63,7 @@ class DB extends AbstractDatabase
     }
     function store($table, $data)
     {
-        
+        $this->db->store($table, $data);
     }
     
     

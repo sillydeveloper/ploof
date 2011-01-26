@@ -43,7 +43,7 @@ class SessionDB extends \core\AbstractDatabase
         
         if (!$where_array)
             return $table_data;
-            
+                    
         foreach($table_data as $td)
         {
             foreach($where_array as $key=>$value)
@@ -71,12 +71,22 @@ class SessionDB extends \core\AbstractDatabase
     function delete($table, $id)
     {
         
-    }
-    function store($table, $data)
-    {
         
     }
     
+    function store($table, $data)
+    {
+        $stored_data= \core\Session::get('SessionDBValues');
+        $id_to_find= $data['id'];
+        foreach($stored_data[$table] as $key=>$td)
+        {
+            if ($td['id'] == $id_to_find)
+            {
+                $stored_data[$table][$key]= $data;
+            }
+        }
+        \core\Session::set('SessionDBValues', $stored_data);
+    }
     
     function is_numeric($field_type)
     {
@@ -86,6 +96,11 @@ class SessionDB extends \core\AbstractDatabase
     function query($sql)
     {
         
+    }
+    
+    static function classname()
+    {
+        return __CLASS__;
     }
 }
 
