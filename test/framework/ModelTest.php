@@ -116,6 +116,27 @@ class ModelTest extends core\TestCase
         $this->assertEquals(1, $has_many->id);
     }
     
+    function test_date_get()
+    {
+        $database= new \plugins\DB\SessionDB(
+            array(
+                'HasMany'=>array(
+                        array('id'=>1, 'dtime'=>'2010-01-01 10:00:00')
+                    )
+                ),
+            array(
+                'HasMany'=>array('id'=>'int', 'dtime'=>'date'),
+            )
+        );
+        $db_check= new \core\DB($database);
+        HasMany::set_db($db_check);
+        $model= new HasMany(1);
+        core\Ploof::debug(1, $model->dtime);
+        $this->assertEquals('01/01/2010', $model->dtime);
+    }
+    
+    
+    
     /*
         // act like an incoming form:
         $a= array('belongsto'=>array('name'=>array(0=>'f', 1=>'g')));

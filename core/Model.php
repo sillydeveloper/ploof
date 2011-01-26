@@ -303,13 +303,17 @@ class Model extends Ploof
         // call the datetime handler if this is a datetime:
         if (array_key_exists($field_name, $this->field_types))
         {
-            switch (strtolower($this->field_types[$field_name]))
+            if (static::$db->get_database()->is_date($this->field_types[$field_name]))
             {
-                case "date": // fall through
-                case "datetime": return format_date($this->fields[$field_name]);
-                case "float": // fall through
-                case "double": return format_float($this->fields[$field_name]);
+                return Format::date(format_date($this->fields[$field_name]));
             }
+            //switch (strtolower($this->field_types[$field_name]))
+            //{
+            //    case "date": // fall through
+            //    case "datetime": return format_date($this->fields[$field_name]);
+            //    case "float": // fall through
+            //    case "double": return format_float($this->fields[$field_name]);
+            //}
         }            
             
         if ($results)

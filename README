@@ -1,10 +1,21 @@
-PLOOF README
-    author(s): Andrew Ettinger
+PHP LIGHTWEIGHT OBJECT ORIENTED FRAMEWORK README
+    author(s): Andrew Ettinger, Nick Sinopoli
+    
+=== GETTING STARTED ===
 
-MODEL MADNESS
+We don't have a release yet, so it's time for a fork! 
 
-    STORE()
-        
+    git branch git://github.com/sillydeveloper/ploof.git
+
+
+=== THE PLOOF COMMAND ===
+
+The ./ploof utility is the swiss army knife of the framework. Not sure what to run with it? Just run ./ploof without any options to get a list of currently supported commands.
+
+
+    
+=== MODEL FEATURES ===
+    
     AUTO HANDLING
         Basically, if a table has [tablename]_id in it, ploof knows it's a relationship 
         and you can access it like:
@@ -14,11 +25,8 @@ MODEL MADNESS
             }
         
             $f= new foo();
-            foreach($f->bar->find() as $a_bar) { // do some stuff }
+            foreach($f->bar->find() as $a_bar) { print($a_bar->id."\n"); }
     
-    JOINER
-        This handles all the relationship specialness - find(), find_object(), etc.
-
     OVERRIDING
         You can override the auto loader by having a function named get_[foo]()
         Example:
@@ -35,7 +43,7 @@ MODEL MADNESS
         Whatever is returned is used by the caching / lazy loader mechanism.
 
 
-CONTROLLER CRAZY
+=== CONTROLLER FEATURES ===
     
     REDIR
         Pass in a GET or POST variable called 'redir' with a url to have the controller auto-route 
@@ -52,5 +60,4 @@ CONTROLLER CRAZY
         $_REQUEST['main_controller'] and $_REQUEST['MAIN_ACTION'] are there to help.
     
 
-VIEW... I DON'T HAVE ONE FOR VIEW
     

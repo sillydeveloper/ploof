@@ -65,6 +65,10 @@ class DB extends AbstractDatabase
     {
         $this->db->store($table, $data);
     }
+    function is_date($field_type)
+    {
+        return $this->db->is_date($field_type);
+    }
     
     
 }

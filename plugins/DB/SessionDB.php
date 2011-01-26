@@ -98,6 +98,11 @@ class SessionDB extends \core\AbstractDatabase
         
     }
     
+    function is_date($field_type)
+    {
+        return ($field_type == 'date');
+    }
+    
     static function classname()
     {
         return __CLASS__;

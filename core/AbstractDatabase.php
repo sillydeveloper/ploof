@@ -29,5 +29,7 @@ abstract class AbstractDatabase extends Ploof
     
     // not sure if this is really required...?
     abstract function query($sql);
+    
+    abstract function is_date($field_type);
 }
 ?>
