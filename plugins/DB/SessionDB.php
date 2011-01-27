@@ -70,8 +70,11 @@ class SessionDB implements \core\PluginInterfaceDB
     
     function delete_row($table, $id)
     {
-        
-        
+        $values= \core\Session::get('SessionDBValues');
+        foreach($values[$table] as $td)
+        {
+            unset($values[$table_data])
+        }
     }
     
     function store_row($table, $data)

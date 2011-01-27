@@ -193,6 +193,7 @@ class Model extends Ploof
     function refresh($field_name, $sort_fun=null, $order=null, $limit=null)
     {   
         //static::$repository->
+        //static::$repository->
         $joiner= false;
         
         // Check to see if we need to override the getter by calling a different
