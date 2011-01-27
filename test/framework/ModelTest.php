@@ -18,10 +18,10 @@ class ModelTest extends core\TestCase
             );
         $this->repository= new core\Repository($session_db);
         $this->session_db= $session_db;
-        core\Model::set_db($this->repository);
+        core\Model::set_repository($this->repository);
     }
     
-    function test_set_db()
+    function test_set_repository()
     {
         $this->assertNotEquals(core\Model::get_db(), null, 'Model::db not being set');
     }
@@ -44,7 +44,7 @@ class ModelTest extends core\TestCase
             array('NoCache'=>array('id'=>'int', 'name'=>'char'))
             );
         $repository= new core\Repository($session_db);
-        NoCache::set_db($repository);
+        NoCache::set_repository($repository);
         $results= NoCache::find();
         $this->assertEquals(count($this->session_db->find_rows('NoCache')), count($results));
         
@@ -77,7 +77,7 @@ class ModelTest extends core\TestCase
                     array('NoCache'=>array('id'=>'int', 'name'=>'char'))
                 )
         );
-        NoCache::set_db($repository_check);
+        NoCache::set_repository($repository_check);
         
         $model= new NoCache(1);
         $model->name= 'bar';
@@ -104,8 +104,8 @@ class ModelTest extends core\TestCase
             )
         );
         $repository_check= new \core\Repository($database);
-        HasMany::set_db($repository_check);
-        BelongsTo::set_db($repository_check);
+        HasMany::set_repository($repository_check);
+        BelongsTo::set_repository($repository_check);
         
         $model= new HasMany(1);
         $belongs_to= $model->BelongsTo->find();
@@ -129,7 +129,7 @@ class ModelTest extends core\TestCase
             )
         );
         $repository_check= new \core\Repository($database);
-        HasMany::set_db($repository_check);
+        HasMany::set_repository($repository_check);
         $model= new HasMany(1);
         $this->assertEquals('01/01/2010', $model->dtime);
     }

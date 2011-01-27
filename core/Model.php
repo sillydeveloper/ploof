@@ -35,7 +35,7 @@ class Model extends Ploof
         
     function __construct($id= null, $repository= null)
     {
-        if ($repository) static::set_db($repository);
+        if ($repository) static::set_repository($repository);
         
         if (static::$repository)
         {
@@ -51,7 +51,7 @@ class Model extends Ploof
         }
     }
         
-    public static function set_db($repository)
+    public static function set_repository($repository)
     {
         static::$repository= $repository;
     }
