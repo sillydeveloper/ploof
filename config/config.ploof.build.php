@@ -17,7 +17,7 @@ set_include_path(get_include_path().PATH_SEPARATOR.
  */
 function __autoload($class_name) 
 {
-    include str_replace("\\", "/", $class_name).".php";
+    include_once str_replace("\\", "/", $class_name).".php";
 }
 
 /**
@@ -29,43 +29,9 @@ define("SESSION_PASSWORD", "password");
 define("SESSION_PASSWORD_SALT", false);
 
 /**
- * Display errors.
- */
-ini_set('display_errors', 1);
-
-/**
- * How verbose you want to debug (1-5). 5 will show everything.
- */
-define("DEBUG_LEVEL", 1);
-
-/**
- * Enable caching: turn off for development, on for production.
- * 0: ALWAYS call refresh() in the core\Joiner object (more DB thrashing)
- * 1: Refresh joined objects only on refresh() command
- */
-define('ENABLE_OBJECT_CACHE', 1);
-
-/**
  * Initial controller to load
  */
 define("DEFAULT_CONTROLLER", "Dashboard");
-
-/**
- * Uhh... Obvious hopefully.
- */
-define("DATABASE_USER", "");
-define("DATABASE_PASS", "");
-define("DATABASE_HOST", "");
-define("DATABASE_NAME", "");
-
-/**
- * Fixture database for unit tests. This database
- * WILL BE WIPED each time you run unit tests.
- */
-define("TEST_DATABASE_USER", "");
-define("TEST_DATABASE_PASS", "");
-define("TEST_DATABASE_HOST", "");
-define("TEST_DATABASE_NAME", "");
 
 /**
  * Initial action to call on controllers
@@ -75,9 +41,14 @@ define("DEFAULT_ACTION", "index");
 define("DEFAULT_LAYOUT", "default");
 
 /**
- * TODO: This is temporary.
+ * Display errors.
  */
-define("USE_MYSQLI", true);
+ini_set('display_errors', 1);
+
+/**
+ * How verbose you want to debug (1-5). 5 will show everything.
+ */
+define("DEBUG_LEVEL", 1);
 
 /**
  * PHP 5.3 requires it.
@@ -112,8 +83,6 @@ define("PLOOF_SEPARATOR", "__");
  */
 define("VIEW_EXTENSION", ".html");
 
-define('IN_UNIT_TESTING', 0); 
-
-#require_once "config.application.php";
+core\Meta::include_if_found("config.application.php");
 require_once "fun.php";
 ?>
