@@ -5,7 +5,7 @@ namespace plugins\DB;
 //  table=>(row=>(key=>value))
 //  
 //
-class SessionDB extends \core\AbstractDatabase
+class SessionDB implements \core\PluginInterfaceDB
 {
    /**
     *  The db handle. 
@@ -27,14 +27,14 @@ class SessionDB extends \core\AbstractDatabase
         \core\Session::set('SessionDBTypes', $init_types);
     }
     
-    function load($table, $id)
+    function load_row($table, $id)
     {
-        return array_pop($this->find($table, array(PRIMARY_KEY=>$id)));
+        return array_pop($this->find_rows($table, array(PRIMARY_KEY=>$id)));
     }
     
     // where array: array('key'=>'value')
     //  this is the simplified finder used by core.
-    function find($table, $where_array=null)
+    function find_rows($table, $where_array=null)
     {
         $results= array();
         $db= \core\Session::get('SessionDBValues');
@@ -62,19 +62,19 @@ class SessionDB extends \core\AbstractDatabase
         return array_keys(\core\Session::get('SessionDBValues'));
     }
     
-    function get_columns($table)
+    function get_table_columns($table)
     {
         $db= \core\Session::get('SessionDBTypes');
         return $db[$table];
     }
     
-    function delete($table, $id)
+    function delete_row($table, $id)
     {
         
         
     }
     
-    function store($table, $data)
+    function store_row($table, $data)
     {
         $stored_data= \core\Session::get('SessionDBValues');
         $id_to_find= $data['id'];
@@ -88,7 +88,7 @@ class SessionDB extends \core\AbstractDatabase
         \core\Session::set('SessionDBValues', $stored_data);
     }
     
-    function is_numeric($field_type)
+    function is_numeric_datatype($field_type)
     {
         
     }
@@ -98,7 +98,7 @@ class SessionDB extends \core\AbstractDatabase
         
     }
     
-    function is_date($field_type)
+    function is_date_datatype($field_type)
     {
         return ($field_type == 'date');
     }

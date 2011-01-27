@@ -3,7 +3,7 @@ namespace core;
 
 class Model extends Ploof
 {
-    static protected $db;
+    static protected $repository;
     
     // storage area for database field values 
     protected $fields= null;
@@ -33,11 +33,11 @@ class Model extends Ploof
     //  these will be ignored by __get() and store().
     protected $no_cache= array();
         
-    function __construct($id= null, $db= null)
+    function __construct($id= null, $repository= null)
     {
-        if ($db) static::set_db($db);
+        if ($repository) static::set_db($repository);
         
-        if (static::$db)
+        if (static::$repository)
         {
             if ($id)
             {
@@ -51,20 +51,20 @@ class Model extends Ploof
         }
     }
         
-    public static function set_db($db)
+    public static function set_db($repository)
     {
-        static::$db= $db;
+        static::$repository= $repository;
     }
     public static function get_db()
     {
-        return static::$db;
+        return static::$repository;
     }    
     
     public function load($id)
     {
-        if ($id and static::$db)
+        if ($id and static::$repository)
         {
-            $data= static::$db->load(Meta::classname_only(static::classname()), $id);
+            $data= static::$repository->load_row(Meta::classname_only(static::classname()), $id);
             foreach($data as $key=>$value)
             {   
                 $this->fields[$key] = stripslashes($value);
@@ -80,9 +80,9 @@ class Model extends Ploof
     
     function set_field_types($nullify= false)
     {
-        if (static::$db)
+        if (static::$repository)
         {
-            $columns= static::$db->get_columns(Meta::classname_only(static::classname()));
+            $columns= static::$repository->get_table_columns(Meta::classname_only(static::classname()));
             foreach($columns as $col_name=>$col_type)
             {
                 if ($nullify)
@@ -109,7 +109,7 @@ class Model extends Ploof
     public function is_numeric($field)
     {
         $type = $this->get_field_type($field);
-        return static::$db->is_numeric($type);
+        return static::$repository->is_numeric($type);
         
         //$numeric= array("decimal", "tinyint", "bigint", "int", "float", "double");
         //if (array_search($type, $numeric) !== false) return true;
@@ -192,7 +192,7 @@ class Model extends Ploof
      */
     function refresh($field_name, $sort_fun=null, $order=null, $limit=null)
     {   
-        //static::$db->
+        //static::$repository->
         $joiner= false;
         
         // Check to see if we need to override the getter by calling a different
@@ -263,7 +263,7 @@ class Model extends Ploof
         if (array_search($field_name, $this->no_cache) !== false)
         {
             // access database directly, bypass any cache access:
-            $fields= static::$db->get_database()->load(static::cname(), $this->id);
+            $fields= static::$repository->get_database()->load(static::cname(), $this->id);
             return $fields[$field_name];
         }
         
@@ -303,17 +303,10 @@ class Model extends Ploof
         // call the datetime handler if this is a datetime:
         if (array_key_exists($field_name, $this->field_types))
         {
-            if (static::$db->get_database()->is_date($this->field_types[$field_name]))
+            if (static::$repository->get_database()->is_date_datatype($this->field_types[$field_name]))
             {
                 return Format::date(format_date($this->fields[$field_name]));
             }
-            //switch (strtolower($this->field_types[$field_name]))
-            //{
-            //    case "date": // fall through
-            //    case "datetime": return format_date($this->fields[$field_name]);
-            //    case "float": // fall through
-            //    case "double": return format_float($this->fields[$field_name]);
-            //}
         }            
             
         if ($results)
@@ -332,12 +325,13 @@ class Model extends Ploof
         if (array_search($field_name, $this->no_cache) !== false)
         {
             $this->fields[$field_name]= $value;
-            static::$db->get_database()->store(static::cname(), $this->fields);
+            static::$repository->get_database()->store_row(static::cname(), $this->fields);
             return; 
         }
         
         if ($this->is_foreign($field_name))
         {
+            /*
             if (is_object($this->fields[$field_name]) == false)
             {
                 $this->debug(5, "Refreshing ".$field_name." for __set");
@@ -348,11 +342,14 @@ class Model extends Ploof
 
             // now add to joiner:
             $this->fields[$field_name]->add_object($value);
+            */
+            
+            
         }
         else
         {
             // call the datetime handler if this is a datetime:
-            if (array_key_exists($field_name, $this->field_types) and static::$db->get_database()->is_date($this->field_types[$field_name]) and strlen($value) > 0)
+            if (array_key_exists($field_name, $this->field_types) and static::$repository->get_database()->is_date_datatype($this->field_types[$field_name]) and strlen($value) > 0)
             {
                 $value = Format::date_sql($value);
             }
@@ -552,7 +549,7 @@ class Model extends Ploof
     {
         $returns= array();
         $classname= static::cname();   
-        $results= static::$db->find(static::cname(), $query);
+        $results= static::$repository->find_rows(static::cname(), $query);
         if (is_array($results))
         {
             foreach($results as $key=>$object_data)
@@ -561,48 +558,6 @@ class Model extends Ploof
             }
         }
         return $returns;
-        
-        /*
-        $classname= classname_only(static::classname());
-        
-        if ($query === null or strlen($query) < 1)
-        {
-            $query= "select ".PRIMARY_KEY." from ".$classname;  
-            self::debug(5, $query);
-            if ($db)
-                $result= $db::query($query);
-            else
-                $result= DB::query($query);
-        }
-        else
-        {
-            $query= "select ".PRIMARY_KEY." from ".$classname." where ".$query;
-            self::debug(5, $query);
-            if ($db)
-                $result= $db::query($query);
-            else
-                $result= DB::query($query);
-        }
-        
-        $results= array();
-        
-        if (!$result) // or DB::num_rows($result) < 1)
-        { 
-			self::debug(5, 'No result');
-            return false;
-        }
-
-        // to instance, we need full path:
-        $c= static::classname();
-        while($ids= DB::fetch_assoc($result))
-        {
-            foreach($ids as $k=>$v)
-            {
-                $results[]= new $c($v);
-            }
-        }
-        return $results;
-        */
     }
     
     /**

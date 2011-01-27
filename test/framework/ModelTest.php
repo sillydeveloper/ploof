@@ -3,7 +3,7 @@ set_include_path(get_include_path().PATH_SEPARATOR."test/framework/fixtures");
 
 class ModelTest extends core\TestCase
 {    
-    protected $db;
+    protected $repository;
     protected $session_db;
     
     function setUp()
@@ -16,9 +16,9 @@ class ModelTest extends core\TestCase
                 ),
             array('Model'=>array('id'=>'int', 'name'=>'char'))
             );
-        $this->db= new core\DB($session_db);
+        $this->repository= new core\Repository($session_db);
         $this->session_db= $session_db;
-        core\Model::set_db($this->db);
+        core\Model::set_db($this->repository);
     }
     
     function test_set_db()
@@ -43,13 +43,13 @@ class ModelTest extends core\TestCase
                 ),
             array('NoCache'=>array('id'=>'int', 'name'=>'char'))
             );
-        $db= new core\DB($session_db);
-        NoCache::set_db($db);
+        $repository= new core\Repository($session_db);
+        NoCache::set_db($repository);
         $results= NoCache::find();
-        $this->assertEquals(count($this->session_db->find('NoCache')), count($results));
+        $this->assertEquals(count($this->session_db->find_rows('NoCache')), count($results));
         
         $results= NoCache::find(array('id'=>1));
-        $this->assertEquals(count($this->session_db->find('NoCache', array('id'=>1))), count($results));
+        $this->assertEquals(count($this->session_db->find_rows('NoCache', array('id'=>1))), count($results));
     }
     
     function test_requires_a()
@@ -62,12 +62,12 @@ class ModelTest extends core\TestCase
     function test_set_field_types()
     {
         $model= new core\Model(1);
-        $this->assertEquals($this->session_db->get_columns('Model'), $model->get_field_types());
+        $this->assertEquals($this->session_db->get_table_columns('Model'), $model->get_field_types());
     }
     
     function test_no_cache_set_and_get()
     {
-        $db_check= new \core\DB(
+        $repository_check= new \core\Repository(
                 new \plugins\DB\SessionDB(
                     array('NoCache'=>array(
                                 array('id'=>1, 'name'=>'Marcy'),
@@ -77,11 +77,11 @@ class ModelTest extends core\TestCase
                     array('NoCache'=>array('id'=>'int', 'name'=>'char'))
                 )
         );
-        NoCache::set_db($db_check);
+        NoCache::set_db($repository_check);
         
         $model= new NoCache(1);
         $model->name= 'bar';
-        $data= $db_check->load('NoCache', 1);
+        $data= $repository_check->load_row('NoCache', 1);
         $this->assertEquals('bar', $data['name']);
     }
     
@@ -103,9 +103,9 @@ class ModelTest extends core\TestCase
                 'BelongsTo'=>array('id'=>'int', 'name'=>'char', 'HasMany_id'=>'int'),
             )
         );
-        $db_check= new \core\DB($database);
-        HasMany::set_db($db_check);
-        BelongsTo::set_db($db_check);
+        $repository_check= new \core\Repository($database);
+        HasMany::set_db($repository_check);
+        BelongsTo::set_db($repository_check);
         
         $model= new HasMany(1);
         $belongs_to= $model->BelongsTo->find();
@@ -128,10 +128,9 @@ class ModelTest extends core\TestCase
                 'HasMany'=>array('id'=>'int', 'dtime'=>'date'),
             )
         );
-        $db_check= new \core\DB($database);
-        HasMany::set_db($db_check);
+        $repository_check= new \core\Repository($database);
+        HasMany::set_db($repository_check);
         $model= new HasMany(1);
-        core\Ploof::debug(1, $model->dtime);
         $this->assertEquals('01/01/2010', $model->dtime);
     }
     

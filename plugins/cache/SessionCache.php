@@ -1,7 +1,7 @@
 <?
 namespace plugins\cache;
 
-class SessionCache extends core\AbstractCache
+class SessionCache extends core\PluginInterfaceCache
 {
     
 }
