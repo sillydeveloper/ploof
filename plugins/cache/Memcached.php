@@ -1,5 +1,5 @@
 <?
-namespace core
+namespace plugins\cache;
 
 class Memcached
 {
@@ -26,7 +26,7 @@ class Memcached
     }
 
    /**
-    *  Adds an item under a new key.  Functionally equivalent to set(), though this operation will fail
+    *  Adds an item under a new key.  Functionally equivalent to set_in_cache(), though this operation will fail
     *  if $key already exists on the server.
     *
     *  @param string $key                       The key under which to store the value.
@@ -38,7 +38,7 @@ class Memcached
     *  @access public
     *  @return bool 
     */
-    public function add($key, $value, $expiration=0, $server_key='')
+    public function add_to_cache($key, $value, $expiration=0, $server_key='')
     {
         return $this->_cache->addByKey($server_key, $key, $value, $expiration);
     }
@@ -106,7 +106,7 @@ class Memcached
     *  @access public
     *  @return bool 
     *
-    *  @see get() for how to obtain the CAS token.
+    *  @see get_from_cache() for how to obtain the CAS token.
     */
     public function cas($token, $key, $value, $expiration=0, $server_key='')
     {
@@ -136,7 +136,7 @@ class Memcached
     *  @access public
     *  @return bool 
     */
-    public function delete($key, $time=0, $server_key='')
+    public function delete_from_cache($key, $time=0, $server_key='')
     {
         return $this->_cache->deleteByKey($server_key, $key, $time);
     }
@@ -148,13 +148,13 @@ class Memcached
     *  @access public
     *  @return bool 
     */
-    public function flush($delay=0)
+    public function flush_cache($delay=0)
     {
         return $this->_cache->flush($delay);
     }
 
    /**
-    *  Retrieves an item.
+    *  Retrieves an item.  Returns false if the key is not found.
     *
     *  @param string $key                       The key of the item to retrieve.
     *  @param callback $cache_callback          Read-through caching callback. 
@@ -165,7 +165,7 @@ class Memcached
     *
     *  @see cas() for how to use CAS tokens.
     */
-    public function get($key, $cache_callback=null, &$cas_token=null, $server_key='')
+    public function get_from_cache($key, $cache_callback=null, &$cas_token=null, $server_key='')
     {
         return $this->_cache->getByKey($server_key, $key, $cache_callback, $cas_token);
     }
@@ -220,8 +220,8 @@ class Memcached
     }
 
    /**
-    *  Replaces the item under an existing key.  Functionally equivalent to set(), though this operation will fail
-    *  if $key already exists on the server.
+    *  Replaces the item under an existing key.  Functionally equivalent to set_in_cache(), though this operation will fail
+    *  if $key does not exist.
     *
     *  @param string $key                       The key under which to store the value.
     *  @param mixed $value                      The value to be stored. 
@@ -232,7 +232,7 @@ class Memcached
     *  @access public
     *  @return bool 
     */
-    public function replace($key, $value, $expiration=0, $server_key='')
+    public function replace_in_cache($key, $value, $expiration=0, $server_key='')
     {
         return $this->_cache->replaceByKey($server_key, $key, $value, $expiration);
     }
@@ -249,7 +249,7 @@ class Memcached
     *  @access public
     *  @return bool 
     */
-    public function set($key, $value, $expiration=0, $server_key='')
+    public function set_in_cache($key, $value, $expiration=0, $server_key='')
     {
         return $this->_cache->setByKey($server_key, $key, $value, $expiration);
     }

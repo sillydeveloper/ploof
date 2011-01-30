@@ -3,20 +3,63 @@ namespace core;
 
 interface PluginInterfaceCache
 {
-    function add_to_cache($key, $value, $expiration=0);
+   /**
+    *  Adds an item under a new key.  Functionally equivalent to set_in_cache(), though this operation will fail
+    *  if $key already exists on the server.
+    *
+    *  @param string $key                       The key under which to store the value.
+    *  @param mixed $value                      The value to be stored. 
+    *  @access public
+    *  @return bool 
+    */
+    public function add_to_cache($key, $value);
     
-    function delete_from_cache($key, $time=0);
+   /**
+    *  Deletes an item.
+    *
+    *  @param string $key                       The key to be deleted.
+    *  @access public
+    *  @return bool 
+    */
+    public function delete_from_cache($key);
     
-    function flush_cache($delay=0);
+   /**
+    *  Invalidates all items in the cache.
+    *
+    *  @access public
+    *  @return bool 
+    */
+    public function flush_cache();
     
-    function get_cached($key, $cache_callback=null, $cas_token=null);
+   /**
+    *  Retrieves an item.  Returns false if the key is not found.
+    *
+    *  @param string $key                       The key of the item to retrieve.
+    *  @access public
+    *  @return mixed 
+    */
+    public function get_from_cache($key);
     
-    function key_exists($key);
+   /**
+    *  Replaces the item under an existing key.  Functionally equivalent to set_in_cache(), though this operation will fail
+    *  if $key does not exist.
+    *
+    *  @param string $key                       The key under which to store the value.
+    *  @param mixed $value                      The value to be stored. 
+    *  @access public
+    *  @return bool 
+    */
+    public function replace_in_cache($key, $value);
     
-    function replace_cached_item($key, $value, $expiration=0);
-    
-    function set_cached_item($key, $value, $expiration=0);
-    
+   /**
+    *  Stores an item.
+    *
+    *  @param string $key                       The key under which to store the value.
+    *  @param mixed $value                      The value to be stored. 
+    *  @access public
+    *  @return bool 
+    */
+    public function set_in_cache($key, $value);
 }
 
 ?>

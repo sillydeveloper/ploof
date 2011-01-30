@@ -6,28 +6,28 @@ class Repository implements PluginInterfaceDB, PluginInterfaceCache
     private $db;
     private $cache;
     
-    function __construct(PluginInterfaceDB $db=null, PluginInterfaceCache $cache=null)
+    public function __construct(PluginInterfaceDB $db=null, PluginInterfaceCache $cache=null)
     {
         $this->db= $db;
         $this->cache= $cache;
     }
     
-    function set_database(PluginInterfaceDB $db)
+    public function set_database(PluginInterfaceDB $db)
     {
         $this->db= $db;
     }
     
-    function set_cache(PluginInterfaceCache $cache)
+    public function set_cache(PluginInterfaceCache $cache)
     {
         $this->cache= $cache;
     }
     
-    function get_database()
+    public function get_database()
     {
         return $this->db;
     }
     
-    function get_cache()
+    public function get_cache()
     {
         return $this->cache;
     }
@@ -35,78 +35,73 @@ class Repository implements PluginInterfaceDB, PluginInterfaceCache
     //-------------------------------------------------
     // by contract to PluginInterfaceCache
     //-------------------------------------------------
-    function add_to_cache($key, $value, $expiration=0)
+    public function add_to_cache($key, $value, $expiration=0, $server_key='')
     {
-        
+        return $this->cache->add_to_cache($key, $value, $expiration, $server_key);    
     }
     
-    function delete_from_cache($key, $time=0)
+    public function delete_from_cache($key, $time=0, $server_key='')
     {
-        
+        return $this->cache->delete_from_cache($key, $time, $server_key);
     }
     
-    function flush_cache($delay=0)
+    public function flush_cache($delay=0)
     {
-        
+        return $this->cache->flush_cache($delay);
     }
     
-    function get_cached($key, $cache_callback=null, $cas_token=null)
+    public function get_from_cache($key, $cache_callback=null, &$cas_token=null, $server_key='')
     {
-        
+        return $this->cache->get_from_cache($key, $cache_callback, $cas_token, $server_key);
     }
     
-    function key_exists($key)
+    public function replace_in_cache($key, $value, $expiration=0, $server_key='')
     {
-        
+        return $this->cache->replace_in_cache($key, $value, $expiration, $server_key);
     }
     
-    function replace_cached_item($key, $value, $expiration=0)
+    public function set_in_cache($key, $value, $expiration=0, $server_key='')
     {
-        
-    }
-    
-    function set_cached_item($key, $value, $expiration=0)
-    {
-        
+        return $this->cache->set_in_cache($key, $value, $expiration, $server_key);
     }
     
     
     //-------------------------------------------------
     // by contract to PluginInterfaceDB:
     //-------------------------------------------------
-    function load_row($table, $id)
+    public function load_row($table, $id)
     {
         return $this->db->load_row($table, $id);
     }
-    function find_rows($table, $where_array)
+    public function find_rows($table, $where_array)
     {
         return $this->db->find_rows($table, $where_array);
     }
-    function show_tables()
+    public function show_tables()
     {
         return $this->db->show_tables();
     }
-    function get_table_columns($table)
+    public function get_table_columns($table)
     {
         return $this->db->get_table_columns($table);
     }
-    function is_numeric_datatype($field_type)
+    public function is_numeric_datatype($field_type)
     {
         return $this->db->is_numeric_datatype($field_type);
     }
-    function query($sql)
+    public function query($sql)
     {
 //        return $this->db->query($sql);
     }
-    function delete_row($table, $id)
+    public function delete_row($table, $id)
     {
         
     }
-    function store_row($table, $data)
+    public function store_row($table, $data)
     {
         $this->db->store_row($table, $data);
     }
-    function is_date_datatype($field_type)
+    public function is_date_datatype($field_type)
     {
         return $this->db->is_date_datatype($field_type);
     }
