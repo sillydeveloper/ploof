@@ -101,7 +101,7 @@ class Repository implements PluginInterfaceDB, PluginInterfaceCache
     
     function query($sql)
     {
-//        return $this->db->query($sql);
+        
     }
     
     function delete_row($table, $id)

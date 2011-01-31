@@ -55,7 +55,8 @@ class Model extends Ploof
     {
         static::$repository= $repository;
     }
-    public static function get_db()
+    
+    public static function get_repository()
     {
         return static::$repository;
     }    
@@ -561,7 +562,8 @@ class Model extends Ploof
      */
     function store($additional=null)
     {
-        static::$repository->store_row(static::cname(), $this->fields);
+        $id= static::$repository->store_row(static::cname(), $this->fields);
+        $this->id= $id;
     } // end store
     
     function delete()
