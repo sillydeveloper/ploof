@@ -78,34 +78,42 @@ class Repository implements PluginInterfaceDB, PluginInterfaceCache
     {
         return $this->db->load_row($table, $id);
     }
+    
     function find_rows($table, $where_array)
     {
         return $this->db->find_rows($table, $where_array);
     }
+    
     function show_tables()
     {
         return $this->db->show_tables();
     }
+    
     function get_table_columns($table)
     {
         return $this->db->get_table_columns($table);
     }
+    
     function is_numeric_datatype($field_type)
     {
         return $this->db->is_numeric_datatype($field_type);
     }
+    
     function query($sql)
     {
 //        return $this->db->query($sql);
     }
+    
     function delete_row($table, $id)
     {
-        
+        $this->db->delete_row($table, $id);
     }
+    
     function store_row($table, $data)
     {
         $this->db->store_row($table, $data);
     }
+    
     function is_date_datatype($field_type)
     {
         return $this->db->is_date_datatype($field_type);

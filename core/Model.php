@@ -191,9 +191,7 @@ class Model extends Ploof
      * Used to make sure cached data is up-to-date.
      */
     function refresh($field_name, $sort_fun=null, $order=null, $limit=null)
-    {   
-        //static::$repository->
-        //static::$repository->
+    {           
         $joiner= false;
         
         // Check to see if we need to override the getter by calling a different
@@ -208,7 +206,7 @@ class Model extends Ploof
         {   
             // joiner handles everything for habtm since it has to load
             //  and know about extra fields in the join table.
-            $joiner= new Joiner($this, static::cname(), $field_name);
+            //$joiner= new Joiner($this, static::cname(), $field_name);
         }
         else 
         {
@@ -344,8 +342,6 @@ class Model extends Ploof
             // now add to joiner:
             $this->fields[$field_name]->add_object($value);
             */
-            
-            
         }
         else
         {
@@ -512,7 +508,7 @@ class Model extends Ploof
     static function find_sql($sql)
     {
         self::debug(5, "find_sql using sql = ".$sql);
-        $res = DB::query($sql);
+        $res = static::$repository->get_database()->query($sql);
         if (!$res) 
         { 
             self::debug(5, 'No result');
@@ -521,10 +517,9 @@ class Model extends Ploof
 
         $classname= static::cname();
         $objects = array();
-        while ($row = DB::fetch_array($res))
+        foreach($res as $row)
         {
-            $primary_key = $row[0];
-            $objects[$pk] = new $classname($primary_key);
+            $objects[] = new $classname($row[PRIMARY_KEY]);
         }
         return $objects;
     }
@@ -561,153 +556,17 @@ class Model extends Ploof
         return $returns;
     }
     
-    /**
-     * Sanitize something for mysql, if needed:
-     */
-    function sanitize($key, $val)
-    {
-        if (SANITIZE_INPUT)
-        { 
-            if (USE_MYSQLI)
-                $val= \mysqli_real_escape_string(DB::getInstance()->connect_id, $val);
-            else
-                $val= \mysql_real_escape_string($val);
-        }
-        
-        if ($this->is_numeric($key) and $val != "NULL")
-        {
-            $val= preg_replace("/[A-Za-z\$,_\%']/i", "", $val);
-        }
-        
-        return $val;
-    }
-    
     /** 
      * Store this object back into the database.
      */
     function store($additional=null)
     {
-        $existing= ($this->fields[PRIMARY_KEY] != null);
-        
-        if (array_key_exists("created_on", $this->fields) and !$this->fields["created_on"])
-            $this->fields["created_on"]= date("Y-m-d H:i:s", time());
-        
-        if (array_key_exists("updated_on", $this->fields))
-            $this->fields["updated_on"]= date("Y-m-d H:i:s", time());
-        
-        $field_query= array();
-
-        // set it up:
-        if ($existing)
-        {
-            $sql= "update ".classname_only(static::classname())." set ";
-            
-            $field_query= array();
-            foreach($this->field_types as $k=>$v)
-            {
-                $v= $this->fields[$k];
-                if ($k != PRIMARY_KEY)
-                {
-                    if (!is_object($v) and !is_array($v) and ($v === null or strlen($v) == 0)) 
-                        $v= "NULL";
-             
-                    if ($k == PRIMARY_KEY) continue;
-                
-                    if (array_search($k, $this->no_cache) !== false)
-                    {
-                        // if it's in a no-cache state, then don't update it.
-                    }
-                    elseif ($this->is_belongs_to($k) and is_object($v))
-                    {
-                        // remember: it's a joiner object.
-                    }
-                    elseif ($this->is_numeric($k) or $v === "NULL" )
-                    {
-                        $field_query[]= $k."=".$this->sanitize($k, $v)."";
-                    }
-                    elseif ($this->is_foreign($k))
-                    {
-                        // if it's otherwise foreign, ignore it.
-                    }
-                    else
-                        $field_query[]= $k."='".$this->sanitize($k, $v)."'";         
-                }           
-            }
-            $sql.= implode(",", $field_query)." where ".PRIMARY_KEY."='".$this->fields[PRIMARY_KEY]."'";
-        }
-        else
-        {   
-            unset($this->fields[PRIMARY_KEY]);
-            $field_query= array();				
-            foreach($this->field_types as $k=>$v)
-            {
-                if ($k != PRIMARY_KEY)
-                {
-                    $v= $this->fields[$k];
-                    
-                    if ($v === null or strlen($v) == 0) { $v= "NULL";  }
-                    
-                    if (array_search($k, $this->no_cache) !== false)
-                    {
-                        // if it's in a no-cache state, then don't update it.
-                        continue;   
-                    }
-                    elseif ($this->is_numeric($k) or $v === "NULL" )
-                        $field_query[$k]= $this->sanitize($k, $v);
-                    elseif ($this->is_belongs_to($k) and is_object($v))
-                    {
-                        $field_query[$k]= $this->sanitize($k, $v->id);
-                    }
-                    elseif ($this->is_foreign($k))
-                    {
-                        continue;
-                    }
-                    else
-                        $field_query[$k]= '"'.$this->sanitize($k, $v).'"';
-                }
-            }
-            
-            $sql= 'insert into '.classname_only(static::classname()).'('.PRIMARY_KEY.', '.implode(',', array_keys($field_query)).') values(null, '.implode(',',array_values($field_query)).');';
-        }
-        
-        $this->debug(5, $sql);
-        
-        // TODO update children
-        DB::query($sql);
-
-        if (!$existing)
-        {
-			$id= DB::insert_id();
-			
-            $this->fields[PRIMARY_KEY]= $id;
-            $this->debug(5, "Set pk to ".$this->fields[PRIMARY_KEY]);
-        }
-
-        // think of $additional as a trigger.
-        // this allows you to use a primary key that is not named like the others;
-        //  to use it, override store() like:
-        //      function store() { parent::store(array(to=>from)); }
-        // this is not recommended for long term use due to indexing and other possible problems,
-        //  but can be used to migrate from an old table system.
-        if ($additional)
-        {
-            $sql= "update ".classname_only(static::classname())." set ";
-            $field_array= array();
-            foreach($additional as $from=>$to)
-            {
-                $field_array[]= $to."=".$from;
-            }
-            $sql.= implode(", ", $field_array)." where ".PRIMARY_KEY."=".$this->fields[PRIMARY_KEY];
-            $this->debug(5, "Performing additional trigger: ".$sql);
-            DB::query($sql);
-        }
+        static::$repository->store_row(static::cname(), $this->fields);
     } // end store
     
     function delete()
     {
-        $sql= 'delete from '.classname_only(static::classname()).' where '.PRIMARY_KEY.'="'.$this->fields[PRIMARY_KEY].'"';
-        $this->debug(5, "Deleting- ".$sql);
-        DB::query($sql);
+        static::$repository->delete_row(static::cname(), $this->id);
     } // end delete
     
     function json_validates()

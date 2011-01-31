@@ -134,6 +134,8 @@ class ModelTest extends core\TestCase
         $this->assertEquals('01/01/2010', $model->dtime);
     }
     
+    function test_()
+    
     
     
     /*
