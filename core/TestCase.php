@@ -36,11 +36,12 @@ class TestCase extends \PHPUnit_Framework_TestCase
     }
 
 
-    
+   /* 
     function test_nothing()
     {
         // this is here to discourage warnings out of PHUNIT.
     }
+    */
     
     static function classname()
     {

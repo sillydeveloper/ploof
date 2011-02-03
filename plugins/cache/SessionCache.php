@@ -1,7 +1,7 @@
 <?
 namespace plugins\cache;
 
-class SessionCache extends core\PluginInterfaceCache
+class SessionCache implements \core\PluginInterfaceCache
 {
 
    /**
@@ -10,7 +10,7 @@ class SessionCache extends core\PluginInterfaceCache
     *  @access public
     *  @return void
     */
-    public public function __construct()
+    public function __construct()
     {
         session_start();
     }
@@ -30,7 +30,7 @@ class SessionCache extends core\PluginInterfaceCache
         {
             return false;
         }
-        return $this->set($key, $value);
+        return $this->set_in_cache($key, $value);
     }
     
    /**
@@ -93,7 +93,7 @@ class SessionCache extends core\PluginInterfaceCache
         {
             return false;
         }
-        return $this->set($key, $value);
+        return $this->set_in_cache($key, $value);
     }
     
    /**
