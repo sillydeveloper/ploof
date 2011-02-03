@@ -65,7 +65,8 @@ function generate_patch($version= "trunk")
     }
 }
 
-function patch()
+// Deprecated?
+function patch_deprecated()
 {
     global $patch_list;
     foreach($patch_list as $k=>$v)
@@ -151,7 +152,7 @@ function clean()
 //--------------------------------------------------
 //          PATCH PLOOF
 //--------------------------------------------------
-function patch_ploof($version= "trunk")
+function patch($version= "trunk")
 {
     global $patch_list;
     
@@ -185,18 +186,17 @@ function test($lib='application')
 //--------------------------------------------------
 if ($argc < 2)
 {
+    print "\n";
     print "usage: ploof [command]\n\n";
     print "Commands: \n";
-    print "install................. a command line installer (won't overwrite existing configs)";
-    print "test.................... run unit tests (/test/application is default)\n";
-    print "migrate................. migrate your database to the current migration\n";
-    print "migration............... create a new migration in resource/migrations\n";
-    print "generate_models......... generate classfiles from your database\n";
-    print "update.................. update via diff; you can optionally supply a version to update to (trunk is default)\n";
-    print "clean................... clean various detritus that can build up\n";
-    print "migration............... create a migration; optionally add the branch for this migration\n";
-    print "migrate................. bring this version of the database up to date; optionally add a branch to migrate from\n";
-    print "patch_ploof............. for developers: create a patchfile to submit to patch ploof\n";
+    print "clean................... Clean various detritus that can build up\n";
+    print "generate_models......... Generate classfiles from your database\n";
+    print "install................. A command line installer (won't overwrite existing configs)\n";
+    print "migrate................. Bring this version of the database up to date; optionally add a branch to migrate from\n";
+    print "migration............... Create a migration; optionally add the branch for this migration\n";
+    print "patch................... For developers: create a patchfile to submit to patch ploof\n";
+    print "test.................... Run unit tests (/test/application is default)\n";
+    print "update.................. Update via diff; you can optionally supply a version to update to (trunk is default)\n\n";
     exit;
 }
 

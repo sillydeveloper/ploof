@@ -23,7 +23,7 @@ class ModelTest extends core\TestCase
     
     function test_set_repository()
     {
-        $this->assertNotEquals(core\Model::get_db(), null, 'Model::db not being set');
+        $this->assertNotEquals(core\Model::get_repository(), null, 'Model::db not being set');
     }
     
     function test_load()
@@ -133,6 +133,35 @@ class ModelTest extends core\TestCase
         $model= new HasMany(1);
         $this->assertEquals('01/01/2010', $model->dtime);
     }
+    
+    function test_delete()
+    {
+        $m= new \core\Model(1);
+        $m->delete();
+        $this->assertEquals(false, \core\Model::get_repository()->load_row('Model', 1));
+    }
+    
+    function test_store_existing()
+    {
+        $m= new \core\Model(1);
+        $m->name= 'kate';
+        $m->store();
+        $data= \core\Model::get_repository()->load_row('Model', 1);
+        $this->assertEquals('kate', $data['name']);
+    }
+    
+    function test_store_new()
+    {
+        $m= new \core\Model();
+        $m->name= 'marty';
+        $m->store();
+        $data= \core\Model::get_repository()->load_row('Model', 3);
+        $this->assertEquals('marty', $data['name']);
+    }
+    
+    
+    
+    
     
     
     

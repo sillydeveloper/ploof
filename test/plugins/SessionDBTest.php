@@ -28,7 +28,7 @@ class SessionDBTest extends \core\TestCase
         
         $db= new \plugins\DB\SessionDB($init_values, $init_types);
         
-        $return= $db->load('Parents', 2);
+        $return= $db->load_row('Parents', 2);
         
         $this->assertEquals($return, array('id'=>2, 'phrase'=>'Yes we do'), 'Wrong return values');
     }

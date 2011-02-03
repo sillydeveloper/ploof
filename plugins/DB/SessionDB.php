@@ -3,18 +3,8 @@ namespace plugins\DB;
 
 // stores data in an array in the session:
 //  table=>(row=>(key=>value))
-//  
-//
 class SessionDB implements \core\PluginInterfaceDB
-{
-   /**
-    *  The db handle. 
-    *
-    *  @var object
-    *  @access private
-    */
-    private $_dbh;
-    
+{    
    /**
     *  Connects and selects database.
     *
@@ -71,24 +61,39 @@ class SessionDB implements \core\PluginInterfaceDB
     function delete_row($table, $id)
     {
         $values= \core\Session::get('SessionDBValues');
-        foreach($values[$table] as $td)
+        foreach($values[$table] as $key=>$td)
         {
-            unset($values[$table_data])
+            if ($td['id'] == $id)
+            {
+                unset($values[$table][$key]);
+                break;
+            }
         }
+        \core\Session::set('SessionDBValues', $values);
     }
     
     function store_row($table, $data)
     {
         $stored_data= \core\Session::get('SessionDBValues');
-        $id_to_find= $data['id'];
+        $id= $data['id'];
+        $found= false;
         foreach($stored_data[$table] as $key=>$td)
         {
-            if ($td['id'] == $id_to_find)
+            if ($td['id'] == $id)
             {
                 $stored_data[$table][$key]= $data;
+                $found= true;
             }
         }
+        if (!$found)
+        {
+            $id= count($stored_data[$table]) + 1;
+            $data['id']= $id;
+            // add it:
+            $stored_data[$table][]= $data;
+        }
         \core\Session::set('SessionDBValues', $stored_data);
+        return $id;
     }
     
     function is_numeric_datatype($field_type)
