@@ -73,7 +73,7 @@ class Repository implements PluginInterfaceDB, PluginInterfaceCache
     {
         return $this->db->load_row($table, $id);
     }
-<<<<<<< HEAD
+
     public function find_rows($table, $where_array)
     {
         return $this->db->find_rows($table, $where_array);
@@ -91,57 +91,18 @@ class Repository implements PluginInterfaceDB, PluginInterfaceCache
         return $this->db->is_numeric_datatype($field_type);
     }
     public function query($sql)
-=======
-    
-    function find_rows($table, $where_array)
-    {
-        return $this->db->find_rows($table, $where_array);
-    }
-    
-    function show_tables()
-    {
-        return $this->db->show_tables();
-    }
-    
-    function get_table_columns($table)
-    {
-        return $this->db->get_table_columns($table);
-    }
-    
-    function is_numeric_datatype($field_type)
-    {
-        return $this->db->is_numeric_datatype($field_type);
-    }
-    
-    function query($sql)
->>>>>>> b9944d9121d5f208d4d2e2e9310583c09df1c714
     {
         
     }
-<<<<<<< HEAD
     public function delete_row($table, $id)
-=======
-    
-    function delete_row($table, $id)
->>>>>>> b9944d9121d5f208d4d2e2e9310583c09df1c714
     {
         $this->db->delete_row($table, $id);
     }
-<<<<<<< HEAD
     public function store_row($table, $data)
     {
         $this->db->store_row($table, $data);
     }
     public function is_date_datatype($field_type)
-=======
-    
-    function store_row($table, $data)
-    {
-        $this->db->store_row($table, $data);
-    }
-    
-    function is_date_datatype($field_type)
->>>>>>> b9944d9121d5f208d4d2e2e9310583c09df1c714
     {
         return $this->db->is_date_datatype($field_type);
     }
