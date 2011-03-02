@@ -104,7 +104,7 @@ function migration($branch= "trunk")
 {
     $path= get_migration_path($branch);
     $dir= opendir($path);
-    if (!$dir) 
+    if (!$dir)
     {
         mkdir($path);
         DB::query("insert into Versioning values(null, 0, '$branch');");

@@ -12,7 +12,7 @@ class SessionCache implements \core\PluginInterfaceCache
     */
     public function __construct()
     {
-        session_start();
+        //session_start();
     }
 
    /**
