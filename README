@@ -1,5 +1,8 @@
 PHP LIGHTWEIGHT OBJECT ORIENTED FRAMEWORK README
-    Ploof Development Team: Andrew Ettinger, Nick Sinopoli, Steven Carnegie
+
+    Ploof Development Team: Andrew Ettinger, Nick Sinopoli, Steven Carnegie and Hang Dao. 
+    
+    Special thanks to AirAdvice for their contributions.
     
     Copyright (c) 2010, ploof development team
     All rights reserved.
@@ -39,6 +42,7 @@ The ./ploof utility is the swiss army knife of the framework. Not sure what to r
     AUTO HANDLING
         Basically, if a table has [tablename]_id in it, ploof knows it's a relationship 
         and you can access it like:
+        
             class foo()
             {
                 protected $has_many= array('bar');
