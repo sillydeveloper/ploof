@@ -37,7 +37,6 @@ define("DEFAULT_CONTROLLER", "Dashboard");
  * Initial action to call on controllers
  */
 define("DEFAULT_ACTION", "index");
-
 define("DEFAULT_LAYOUT", "default");
 
 /**
@@ -83,6 +82,7 @@ define("PLOOF_SEPARATOR", "__");
  */
 define("VIEW_EXTENSION", ".html");
 
-core\Meta::include_if_found(require_once "config.application.php");
+core\Meta::include_if_found("config.application.php");
+// note: fun.php is marked for deprecation:
 require_once "fun.php";
 ?>

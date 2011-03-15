@@ -26,16 +26,16 @@ PHP LIGHTWEIGHT OBJECT ORIENTED FRAMEWORK README
     
 === GETTING STARTED ===
 
-We don't have a release yet, so cloning our repository is the only wat to get the code:
+    We don't have a release yet, so cloning our repository is the only way to get the code:
 
-    git clone git://github.com/sillydeveloper/ploof.git
+        git clone git://github.com/sillydeveloper/ploof.git
 
+    
+    
 
 === THE PLOOF COMMAND ===
 
 The ./ploof utility is the swiss army knife of the framework. Not sure what to run with it? Just run ./ploof without any options to get a list of currently supported commands.
-
-
     
 === MODEL FEATURES ===
     
@@ -74,7 +74,7 @@ The ./ploof utility is the swiss army knife of the framework. Not sure what to r
         you once the render is complete
     
     ROUTE
-        Routable actions were intended to be used by things like add / delete / save
+        Routable actions were intended to be used by things like add / delete / save. 
     
     ASSIGN
         Assigns are made available to your view via $controller->assign("varname", $varvalue);
@@ -83,5 +83,6 @@ The ./ploof utility is the swiss army knife of the framework. Not sure what to r
         If you need to know who the *topmost* call is coming from when the page loads,
         $_REQUEST['main_controller'] and $_REQUEST['MAIN_ACTION'] are there to help.
     
+=== TESTING ===
 
     

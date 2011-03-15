@@ -104,6 +104,7 @@ class Model extends Ploof
         if (static::$repository)
         {
             $columns= static::$repository->get_table_columns(Meta::classname_only(static::classname()));
+            
             foreach($columns as $col_name=>$col_type)
             {
                 if ($nullify)
@@ -131,11 +132,6 @@ class Model extends Ploof
     {
         $type = $this->get_field_type($field);
         return static::$repository->is_numeric($type);
-        
-        //$numeric= array("decimal", "tinyint", "bigint", "int", "float", "double");
-        //if (array_search($type, $numeric) !== false) return true;
-        //if (strpos($type, "decimal") !== false) return true;  // e.g. "decimal(5,2)"
-        //return false;
     }
     
     public function get_field_types()
@@ -210,6 +206,7 @@ class Model extends Ploof
     /**
      * If a field_name is foreign, then refresh the data it points to.
      * Used to make sure cached data is up-to-date.
+     * NOTICE: This method is marked for deprecation.
      */
     function refresh($field_name, $sort_fun=null, $order=null, $limit=null)
     {           
@@ -227,7 +224,7 @@ class Model extends Ploof
         {   
             // joiner handles everything for habtm since it has to load
             //  and know about extra fields in the join table.
-            //$joiner= new Joiner($this, static::cname(), $field_name);
+            $joiner= new Joiner($this, static::cname(), $field_name);
         }
         else 
         {
@@ -236,7 +233,11 @@ class Model extends Ploof
                 $lookup_id= $this->fields[$field_name.PK_SEPARATOR.PRIMARY_KEY];
                 $lookup_field= PRIMARY_KEY;
             
-                $results= $field_name::find(array($lookup_field=>$lookup_id));
+                // this needs to be a raw db load for this to 'actually' work:
+                $result= $field_name::find_object(array($lookup_field=>$lookup_id));
+                
+                // now update the cache:
+                $field_name::$repository->replace_in_cache($result->ckey(), $result);
             }
         
             if ($this->is_has_many($field_name))
@@ -244,11 +245,24 @@ class Model extends Ploof
                 $lookup_id= $this->fields[PRIMARY_KEY];
                 $lookup_field= static::cname().PK_SEPARATOR.PRIMARY_KEY;
                 
-                //$sql= $lookup_field."='".$lookup_id."' ".$order." ".$limit;
-                
-                //$this->debug(5, $field_name." sql=".$sql);
-                
                 $results= $field_name::find(array($lookup_field=>$lookup_id));
+                
+                foreach($results as $obj)
+                {
+                    $field_name::$repository->replace_in_cache($obj->ckey(), $obj);
+                }
+                
+                /* 
+                if ($sort_fun)
+                    usort($results, $sort_fun);
+                
+                $joiner= new Joiner();
+                $joiner->set_objects($results);
+                $joiner->set_parent($this, classname_only(static::classname()));
+                $joiner->set_child_class($field_name);
+                
+                $this->fields[$field_name]= $joiner;
+                */
             }
             
             if ($this->is_has_one($field_name))
@@ -256,23 +270,16 @@ class Model extends Ploof
                 $lookup_id= $this->fields[PRIMARY_KEY];
                 $lookup_field= static::cname().PK_SEPARATOR.PRIMARY_KEY;
                 
-                $results= $field_name::find(array($lookup_field=>$lookup_id));
+                $result= $field_name::find_object(array($lookup_field=>$lookup_id));
+
+                 // now update the cache:
+                $field_name::$repository->replace_in_cache($result->ckey(), $result);
             }
-        }
+        } // end habtm check
         
-        if ($sort_fun)
-            usort($results, $sort_fun);
+       
         
-        //if (!$joiner)
-        //{
-        //    $joiner= new Joiner();
-        //    $joiner->set_objects($results);
-        //    $joiner->set_parent($this, classname_only(static::classname()));
-        //    $joiner->set_child_class($field_name);         
-        //}
-        
-        $this->fields[$field_name]= $joiner;
-    }
+    } // end refresh
     
     /**
      * Generic __get. All $obj->property calls come through here.
@@ -304,11 +311,8 @@ class Model extends Ploof
             if ($this->is_has_many($field_name))
             {
                 $lookup_id= $this->fields[PRIMARY_KEY];
-                $lookup_field= static::cname().PK_SEPARATOR.PRIMARY_KEY;
-                
-                // return a dummy object?
-                // TODO: andrew doesn't like this. 
-                $results= new $field_name();
+                $lookup_field= static::cname().PK_SEPARATOR.PRIMARY_KEY;                
+                $results= $field_name::find(array($lookup_field=>$lookup_id));
             }
 
             if ($this->is_has_one($field_name))
@@ -351,7 +355,39 @@ class Model extends Ploof
         
         if ($this->is_foreign($field_name))
         {
-            /*
+            if ($this->is_belongs_to($field_name))
+            {
+                $lookup_id= $this->fields[$field_name.PK_SEPARATOR.PRIMARY_KEY];
+                $lookup_field= PRIMARY_KEY;
+
+                $results= $field_name::find_object(array($lookup_field=>$lookup_id));
+                
+            }
+
+            if ($this->is_has_many($field_name))
+            {
+                $lookup_id= $this->fields[PRIMARY_KEY];
+                $lookup_field= static::cname().PK_SEPARATOR.PRIMARY_KEY;
+                
+                // return a dummy object?
+                // TODO: andrew doesn't like this. 
+                $results= $field_name::find(array($lookup_field=>$lookup_id));
+            }
+
+            if ($this->is_has_one($field_name))
+            {
+                $lookup_id= $this->fields[PRIMARY_KEY];
+                $lookup_field= static::cname().PK_SEPARATOR.PRIMARY_KEY;
+
+                $results= $field_name::find_object(array($lookup_field=>$lookup_id));
+            }
+            
+            if ($this->is_has_one($field_name) or $this->is_belongs_to($field_name))
+            {
+                
+            }
+            
+            
             if (is_object($this->fields[$field_name]) == false)
             {
                 $this->debug(5, "Refreshing ".$field_name." for __set");
@@ -362,7 +398,7 @@ class Model extends Ploof
 
             // now add to joiner:
             $this->fields[$field_name]->add_object($value);
-            */
+            
         }
         else
         {
@@ -374,6 +410,11 @@ class Model extends Ploof
             
             $this->fields[$field_name]= $value;
         }
+    }
+    
+    function add_object($class, $object)
+    {
+        
     }
     
     /**
@@ -718,7 +759,19 @@ class Model extends Ploof
          $this->fields[PRIMARY_KEY]= null;
      }
      
-     function cname()
+     /**
+      * Get the cache key for this object:
+      */
+     function ckey()
+     {
+         $pk= PRIMARY_KEY;
+         return static::cname().'_'.$this->$pk;
+     }
+     
+     /** 
+      * Shortcut for Meta::classname_only(static::classname())
+      */
+     static function cname()
      {
          return Meta::classname_only(static::classname());
      }

@@ -21,6 +21,14 @@ function __autoload($class_name)
 }
 
 /**
+ * Default database access and caching scheme.
+ */
+$db= new plugins\DB\MysqliConnector('root', '', 'ploof', '127.0.0.1');
+$cache= new plugins\cache\SessionCache();
+ApplicationModel::set_repository(new core\Repository($db, $cache));
+
+
+/**
  * What object that a session attaches to
  */
 define("SESSION_OBJECT", "User");
