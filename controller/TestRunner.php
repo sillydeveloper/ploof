@@ -2,7 +2,6 @@
 
 class TestRunner extends core\Controller
 {
-    
     function index()
     {   
         $this->assign('tests', File::list_files(BASE_INSTALL."/test/framework/"));
@@ -13,3 +12,5 @@ class TestRunner extends core\Controller
         return __CLASS__;
     }
 }
+
+?>

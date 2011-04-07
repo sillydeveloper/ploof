@@ -108,7 +108,7 @@ class ModelTest extends core\TestCase
         BelongsTo::set_repository($repository_check);
         
         $model= new HasMany(1);
-        $belongs_to= $model->BelongsTo->find();
+        $belongs_to= $model->BelongsTo;
         $this->assertEquals(2, count($belongs_to));
 
         $model= new BelongsTo(1);

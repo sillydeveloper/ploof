@@ -3,6 +3,6 @@ namespace test\framework\fixtures;
 
 class Requires extends \core\Model
 {
-    protected $requires= array('Requirement');
+    static protected $requires= array('Requirement');
 }
 ?>

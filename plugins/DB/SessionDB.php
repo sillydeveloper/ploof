@@ -98,7 +98,7 @@ class SessionDB implements \core\PluginInterfaceDB
     
     function is_numeric_datatype($field_type)
     {
-        
+
     }
     
     function query($sql)

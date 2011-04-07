@@ -1,7 +1,7 @@
 <?
 class BelongsTo extends \core\Model
 {
-    protected $belongs_to= array('HasMany');
+    static protected $belongs_to= array('HasMany');
     
     static function classname()
     {

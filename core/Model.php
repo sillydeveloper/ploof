@@ -29,12 +29,12 @@ class Model extends Ploof
     protected $fields= null;
     
     // storage area for database field types (datetime, int, etc)
-    protected $field_types= null;   
+    static protected $field_types= null;   
     
-    protected $has_many= null;
-    protected $has_one= null;
-    protected $belongs_to= null;
-    protected $has_and_belongs_to_many= null; 
+    static protected $has_many= null;
+    static protected $has_one= null;
+    static protected $belongs_to= null;
+    static protected $has_and_belongs_to_many= null; 
     
     // TODO: an array of sort functions; ex:
     //  $sort_by= array('name'=>function($a, $b) 
@@ -47,11 +47,11 @@ class Model extends Ploof
     protected $getter_override= null;
     
     // array of classes that will be autocreated when asked for via find()
-    protected $requires= null;
+    static protected $requires= null;
     
     // array of properties to NOT cache. 
     //  these will be ignored by __get() and store().
-    protected $no_cache= array();
+    static protected $no_cache= array();
         
     function __construct($id= null, $repository= null)
     {
@@ -66,7 +66,7 @@ class Model extends Ploof
             }
             elseif (count($this->fields) < 1)
             {
-                $this->set_field_types(true);
+                $this->set_field_types();
             }   
         }
     }
@@ -76,12 +76,17 @@ class Model extends Ploof
         static::$repository= $repository;
     }
     
-    public static function get_repository()
+    static function get_repository()
     {
         return static::$repository;
     }    
     
-    public function load($id)
+    static function get_requires()
+    {
+        return static::$requires;
+    }
+    
+    function load($id)
     {
         if ($id and static::$repository)
         {
@@ -93,13 +98,13 @@ class Model extends Ploof
         }
     }
     
-    public function requires_a($classname)
+    static function requires_a($classname)
     {
-        if (!$this->requires) return false;
-        return (array_search($classname, $this->requires) !== false);
+        if (!static::$requires) return false;
+        return (array_search($classname, static::$requires) !== false);
     }
     
-    function set_field_types($nullify= false)
+    static function set_field_types()
     {
         if (static::$repository)
         {
@@ -107,10 +112,7 @@ class Model extends Ploof
             
             foreach($columns as $col_name=>$col_type)
             {
-                if ($nullify)
-                    $this->fields[$col_name]= null;
-                
-                $this->field_types[$col_name]= preg_replace("/\(([0-9])*\)/", "", $col_type);
+                static::$field_types[$col_name]= preg_replace("/\(([0-9])*\)/", "", $col_type);
             }
         }
     }
@@ -120,45 +122,45 @@ class Model extends Ploof
         return $this->fields;
     }
     
-    public function has_field($var)
+    static public function has_field($var)
     {
-        return array_key_exists($var, $this->fields);
+        return array_key_exists($var, static::$fields_types);
     }
     
     /**
      * Check and see if a field is a numeric type; dates are not numeric.
      */
-    public function is_numeric($field)
+    static public function is_numeric($field)
     {
-        $type = $this->get_field_type($field);
+        $type = static::$get_field_type($field);
         return static::$repository->is_numeric($type);
     }
     
-    public function get_field_types()
+    static public function get_field_types()
     {
-        return $this->field_types;
+        return static::$field_types;
     }
     
-    public function get_field_type($field)
+    static public function get_field_type($field)
     {
-        return $this->field_types[$field];
+        return static::$field_types[$field];
     }
     
     /**
      *  Whether or not a field has _any_ foreign key characteristics (has_many, has_one, habtm) 
      */
-    function is_foreign($field_name)
+    static function is_foreign($field_name)
     {
-        return ($this->is_has_many($field_name) || $this->is_has_one($field_name) 
-            || $this->is_habtm($field_name) || $this->is_belongs_to($field_name));
+        return (static::is_has_many($field_name) || static::is_has_one($field_name) 
+            || static::is_habtm($field_name) || static::is_belongs_to($field_name));
     }
     
     /**
      * Whether or not a field is a belongs_to relationship
      */
-    function is_belongs_to($field_name)
+    static function is_belongs_to($field_name)
     {
-        if (count($this->belongs_to) > 0 and array_search($field_name, $this->belongs_to) !== false)
+        if (count(static::$belongs_to) > 0 and array_search($field_name, static::$belongs_to) !== false)
             return true;
         return false;
     }
@@ -166,9 +168,9 @@ class Model extends Ploof
     /**
      *  Whether or not a field is a has_many relationship
      */
-    function is_has_many($field_name)
+    static function is_has_many($field_name)
     {
-        if (count($this->has_many) > 0 and array_search($field_name, $this->has_many) !== false)
+        if (count(static::$has_many) > 0 and array_search($field_name, static::$has_many) !== false)
             return true;
         return false;
     }
@@ -176,9 +178,9 @@ class Model extends Ploof
     /**
      * Whether or not a field is a has_one relationship
      */
-    function is_has_one($field_name)
+    static function is_has_one($field_name)
     {
-        if (count($this->has_one) > 0 and array_search($field_name, $this->has_one) !== false)
+        if (count(static::$has_one) > 0 and array_search($field_name, static::$has_one) !== false)
             return true;
         return false;
     }
@@ -186,9 +188,9 @@ class Model extends Ploof
     /**
      * Whether or not a field is a habtm relationship
      */
-    function is_habtm($field_name)
+    static function is_habtm($field_name)
     {
-        if (count($this->has_and_belongs_to_many) > 0 and array_search($field_name, $this->has_and_belongs_to_many) !== false)
+        if (count(static::$has_and_belongs_to_many) > 0 and array_search($field_name, static::$has_and_belongs_to_many) !== false)
             return true;
         return false;        
     }
@@ -197,7 +199,7 @@ class Model extends Ploof
      * Generate the join table name for field_name
      * TODO: Change this method name to get_habtm_join_table
      */
-    function get_join_table($field_name)
+    static function get_join_table($field_name)
     {
         $my_class = classname_only(static::classname());
         return ($field_name > $my_class) ? $my_class.PLOOF_SEPARATOR.$field_name : $field_name.PLOOF_SEPARATOR.$my_class;
@@ -276,9 +278,6 @@ class Model extends Ploof
                 $field_name::$repository->replace_in_cache($result->ckey(), $result);
             }
         } // end habtm check
-        
-       
-        
     } // end refresh
     
     /**
@@ -287,7 +286,7 @@ class Model extends Ploof
     function __get($field_name)
     {
         // if no_cache, then get from the database directly:
-        if (array_search($field_name, $this->no_cache) !== false)
+        if (array_search($field_name, static::$no_cache) !== false)
         {
             // access database directly, bypass any cache access:
             $fields= static::$repository->get_database()->load(static::cname(), $this->id);
@@ -312,7 +311,8 @@ class Model extends Ploof
             {
                 $lookup_id= $this->fields[PRIMARY_KEY];
                 $lookup_field= static::cname().PK_SEPARATOR.PRIMARY_KEY;                
-                $results= $field_name::find(array($lookup_field=>$lookup_id));
+                $objects= $field_name::find(array($lookup_field=>$lookup_id));
+                $results= new HasManyWrapper($objects);
             }
 
             if ($this->is_has_one($field_name))
@@ -325,11 +325,11 @@ class Model extends Ploof
         }
 
         // call the datetime handler if this is a datetime:
-        if (array_key_exists($field_name, $this->field_types))
+        if (array_key_exists($field_name, static::$field_types))
         {
-            if (static::$repository->get_database()->is_date_datatype($this->field_types[$field_name]))
+            if (static::$repository->get_database()->is_date_datatype(static::$field_types[$field_name]))
             {
-                return Format::date(format_date($this->fields[$field_name]));
+                return Format::date($this->fields[$field_name]);
             }
         }            
             
@@ -346,7 +346,7 @@ class Model extends Ploof
     function __set($field_name, $value)
     {
         // if no_cache, then get from the database directly:
-        if (array_search($field_name, $this->no_cache) !== false)
+        if (array_search($field_name, static::$no_cache) !== false)
         {
             $this->fields[$field_name]= $value;
             static::$repository->get_database()->store_row(static::cname(), $this->fields);
@@ -361,7 +361,6 @@ class Model extends Ploof
                 $lookup_field= PRIMARY_KEY;
 
                 $results= $field_name::find_object(array($lookup_field=>$lookup_id));
-                
             }
 
             if ($this->is_has_many($field_name))
@@ -403,7 +402,7 @@ class Model extends Ploof
         else
         {
             // call the datetime handler if this is a datetime:
-            if (array_key_exists($field_name, $this->field_types) and static::$repository->get_database()->is_date_datatype($this->field_types[$field_name]) and strlen($value) > 0)
+            if (array_key_exists($field_name, static::$field_types) and static::$repository->get_database()->is_date_datatype($this->field_types[$field_name]) and strlen($value) > 0)
             {
                 $value = Format::date_sql($value);
             }
@@ -624,7 +623,25 @@ class Model extends Ploof
     function store($additional=null)
     {
         $id= static::$repository->store_row(static::cname(), $this->fields);
-        $this->id= $id;
+        $this->fields[PRIMARY_KEY]= $id;
+        
+        // think of $additional as a trigger.
+        // this allows you to use a primary key that is not named like the others;
+        //  to use it, override store() like:
+        //      function store() { parent::store(array(to=>from)); }
+        // this is not recommended for long term use due to indexing and other possible problems,
+        //  but can be used to migrate from an old table system.
+        if ($additional)
+        {
+            $sql= "update ".$table." set ";
+            $field_array= array();
+            foreach($additional as $from=>$to)
+            {
+                $field_array[]= $to."=".$from;
+            }
+            $sql.= implode(", ", $field_array)." where ".PRIMARY_KEY."=".$this->fields[PRIMARY_KEY];
+            static::$repository->query($sql);
+        }
     } // end store
     
     function delete()

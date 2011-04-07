@@ -115,13 +115,9 @@ class MysqliConnector implements \core\PluginInterfaceDB
                     {
                         // remember: it's a joiner object.
                     }
-                    elseif ($this->is_numeric($col_types[$k]) or $v === "NULL" )
+                    elseif ($this->is_numeric_datatype($col_types[$k]) or $v === "NULL" )
                     {
                         $field_query[]= $k."=".$v."";
-                    }
-                    elseif ($this->is_foreign($k))
-                    {
-                        // if it's otherwise foreign, ignore it.
                     }
                     else
                         $field_query[]= $k."='".$this->sanitize($k, $v)."'";         
@@ -131,70 +127,30 @@ class MysqliConnector implements \core\PluginInterfaceDB
         }
         else
         {   
-            unset($this->fields[PRIMARY_KEY]);
+            unset($data[PRIMARY_KEY]);
             $field_query= array();				
-            foreach($this->field_types as $k=>$v)
+            foreach($data as $k=>$v)
             {
                 if ($k != PRIMARY_KEY)
                 {
-                    $v= $this->fields[$k];
+                    $v= $data[$k];
                     
                     if ($v === null or strlen($v) == 0) { $v= "NULL";  }
                     
-                    if (array_search($k, $this->no_cache) !== false)
-                    {
-                        // if it's in a no-cache state, then don't update it.
-                        continue;   
-                    }
-                    elseif ($this->is_numeric($k) or $v === "NULL" )
+                    if ($this->is_numeric_datatype($col_types[$k]) or $v === "NULL" )
                         $field_query[$k]= $this->sanitize($k, $v);
-                    elseif ($this->is_belongs_to($k) and is_object($v))
-                    {
-                        $field_query[$k]= $this->sanitize($k, $v->id);
-                    }
-                    elseif ($this->is_foreign($k))
-                    {
-                        continue;
-                    }
                     else
-                        $field_query[$k]= '"'.$this->sanitize($k, $v).'"';
+                        $field_query[$k]= '"'.$v.'"';
                 }
             }
             
-            $sql= 'insert into '.classname_only(static::classname()).'('.PRIMARY_KEY.', '.implode(',', array_keys($field_query)).') values(null, '.implode(',',array_values($field_query)).');';
+            $sql= 'insert into '.$table.'('.PRIMARY_KEY.', '.implode(',', array_keys($field_query)).') values(null, '.implode(',',array_values($field_query)).');';
         }
         
-        $this->debug(5, $sql);
+        $this->query($sql);
         
-        // TODO update children
-        DB::query($sql);
-
-        if (!$existing)
-        {
-			$id= DB::insert_id();
-			
-            $this->fields[PRIMARY_KEY]= $id;
-            $this->debug(5, "Set pk to ".$this->fields[PRIMARY_KEY]);
-        }
-
-        // think of $additional as a trigger.
-        // this allows you to use a primary key that is not named like the others;
-        //  to use it, override store() like:
-        //      function store() { parent::store(array(to=>from)); }
-        // this is not recommended for long term use due to indexing and other possible problems,
-        //  but can be used to migrate from an old table system.
-        if ($additional)
-        {
-            $sql= "update ".classname_only(static::classname())." set ";
-            $field_array= array();
-            foreach($additional as $from=>$to)
-            {
-                $field_array[]= $to."=".$from;
-            }
-            $sql.= implode(", ", $field_array)." where ".PRIMARY_KEY."=".$this->fields[PRIMARY_KEY];
-            $this->debug(5, "Performing additional trigger: ".$sql);
-            DB::query($sql);
-        }
+        $id= ($existing) ? $data[PRIMARY_KEY] : \mysqli_insert_id($this->conn);
+        return $id;
     }
 }
 
