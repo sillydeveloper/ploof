@@ -46,15 +46,6 @@ class HasManyWrapper
         return $results;
     }
      
-     /**
-      * Get the cache key for this object:
-      */
-     function ckey()
-     {
-         $pk= PRIMARY_KEY;
-         return $this->parent_class.'_'.$this->$pk;
-     }
-     
      /** 
       * Shortcut for Meta::classname_only(static::classname())
       */

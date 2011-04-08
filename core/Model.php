@@ -408,16 +408,10 @@ class Model extends Ploof
         }
     }
     
-    function add_object($class, $object)
-    {
-        
-    }
-    
     /**
      *  Find and overwrite, or create and store, an object of $classname
      *      with $values_array that has a relationship to $this. 
      *      Use store() on an object, save() on a relationship.
-     *      TODO: This should be moved into joiner, which deals with relationships...
      */
     function save($classname, $values_array)
     {
