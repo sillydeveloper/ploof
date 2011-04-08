@@ -309,10 +309,7 @@ class Model extends Ploof
 
             if ($this->is_has_many($field_name))
             {
-                $lookup_id= $this->fields[PRIMARY_KEY];
-                $lookup_field= static::cname().PK_SEPARATOR.PRIMARY_KEY;                
-                $objects= $field_name::find(array($lookup_field=>$lookup_id));
-                $results= new HasManyWrapper($objects);
+                $results= new HasManyWrapper($this, $field_name);
             }
 
             if ($this->is_has_one($field_name))
@@ -383,7 +380,7 @@ class Model extends Ploof
             
             if ($this->is_has_one($field_name) or $this->is_belongs_to($field_name))
             {
-                
+                // replace into the cache
             }
             
             
