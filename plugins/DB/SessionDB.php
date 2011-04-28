@@ -63,15 +63,12 @@ class SessionDB implements \core\PluginInterfaceDB
         $values= \core\Session::get('SessionDBValues');
         foreach($values[$table] as $key=>$td)
         {
-            \core\Ploof::debug(1,$id);
             if ($td['id'] == "".$id)
             {
-                \core\Ploof::debug(1, "HAHAHAHAHA FOUND IT SUCKA");
                 unset($values[$table][$key]);
                 break;
             }
         }
-        \core\Ploof::debug(1, $values);
         \core\Session::set('SessionDBValues', $values);
     }
     

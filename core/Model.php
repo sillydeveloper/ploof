@@ -413,7 +413,7 @@ class Model extends Ploof
      *      with $values_array that has a relationship to $this. 
      *      Use store() on an object, save() on a relationship.
      */
-    function save($classname, $values_array)
+    static function save($values_array)
     {
         if ( !is_array($values_array) ) return false;
 
@@ -538,12 +538,12 @@ class Model extends Ploof
         {
             foreach($arr as $key=>$value)
             {   
-                if (array_key_exists($key, $this->field_types) and $this->is_foreign($key) === false)
+                $this->debug(1, $key.'/'.$value[0]);
+                if (array_key_exists($key, static::$field_types) and $this->is_foreign($key) === false)
                 {
-                    //$this->fields[$key]= ($index === null) ? $this->sanitize($key, $value) : $this->sanitize($key, $value[$index]);
-                    // use set to ensure datetimes are handled
+                    // use __set to ensure special cases are handled (like datetimes)
                     $this->__set($key, ($index === null) ? $this->sanitize($key, $value) : $this->sanitize($key, $value[$index]));
-                    $this->debug(5,"Populating $key as " . $this->fields[$key]);
+                    $this->debug(1, "Populating $key as " . $this->fields[$key]);
                 }
             }
         }
@@ -782,6 +782,11 @@ class Model extends Ploof
      static function cname()
      {
          return Meta::classname_only(static::classname());
+     }
+     
+     static function sanitize($key, $value)
+     {
+         return $value;
      }
     
     /**

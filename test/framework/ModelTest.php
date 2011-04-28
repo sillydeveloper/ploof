@@ -163,26 +163,20 @@ class ModelTest extends core\TestCase
     function test_form_inputs()
     {    
         // act like an incoming form:
-        $a= array('HasMany'=>array('id'=>array(0=>null, 1=>null), 'name'=>array(0=>'f', 1=>'g')));
-        //::set_repository($this->repository);
-        $hm= new \core\Model();
-        $hm->populate_from($a);
+        $a= array('Model'=>array('name'=>array(0=>'f', 1=>'g')));
+        $hm= new core\Model();
+        $hm->populate_from($a['Model'], 0);
         
-        core\Ploof::debug(1, $hm);
-        
-        //$hm= new hasmany(1);
-        //$hm->save('belongsto', $a);
-        //$this->assertEquals(2, count($hm->belongsto->find()), 'Wrong count for hasmany save() (existing object)');
-        //$hm->refresh("belongsto");
-        //$this->assertEquals(2, count($hm->belongsto->find()), 'Wrong count for hasmany save() (existing object) after refresh');
-        //
-        //$hm= new hasmany();
-        //$hm->store();
-        //$hm->save('belongsto', $a);
-        //$this->assertEquals(2, count($hm->belongsto->find()), 'Wrong count for hasmany save() (new object)');
-        //$hm->refresh('belongsto');
-        //$this->assertEquals(2, count($hm->belongsto->find()), 'Wrong count for hasmany save() (new object) after refresh');
-        
+        $this->assertEquals('f', $hm->name);
+    }
+    
+    function test_save()
+    {    
+        // act like an incoming form:
+        $a= array('Model'=>array('name'=>array(0=>'f', 1=>'g')));
+        core\Model::save($a['Model']);
+        $all_models= core\Model::find();
+        $this->assertEquals(4, count($all_models));
     }
     
     
