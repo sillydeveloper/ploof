@@ -173,13 +173,11 @@ class ModelTest extends core\TestCase
     function test_save()
     {    
         // act like an incoming form:
-        $a= array('Model'=>array('name'=>array(0=>'f', 1=>'g')));
+        $a= array('Model'=>array('name'=>array('f', 'g')));
         core\Model::save($a['Model']);
         $all_models= core\Model::find();
         $this->assertEquals(4, count($all_models));
     }
-    
-    
     
     
     /*

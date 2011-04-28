@@ -409,124 +409,28 @@ class Model extends Ploof
     }
     
     /**
-     *  Find and overwrite, or create and store, an object of $classname
-     *      with $values_array that has a relationship to $this. 
-     *      Use store() on an object, save() on a relationship.
+     *  Store() many at once:
      */
-    static function save($values_array)
+    static function save($values_array, $class= null)
     {
         if ( !is_array($values_array) ) return false;
-
-        // we'll return whatever we create / add / update:
-        $return= null;
-        if ($this->is_belongs_to($classname))
+        
+        if ($class == null) $class= static::classname();
+        
+        // check and see if the class is a subarray;
+        //  if so, take it out:
+        if (array_key_exists($class, $values_array)) $values_array= $values_array[$class];
+        
+        // we need to figure out how many things we're saving:
+        $keys= array_keys($values_array);
+        $cnt= count($values_array[$keys[0]]);
+        
+        for($i=0; $i<$cnt; $i++)
         {
-            $this->debug(5, 'Saving '.$classname.' (belongs_to) with:');
-            $this->debug(5, $values_array);
-            
-            // Question: Do we need a refresh check here? No because $this->$classname calls
-            //  the getter (which should be an object of the type described by the belongs_to)
-            if (is_object($this->$classname))
-            {
-                $this->debug(5, $classname.' exists, id '.$this->$classname->id);
-                // this is a belongs to, so only the first is item is touched:
-                $this->$classname->populate_from($values_array[$classname]);
-                $this->$classname->store();
-            }
-            else
-            {
-                $object= new $classname();
-                $object->fields[PRIMARY_KEY]= null;
-                $object->populate_from($values_array[$classname]);
-                $object->store();
-                $return= $object;
-                
-                $lookup_field= $classname.PK_SEPARATOR.PRIMARY_KEY;
-                $this->$lookup_field= $object->id;
-                $this->store();
-                
-                $this->debug(5, $classname.' does not exist; adding id '.$this->$classname->id);
-            }
-            $this->refresh($classname);
-        } // end belongs_to
-        if ($this->is_has_one($classname))
-        {
-            $this->debug(5, 'Saving '.$classname.' (has_one) with:');
-            $this->debug(5, $values_array);
-            
-            if (is_object($this->$classname))
-            {
-                $this->debug(5, $classname.' exists, id '.$this->$classname->id);
-                $this->$classname->populate_from($values_array[$classname], 0);
-                $this->$classname->store();
-                $return= $this->$classname;
-            }
-            else
-            {
-                $this_class= classname_only(static::classname());
-                $lookup_field= $this_class.PK_SEPARATOR.PRIMARY_KEY;
-                
-                $object= new $classname();
-                $object->fields[PRIMARY_KEY]= null;
-                $object->$lookup_field= $this->fields[PRIMARY_KEY];
-                $object->populate_from($values_array[$classname], 0);
-                $object->store();
-                $return= $object;
-                $this->debug(5, $classname.' does not exist; adding id '.$this->$classname->id);
-            }
-        }    // end has_one
-        if ($this->is_has_many($classname))
-        {
-            $this->debug(5, 'Saving '.$classname.' (has_many) with:');
-            $this->debug(5, $values_array);
-            
-            if (is_object($this->$classname))
-            {
-                $this->debug(5, 'Currently '.count($this->$classname->find()).' exist; repopulating with new values...');
-                $this_class= classname_only(static::classname());
-                $lookup_field= $this_class.PK_SEPARATOR.PRIMARY_KEY;
-                
-                if (!count($values_array))
-                {
-                    $this->debug(5, "No data; adding raw object");
-                    // add a new one:
-                    $obj= new $classname();
-                    $obj->$lookup_field= $this->id;
-                    $obj->store();
-                    $return= $obj;
-                    $this->refresh($classname);
-                }
-                else
-                {
-                    foreach($values_array[$classname] as $property=>$index)
-                    {
-                        $number_of_records= count($values_array[$classname][$property]);
-                        break; 
-                    }
-                    
-                    for($i=0; $i<$number_of_records; $i++)
-                    {
-                        if (array_key_exists(PRIMARY_KEY, $values_array[$classname]))
-                        {
-                            $obj= $this->$classname->find_object(array(PRIMARY_KEY=>$values_array[$classname][PRIMARY_KEY][$i]));
-                            if ($obj) 
-                            {
-                                $this->debug(5, 'Found '.$obj->id);
-                                $obj->populate_from($values_array[$classname], $i);
-                                $obj->store();
-                                $return[]= $obj;
-                            }
-                        }
-                        else
-                        {
-                            $this->debug(5, 'Not found, creating');
-                            $return[]= $this->$classname->add_array($values_array[$classname], $i);
-                        }
-                    }
-                }
-            }
-        } // end has_many
-        return $return;
+            $obj= new $class();
+            $obj->populate_from($values_array, $i);
+            $obj->store();
+        }
     } // end save()
     
     /**
@@ -538,12 +442,11 @@ class Model extends Ploof
         {
             foreach($arr as $key=>$value)
             {   
-                $this->debug(1, $key.'/'.$value[0]);
                 if (array_key_exists($key, static::$field_types) and $this->is_foreign($key) === false)
                 {
                     // use __set to ensure special cases are handled (like datetimes)
                     $this->__set($key, ($index === null) ? $this->sanitize($key, $value) : $this->sanitize($key, $value[$index]));
-                    $this->debug(1, "Populating $key as " . $this->fields[$key]);
+                    $this->debug(5, "Populating $key as " . $this->fields[$key]);
                 }
             }
         }
@@ -567,7 +470,7 @@ class Model extends Ploof
             return array();
         }
 
-        $classname= static::cname();
+        $classname= static::classname();
         $objects = array();
         foreach($res as $row)
         {
@@ -596,7 +499,7 @@ class Model extends Ploof
     static function find($query=null)
     {
         $returns= array();
-        $classname= static::cname();   
+        $classname= static::classname();   
         $results= static::$repository->find_rows(static::cname(), $query);
         if (is_array($results))
         {
