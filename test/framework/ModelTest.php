@@ -137,8 +137,6 @@ class ModelTest extends core\TestCase
     function test_delete()
     {
         $m= new \core\Model(1);
-        $m->name= "lolwut";
-        $m->store();
         $m->delete();
 
         $this->assertEquals(false, \core\Model::get_repository()->load_row('Model', 1));
