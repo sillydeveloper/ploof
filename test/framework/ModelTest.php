@@ -137,7 +137,10 @@ class ModelTest extends core\TestCase
     function test_delete()
     {
         $m= new \core\Model(1);
+        $m->name= "lolwut";
+        $m->store();
         $m->delete();
+
         $this->assertEquals(false, \core\Model::get_repository()->load_row('Model', 1));
     }
     
@@ -159,8 +162,30 @@ class ModelTest extends core\TestCase
         $this->assertEquals('marty', $data['name']);
     }
     
-    
-    
+    function test_form_inputs()
+    {    
+        // act like an incoming form:
+        $a= array('HasMany'=>array('id'=>array(0=>null, 1=>null), 'name'=>array(0=>'f', 1=>'g')));
+        //::set_repository($this->repository);
+        $hm= new \core\Model();
+        $hm->populate_from($a);
+        
+        core\Ploof::debug(1, $hm);
+        
+        //$hm= new hasmany(1);
+        //$hm->save('belongsto', $a);
+        //$this->assertEquals(2, count($hm->belongsto->find()), 'Wrong count for hasmany save() (existing object)');
+        //$hm->refresh("belongsto");
+        //$this->assertEquals(2, count($hm->belongsto->find()), 'Wrong count for hasmany save() (existing object) after refresh');
+        //
+        //$hm= new hasmany();
+        //$hm->store();
+        //$hm->save('belongsto', $a);
+        //$this->assertEquals(2, count($hm->belongsto->find()), 'Wrong count for hasmany save() (new object)');
+        //$hm->refresh('belongsto');
+        //$this->assertEquals(2, count($hm->belongsto->find()), 'Wrong count for hasmany save() (new object) after refresh');
+        
+    }
     
     
     
