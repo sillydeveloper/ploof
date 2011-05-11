@@ -23,31 +23,33 @@ namespace core;
 
 class URL {
 
-    public static function get_url_parts($url)
+    static function get_url_parts($url)
     {
-	$query_str= explode("?", $url);
-	return explode("/",substr($query_str[0], 1)); // trim the front slash and split
+	    $query_str= explode("?", $url);
+	    return explode("/",substr($query_str[0], 1)); // trim the front slash and split
     }
 
-    public function get_query_string($url)
+    static function get_query_string($url)
     {
-	$query_str= explode("?", $url);
-	return $query_str[1]; // trim the front slash and split
+	    $query_str= explode("?", $url);
+	    return $query_str[1]; // trim the front slash and split
     }
 
    /**
     * Return name if 'current url' matches 'url', or <a href='url'>name</a>.
     *  Useful for navigation systems.
     */
-    public function match_or_link($url, $name)
+    static function match_or_link($url, $name, $options=array())
     {
-        if ($this->url_matches($url)) 
-            return "<a href='$url' class='menumatch'>$name</a>";
+        $class= array_key_exists('class', $options) ? $options['class'] : 'menumatch';
+            
+        if (URL::url_matches($url)) 
+            return "<a href='$url' class='$class'>$name</a>";
         else 
             return "<a href='$url'>$name</a>";
     }
 
-    public function parent_url()
+    static function parent_url()
     {
 	if ($_REQUEST['parent'] and $_REQUEST['parentid'])
 	    return "/".$_REQUEST['parent']."/".$_REQUEST['parentid'];
@@ -58,7 +60,7 @@ class URL {
     /**
     * What is probably a horrible url matcher against the uri...
     */
-    public function url_matches($url_to_match_against_uri)
+    static function url_matches($url_to_match_against_uri)
     {
         $url= $url_to_match_against_uri;
         $uri= $_SERVER['REQUEST_URI'];
@@ -66,11 +68,11 @@ class URL {
         if ($url=="/")
             return ($uri=="/");
         
-        list($url_con, $url_act, $url_id) = $this->get_url_parts($url);
-        list($uri_con, $uri_act, $uri_id) = $this->get_url_parts($uri);
+        list($url_con, $url_act, $url_id) = URL::get_url_parts($url);
+        list($uri_con, $uri_act, $uri_id) = URL::get_url_parts($uri);
             
         if ($url_con and $url_act and $url_id)
-            return $this->get_url_parts($url) == $this->get_url_parts($uri);
+            return $this->get_url_parts($url) == URL::get_url_parts($uri);
         if ($url_con and $url_act)
             return ($url_con == $uri_con and $url_act == $uri_act);
         if ($url_con)
