@@ -554,9 +554,9 @@ class Model extends Ploof
      */
     static function generate_models()
     {
-        $qry= DB::query("show tables");
+        $qry= \ApplicationModel::get_repository()->get_database()->query("show tables");
         $classes= array();
-        while($table= DB::fetch_array($qry))
+        while($table= \mysqli_fetch_array($qry)) // TODO: fix no bueno mysql specific here!
         {   
             $table= $table[0];
             //print("Generating ".$table."...\n");
@@ -592,9 +592,9 @@ class Model extends Ploof
 
             if ($habtm == false)
             {
-                $qry2= DB::query("show columns from ".$table);
+                $qry2= \ApplicationModel::get_repository()->get_database()->query("show columns from ".$table);
                 
-                while($column= DB::fetch_array($qry2))
+                while($column= \mysqli_fetch_array($qry2)) // TODO: fix no bueno mysql specific here!
                 {
                     $column= $column["Field"];
                     
@@ -611,10 +611,7 @@ class Model extends Ploof
         
         foreach($classes as $class=>$relations)
         {
-            if (IN_UNIT_TESTING)
-                $file = "test/temp/".$class.".php";
-            else
-                $file = "model/".$class.".php";
+            $file = "model/".$class.".php";
             if (file_exists($file) == false)
             {
                 $f= fopen($file, "w+");
