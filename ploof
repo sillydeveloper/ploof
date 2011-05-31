@@ -169,6 +169,15 @@ function patch($version= "trunk")
 }
 
 //--------------------------------------------------
+//          INSTALLER
+//--------------------------------------------------
+function install()
+{
+    exec("cp config/config.application.default.php config/config.application.php");
+    exec("cp config/config.default.php config/config.php");
+}
+
+//--------------------------------------------------
 //          TEST
 //--------------------------------------------------
 function test($lib='application')
@@ -189,6 +198,7 @@ if ($argc < 2)
     print "\n";
     print "usage: ploof [command]\n\n";
     print "Commands: \n";
+    print "install................. Setup initial configuration for a fresh install\n";
     print "clean................... Clean various detritus that can build up\n";
     print "generate_models......... Generate classfiles from your database\n";
     print "install................. A command line installer (won't overwrite existing configs)\n";

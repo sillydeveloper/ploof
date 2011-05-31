@@ -24,65 +24,43 @@ PHP LIGHTWEIGHT OBJECT ORIENTED FRAMEWORK README
     LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY 
     OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     
-=== GETTING STARTED ===
+Get the code
+------------
 
-    We don't have a release yet, so cloning our repository is the only way to get the code:
+    - We don't have a release yet, so cloning our repository is the only way to get the code:
 
-        git clone git://github.com/sillydeveloper/ploof.git
+            git clone git://github.com/sillydeveloper/ploof.git
 
-    
-    
+Models and ORM
+--------------
 
-=== THE PLOOF COMMAND ===
+- Clone the code then initialize ploof for a first run: ::
+    ./ploof install
+    
+- Edit config/config.application.php to connect to your database. We have several plugins available and are looking to add more.
+    
+- ploof is set up to automatically build your model files based on your database, wiring in all the relationships for you. So create a simple migration by running: ::
+    ./ploof migration
+    
+- Open resource/migrations/trunk/1__Migration and add this (for mysql): ::
+    create table User(id int not null primary key auto_increment, username varchar(255), password varchar(255));
+    create table Post(id int not null primary key auto_increment, User_id int, title varchar(255), body text);
+            
+- Update your database via ::
+    ./ploof migrate
+    
+- Now we can generate our models: ::
+    ./ploof generate_models
+    
+You should have User and Post objects available in the model folder, and you can find
 
-The ./ploof utility is the swiss army knife of the framework. Not sure what to run with it? Just run ./ploof without any options to get a list of currently supported commands.
-    
-=== MODEL FEATURES ===
-    
-    AUTO HANDLING
-        Basically, if a table has [tablename]_id in it, ploof knows it's a relationship 
-        and you can access it like:
-        
-            class foo()
-            {
-                protected $has_many= array('bar');
-            }
-        
-            $f= new foo();
-            foreach($f->bar->find() as $a_bar) { print($a_bar->id."\n"); }
-    
-    OVERRIDING
-        You can override the auto loader by having a function named get_[foo]()
-        Example:
-        
-            class foo()
-            {
-                protected $has_many= array('bar');
-                function get_bar()
-                {
-                    return bar::find('start_date < now()');
-                }
-            }
-    
-        Whatever is returned is used by the caching / lazy loader mechanism.
+Controllers and Views
+---------------------
+
+Testing, Testing, Testing
+-------------------------
 
 
-=== CONTROLLER FEATURES ===
-    
-    REDIR
-        Pass in a GET or POST variable called 'redir' with a url to have the controller auto-route 
-        you once the render is complete
-    
-    ROUTE
-        Routable actions were intended to be used by things like add / delete / save. 
-    
-    ASSIGN
-        Assigns are made available to your view via $controller->assign("varname", $varvalue);
-        
-    MAIN_CONTROLLER AND MAIN_ACTION
-        If you need to know who the *topmost* call is coming from when the page loads,
-        $_REQUEST['main_controller'] and $_REQUEST['MAIN_ACTION'] are there to help.
-    
-=== TESTING ===
 
-    
+
+
