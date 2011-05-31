@@ -25,40 +25,53 @@ PHP LIGHTWEIGHT OBJECT ORIENTED FRAMEWORK README
     OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     
 Get the code
-------------
+~~~~~~~~~~~~
 
-    - We don't have a release yet, so cloning our repository is the only way to get the code:
-
-            git clone git://github.com/sillydeveloper/ploof.git
+We don't have a release yet, so cloning our repository is the only way to get the code::
+    git clone git://github.com/sillydeveloper/ploof.git
 
 Models and ORM
---------------
+~~~~~~~~~~~~~~
 
-- Clone the code then initialize ploof for a first run: ::
+- Clone the code then initialize ploof for a first run::
+
     ./ploof install
     
 - Edit config/config.application.php to connect to your database. We have several plugins available and are looking to add more.
     
-- ploof is set up to automatically build your model files based on your database, wiring in all the relationships for you. So create a simple migration by running: ::
+- ploof is set up to automatically build your model files based on your database, wiring in all the relationships for you. So create a simple migration by running::
+
     ./ploof migration
     
-- Open resource/migrations/trunk/1__Migration and add this (for mysql): ::
+- Open resource/migrations/trunk/1__Migration and add this (for mysql)::
+
     create table User(id int not null primary key auto_increment, username varchar(255), password varchar(255));
     create table Post(id int not null primary key auto_increment, User_id int, title varchar(255), body text);
             
-- Update your database via ::
+- Update your database via::
+
     ./ploof migrate
     
-- Now we can generate our models: ::
+- Now we can generate our models::
+
     ./ploof generate_models
     
-You should have User and Post objects available in the model folder, and you can find
+You should have User and Post objects available in the model folder. You can use them to do magical associative things right out of the box::
+
+    $new_user= new User();
+    $new_user->username= 'foovius';
+    $new_user->store();
+    $u= User::find(array('username'=>'foovius'));
+    $p= new Post();
+    $p->title= 'Why hello there';
+    $u->Post->add_object($p);
+    $all_foovius_posts= $u->Post->find();
 
 Controllers and Views
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 Testing, Testing, Testing
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 
