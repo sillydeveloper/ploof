@@ -619,7 +619,7 @@ class Model extends Ploof
             {
                 $f= fopen($file, "w+");
                 fwrite($f,"<?\n");
-                fwrite($f,"class $class extends \\core\\Model\n");
+                fwrite($f,"class $class extends ApplicationModel\n");
                 fwrite($f,"{\n");
                 foreach ($relations as $k=>$r)
                     fwrite($f,"    protected \$$k= array('".implode("', '", $r)."');\n");

@@ -26,7 +26,20 @@ class MysqliConnector implements \core\PluginInterfaceDB
     // find everything in table matching where_array
     function find_rows($table, $where_array)
     {
-        
+        $sql= "select * from ".$table." where ";
+        $sql_arr= array();
+        foreach($where_array as $key=>$value)
+        {
+            $sql_arr[]= $key."='".$value."'";
+        }
+        $sql.=implode(' and ', $sql_arr);
+        $result= $this->query($sql);
+        $return= array();
+        while($assoc= \mysqli_fetch_assoc($result))
+        {
+            $return[]= $assoc;
+        }
+        return $return;
     }
     
     // get a list of tables
@@ -84,8 +97,7 @@ class MysqliConnector implements \core\PluginInterfaceDB
         //  we'll need column types to determine how to build our sql statement.
         $col_types= $this->get_table_columns($table);
         
-        if (!$data[PRIMARY_KEY])
-            $existing= false;
+        $existing= ($data[PRIMARY_KEY]) ? true : false;
         
         if (array_key_exists("created_on", $data) and !$data["created_on"])
             $data["created_on"]= date("Y-m-d H:i:s", time());
@@ -111,16 +123,14 @@ class MysqliConnector implements \core\PluginInterfaceDB
              
                     if ($k == PRIMARY_KEY) continue;
                 
-                    if ($this->is_belongs_to($k) and is_object($v))
-                    {
-                        // remember: it's a joiner object.
-                    }
-                    elseif ($this->is_numeric_datatype($col_types[$k]) or $v === "NULL" )
-                    {
+                    if ($this->is_numeric_datatype($col_types[$k]) or $v === "NULL" )
                         $field_query[]= $k."=".$v."";
+                    elseif (is_object($v))
+                    {
+                        // do nothing for objects
                     }
                     else
-                        $field_query[]= $k."='".$this->sanitize($k, $v)."'";         
+                        $field_query[]= $k."='".$v."'";         
                 }           
             }
             $sql.= implode(",", $field_query)." where ".PRIMARY_KEY."='".$data[PRIMARY_KEY]."'";
