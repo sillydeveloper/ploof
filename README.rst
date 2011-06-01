@@ -27,6 +27,7 @@ PHP Lightweight Object Oriented Framework (aka ploof) : Quickstart!
     
 Get the code
 ~~~~~~~~~~~~
+
 We don't have a release yet (we're unit testing the new database repository framework), so to get the code, clone us::
 
     git clone git://github.com/sillydeveloper/ploof.git
@@ -82,12 +83,7 @@ Let's create a controller. Create a new file called Posts.php in the controller 
                 $post->populate_from($_REQUEST);
                 $post->store();
             }
-            
-            function edit()
-            {
-                $this->assign('post', new Post($this->id));
-            }
-            
+
             function index()
             {
                 $this->assign('posts', Post::find());
@@ -125,6 +121,11 @@ Ok, but how do I test it? Point your favorite webserver to the public folder, an
 You should now be able to point your browser at::
 
     http://[domain]/Posts
+
+Change the Layout
+~~~~~~~~~~~~~~~~~
+
+In view/layout/default.html you can redesign your layout for each page. 
 
 Testing, Testing, Testing
 ~~~~~~~~~~~~~~~~~~~~~~~~~
