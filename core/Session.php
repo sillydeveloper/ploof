@@ -52,10 +52,8 @@ class Session extends Ploof
             Session::set_message(Session::NOTICE, "Please enter a username and password");
             return false;
         }
-            
-        $sql= $k_field."='".$key."' and ".$p_field."='".$password."'";
 
-        $object= $class::find_object($sql);
+        $object= $class::find_object(array($k_field=>$key, $p_field=>$password));
 
         if ($object)
         {
