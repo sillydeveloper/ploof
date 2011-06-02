@@ -619,7 +619,7 @@ class Model extends Ploof
                 fwrite($f,"class $class extends ApplicationModel\n");
                 fwrite($f,"{\n");
                 foreach ($relations as $k=>$r)
-                    fwrite($f,"    protected \$$k= array('".implode("', '", $r)."');\n");
+                    fwrite($f,"    static \$$k= array('".implode("', '", $r)."');\n");
                 fwrite($f,"    static function classname()\n");
                 fwrite($f,"    {\n");
                 fwrite($f,"        return __CLASS__;\n");
