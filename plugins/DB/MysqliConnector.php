@@ -20,19 +20,25 @@ class MysqliConnector implements \core\PluginInterfaceDB
     // load a single row in table identified by id
     function load_row($table, $id)
     {
-        
+        $results= $this->find_rows($table, array('id'=>$id));
+        return $results[0];
     }
     
     // find everything in table matching where_array
-    function find_rows($table, $where_array)
+    function find_rows($table, $where_array=null)
     {
-        $sql= "select * from ".$table." where ";
+        $sql= "select * from ".$table." ";
         $sql_arr= array();
-        foreach($where_array as $key=>$value)
+        
+        if ($where_array)
         {
-            $sql_arr[]= $key."='".$value."'";
+            $sql.= " where "; 
+            foreach($where_array as $key=>$value)
+            {
+                $sql_arr[]= $key."='".$value."'";
+            }
+            $sql.=implode(' and ', $sql_arr);
         }
-        $sql.=implode(' and ', $sql_arr);
         $result= $this->query($sql);
         $return= array();
         while($assoc= \mysqli_fetch_assoc($result))
