@@ -322,7 +322,7 @@ class Model extends Ploof
         }
 
         // call the datetime handler if this is a datetime:
-        if (array_key_exists($field_name, static::$field_types))
+        if (is_array(static::$field_types) and array_key_exists($field_name, static::$field_types))
         {
             if (static::$repository->get_database()->is_date_datatype(static::$field_types[$field_name]))
             {
@@ -333,7 +333,9 @@ class Model extends Ploof
         if ($results)
             return $results;
         else
+        {
             return stripslashes($this->fields[$field_name]); // remove sanitized escape
+        }
     }
     
     /**
