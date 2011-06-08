@@ -88,7 +88,7 @@ class MysqliConnector implements \core\PluginInterfaceDB
     
     function is_date_datatype($field_type)
     {
-        
+        return (strtolower($field_type) == 'datetime');
     }
     
     function delete_row($table, $id)
