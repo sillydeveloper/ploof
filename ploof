@@ -107,7 +107,6 @@ function migration($branch= "trunk")
     if (!$dir)
     {
         mkdir($path);
-        DB::query("insert into Versioning values(null, 0, '$branch');");
         touch($path."/1__Migration");
     }
     else
