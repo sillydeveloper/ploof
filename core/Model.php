@@ -90,7 +90,7 @@ class Model extends Ploof
     {
         if ($id and static::$repository)
         {
-            $data= static::$repository->load_row(Meta::classname_only(static::classname()), $id);
+            $data= static::$repository->load_row(static::cname(), $id);
             foreach($data as $key=>$value)
             {   
                 $this->fields[$key] = stripslashes($value);
@@ -322,13 +322,13 @@ class Model extends Ploof
         }
 
         // call the datetime handler if this is a datetime:
-        if (is_array(static::$field_types) and array_key_exists($field_name, static::$field_types))
+        /*if (is_array(static::$field_types) and array_key_exists($field_name, static::$field_types))
         {
             if (static::$repository->get_database()->is_date_datatype(static::$field_types[$field_name]))
             {
                 return Format::date($this->fields[$field_name]);
             }
-        }            
+        }*/
             
         if ($results)
             return $results;
@@ -493,6 +493,15 @@ class Model extends Ploof
             return array_pop($results);
             
         return false;
+    }
+    
+    /** 
+     * Map to Repository::query
+     */
+    static function query($query)
+    {
+        $classname= static::cname();
+        return $classname::get_repository()->query($query);
     }
     
     /**
