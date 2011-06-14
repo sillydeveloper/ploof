@@ -21,9 +21,9 @@ get_view_id_parts= function(view_id)
 toggle_checkbox= function(targ, val)
 {
     if ($('#'+targ).attr('checked'))
-        $('#hidden_'+targ).val($('#'+targ).val());
+        $('#hidden_checkbox_'+targ).val($('#'+targ).val());
     else
-        $('#hidden_'+targ).val('');
+        $('#hidden_checkbox_'+targ).val('');
 }
 
 
