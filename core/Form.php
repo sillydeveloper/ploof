@@ -147,7 +147,7 @@ class Form
     }
 
 
-    public static function checkbox($object, $name, $value=null, $label=null, $class='input')
+    public static function checkbox($object, $name, $value=1, $label=null, $class='input')
     {
         $checked= false;
 
