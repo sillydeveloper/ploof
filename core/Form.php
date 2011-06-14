@@ -64,7 +64,13 @@ class Form
     public static function text($object, $name, $attributes=array())
     {
         $cname = Meta::classname_only($object::classname());
-        $html = "<input type='text' name='". Form::fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name  . "' value='" . htmlentities($object->$name). "' "; 
+
+        if ($object->get_repository()->is_date_datatype($object->get_field_type($name)))
+            $value= Format::date($object->$name);
+        else
+            $value= htmlentities($object->$name);
+                
+        $html = "<input type='text' name='". Form::fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name  . "' value='" . $value. "' "; 
         foreach ( $attributes as $name=>$value )
          {
             if ( $name == 'size')
@@ -81,7 +87,7 @@ class Form
     public static function textarea($object, $name, $attributes=array())
     {
         $cname= Meta::classname_only($object::classname());
-        $html = "<textarea name='" . Form::fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name . " ";
+        $html = "<textarea name='" . Form::fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name . "' ";
         foreach ( $attributes as $name=>$value )
          {
             if ( $name = 'cols' || $name == 'rows')
@@ -125,7 +131,7 @@ class Form
         return $html;
     }
 
-    public static function form_select_simple($name, $options, $select=null, $class='input', $id=null)
+    public static function select_simple($name, $options, $select=null, $class='input', $id=null)
     {
         $html="<select id='$id' class='$class' name='$name'>";
     
@@ -141,7 +147,7 @@ class Form
     }
 
 
-    public static function form_checkbox($object, $name, $value=null, $label=null, $class='input')
+    public static function checkbox($object, $name, $value=null, $label=null, $class='input')
     {
         $checked= false;
 
@@ -161,7 +167,7 @@ class Form
         return $html;
     }
 
-    public static function form_checkbox_simple($name, $value, $checked=false, $label=null, $class='input', $id=null)
+    public static function checkbox_simple($name, $value, $checked=false, $label=null, $class='input', $id=null)
     {
         if ($checked)
             $checked= "checked='checked'";
@@ -185,7 +191,7 @@ class Form
         return $html;
     }
 
-    public static function form_radio($object, $name, $values, $class='input', $list_vertically=false)
+    public static function radio($object, $name, $values, $class='input', $list_vertically=false)
     {
         $id= md5($name."_".$object->id);
         $id_ploof= Meta::classname_only($object->classname())."_".$object->id."_$name";
@@ -203,7 +209,7 @@ class Form
         return $html;
     }
 
-    public static function form_radio_simple($name, $value, $checked, $class='input', $id=null)
+    public static function radio_simple($name, $value, $checked, $class='input', $id=null)
     {
         if ($checked)
             $checked= "checked='checked'";

@@ -401,12 +401,12 @@ class Model extends Ploof
         else
         {
             // call the datetime handler if this is a datetime:
-            if (array_key_exists($field_name, static::$field_types) and static::$repository->get_database()->is_date_datatype($this->field_types[$field_name]) and strlen($value) > 0)
+            if (array_key_exists($field_name, static::$field_types) and static::$repository->get_database()->is_date_datatype($this->get_field_type($field_name)) and strlen($value) > 0)
             {
                 $value = Format::date_sql($value);
             }
-            
             $this->fields[$field_name]= $value;
+
         }
     }
     
