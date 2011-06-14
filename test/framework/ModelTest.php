@@ -131,7 +131,7 @@ class ModelTest extends core\TestCase
         $repository_check= new \core\Repository($database);
         HasMany::set_repository($repository_check);
         $model= new HasMany(1);
-        $this->assertEquals('01/01/2010', $model->dtime);
+        $this->assertEquals('01/01/2010', \core\Format::date($model->dtime));
     }
     
     function test_delete()
