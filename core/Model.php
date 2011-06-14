@@ -438,7 +438,7 @@ class Model extends Ploof
     /**
      * Auto populate the fields from an array
      */
-    function populate_from($arr, $index= null)
+    function populate_from($arr, $index= 0)
     {
         if (is_array($arr))
         {
