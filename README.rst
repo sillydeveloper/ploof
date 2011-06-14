@@ -32,8 +32,8 @@ We don't have a release yet (we're unit testing the new database repository fram
 
     git clone git://github.com/sillydeveloper/ploof.git
 
-Models and ORM
-~~~~~~~~~~~~~~
+Creating Models
+~~~~~~~~~~~~~~~
 
 - Clone the code then initialize ploof for a first run::
 
@@ -80,7 +80,7 @@ Let's create a controller. Create a new file called Posts.php in the controller 
             function save()
             {
                 $post= new Post();
-                $post->populate_from($_REQUEST);
+                $post->populate_from($this->data['Post']);
                 $post->store();
             }
 
@@ -101,7 +101,7 @@ In the views folder, create a folder called Posts and add a file index.html to i
     Welcome to posts index!
     <?=core\Form::start('/Posts/save')?>
         Make a new post: <?=core\Form::text(new Post(), 'title')?> <input type='submit'/>
-    </form>
+    <?=core\Form::end()?>
     <div>
         <? foreach($posts as $post) { ?><div><?=$post->title?></div><? } ?>
     </div>
@@ -109,7 +109,7 @@ In the views folder, create a folder called Posts and add a file index.html to i
 Server Setup 
 ~~~~~~~~~~~~
 
-Ok, but how do I test it? Point your favorite webserver to the public folder, and turn on rewrites with the following (apache style)::
+Ok, but how do I load this up in a webserver? Point your favorite webserver to the public folder, and turn on rewrites with the following (apache style)::
 
     RewriteRule   ^/([\_A-Za-z0-9-]+)/([\_A-Za-z0-9-]+)/?$ /index.php?controller=$1&action=$2 [L,QSA]                          
     RewriteRule   ^/([\_A-Za-z0-9-]+)/([\_A-Za-z0-9-]+)/([\_A-Za-z0-9-]+)?$ /index.php?controller=$1&action=$2&id=$3 [L,QSA]
