@@ -30,7 +30,12 @@ class MysqliConnector implements \core\PluginInterfaceDB
         $sql= "select * from ".$table." ";
         $sql_arr= array();
         
-        if ($where_array)
+        if ($where_array and !is_array($where_array))
+        {
+            throw new Exception('Invalid argument type to MysqliConnector::find_rows()');
+        }
+        
+        if (is_array($where_array))
         {
             $sql.= " where "; 
             foreach($where_array as $key=>$value)
@@ -154,7 +159,7 @@ class MysqliConnector implements \core\PluginInterfaceDB
                     if ($v === null or strlen($v) == 0) { $v= "NULL";  }
                     
                     if ($this->is_numeric_datatype($col_types[$k]) or $v === "NULL" )
-                        $field_query[$k]= $this->sanitize($k, $v);
+                        $field_query[$k]= $v;
                     else
                         $field_query[$k]= '"'.$v.'"';
                 }
