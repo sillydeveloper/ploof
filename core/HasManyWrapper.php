@@ -19,6 +19,14 @@ class HasManyWrapper
         $this->lookup_field= $parent_object::cname().PK_SEPARATOR.PRIMARY_KEY;                
     }
     
+    function add_object($obj)
+    {
+        $child_join= $this->parent_class.'_id';
+        $obj->$child_join= $this->parent_object->id;
+        $obj->store();
+        return $obj;
+    }
+    
     /**
      * Find and return an object. 
      */
