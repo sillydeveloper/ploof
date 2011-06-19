@@ -126,7 +126,7 @@ class Repository implements PluginInterfaceDB, PluginInterfaceCache
 
     public function store_row($table, $data)
     {
-        $this->db->store_row($table, $data);
+        return $this->db->store_row($table, $data);
     }
 
     public function is_date_datatype($field_type)
