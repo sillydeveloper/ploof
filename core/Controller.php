@@ -24,7 +24,7 @@ namespace core;
 class Controller extends Ploof
 {
     protected $data= array();
-    private $assigns= array();
+    protected $assigns= array();
     
     private $use_routes= false;
     
