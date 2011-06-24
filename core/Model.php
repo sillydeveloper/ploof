@@ -88,7 +88,7 @@ class Model extends Ploof
     
     function load($id)
     {
-        if ($id and static::$repository)
+        if ($id > 0 and static::$repository)
         {
             $data= static::$repository->load_row(static::cname(), $id);
             foreach($data as $key=>$value)
@@ -305,6 +305,7 @@ class Model extends Ploof
                 $lookup_field= PRIMARY_KEY;
 
                 $results= $field_name::find_object(array($lookup_field=>$lookup_id));
+                
             }
 
             if ($this->is_has_many($field_name))
@@ -319,6 +320,17 @@ class Model extends Ploof
 
                 $results= $field_name::find_object(array($lookup_field=>$lookup_id));
             }
+        }
+        
+        if ($this->requires_a($field_name) and !$results)
+        {
+            $obj= new $field_name();
+            $obj->$lookup_field= $lookup_id;
+            $obj->store();
+            if ($this->is_has_many($field_name))
+                $results[]= $obj;
+            else
+                $results= $obj;
         }
 
         // call the datetime handler if this is a datetime:
@@ -528,7 +540,7 @@ class Model extends Ploof
     function store($additional=null)
     {
         $id= static::$repository->store_row(static::cname(), $this->fields);
-        $this->fields[PRIMARY_KEY]= $id;
+        $this->id= $id;
         
         // think of $additional as a trigger.
         // this allows you to use a primary key that is not named like the others;
