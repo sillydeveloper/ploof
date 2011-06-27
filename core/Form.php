@@ -60,8 +60,31 @@ class Form
         }
         return $size;
     }
+    
+    public static function password($object, $name, $attributes= array())
+    {
+        $cname = Meta::classname_only($object::classname());
 
-    public static function text($object, $name, $attributes=array())
+        if ($object->get_repository()->is_date_datatype($object->get_field_type($name)))
+            $value= Format::date($object->$name);
+        else
+            $value= htmlentities($object->$name);
+                
+        $html = "<input type='password' name='". Form::fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name  . "' value='" . $value. "' "; 
+        foreach ( $attributes as $name=>$value )
+         {
+            if ( $name == 'size')
+            {
+                $value = Form::text_size($value);
+            }
+            $html .= $name . "='" . $value . "' "; 
+        }
+        $html .= "/>";
+        
+        return $html;
+    }
+
+    public static function text($object, $name, $attributes= array())
     {
         $cname = Meta::classname_only($object::classname());
 
@@ -145,7 +168,6 @@ class Form
         $html.="</select>";
         return $html;
     }
-
 
     public static function checkbox($object, $name, $value="1", $label=null, $class='input')
     {
