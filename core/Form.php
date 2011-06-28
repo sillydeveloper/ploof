@@ -45,7 +45,17 @@ class Form
     {
         return "</form>";
     }
+    
+    static function view_id($object, $name)
+    {
+        if (!is_object($object))
+            throw new \Exception('no object');
 
+        return classname_only($object->classname())."_".$object->id."_$name";
+    }
+    
+    
+    // TODO: deprecated:
     public static function text_size($size_name)
     {
         $size = $size_name;
