@@ -299,26 +299,35 @@ class Model extends Ploof
         {
             $this->debug(5, "Found foreign: ".$field_name);
             
-            if ($this->is_belongs_to($field_name))
+            if (method_exists($this, "get_".$field_name))
             {
-                $lookup_id= $this->fields[$field_name.PK_SEPARATOR.PRIMARY_KEY];
-                $lookup_field= PRIMARY_KEY;
+                $method= "get_".$field_name;
+                $this->debug(5, "Calling override ".$method." for __get(".$field_name.")");
+                $results= $this->$method();
+            }
+            else
+            {
+                if ($this->is_belongs_to($field_name))
+                {
+                    $lookup_id= $this->fields[$field_name.PK_SEPARATOR.PRIMARY_KEY];
+                    $lookup_field= PRIMARY_KEY;
 
-                $results= $field_name::find_object(array($lookup_field=>$lookup_id));
+                    $results= $field_name::find_object(array($lookup_field=>$lookup_id));
                 
-            }
+                }
 
-            if ($this->is_has_many($field_name))
-            {
-                $results= new HasManyWrapper($this, $field_name);
-            }
+                if ($this->is_has_many($field_name))
+                {
+                    $results= new HasManyWrapper($this, $field_name);
+                }
 
-            if ($this->is_has_one($field_name))
-            {
-                $lookup_id= $this->fields[PRIMARY_KEY];
-                $lookup_field= static::cname().PK_SEPARATOR.PRIMARY_KEY;
+                if ($this->is_has_one($field_name))
+                {
+                    $lookup_id= $this->fields[PRIMARY_KEY];
+                    $lookup_field= static::cname().PK_SEPARATOR.PRIMARY_KEY;
 
-                $results= $field_name::find_object(array($lookup_field=>$lookup_id));
+                    $results= $field_name::find_object(array($lookup_field=>$lookup_id));
+                }
             }
         }
         
@@ -332,16 +341,7 @@ class Model extends Ploof
             else
                 $results= $obj;
         }
-
-        // call the datetime handler if this is a datetime:
-        /*if (is_array(static::$field_types) and array_key_exists($field_name, static::$field_types))
-        {
-            if (static::$repository->get_database()->is_date_datatype(static::$field_types[$field_name]))
-            {
-                return Format::date($this->fields[$field_name]);
-            }
-        }*/
-            
+        
         if ($results)
             return $results;
         else
