@@ -138,10 +138,14 @@ class Form
         return "<input type='hidden' class='input' name='" . Form::fname($object, $name) . "' value='" . $object->$name . "'/>";
     }
 
-    public static function select($object, $name, $options, $display=null, $class='input')
+    public static function select($object, $name, $options, $display=null, $html_option=array(), $preamble=null)
     {
         $cname= Meta::classname_only($object::classname());
-        $html= "<select id='".$cname."_".$object->id."_$name' class='$class' name='".Form::fname($object, $name)."'>";
+        $html= "<select id='".$cname."_".$object->id."_$name' name='".Form::fname($object, $name)."'>";
+        if ($preamble)
+        {
+            $html.= "<option value='null'>".$preamble."</option>";
+        }
         foreach($options as $k=>$o)
         {
             if (is_object($o))
@@ -179,7 +183,7 @@ class Form
         return $html;
     }
 
-    public static function checkbox($object, $name, $value="1", $label=null, $class='input')
+    public static function checkbox($object, $name, $value="1", $attributes= array())
     {
         $checked= false;
 
@@ -189,7 +193,17 @@ class Form
         $cname= Meta::classname_only($object::classname());
         $id= $cname."_".$object->id."_$name";
 
-        $html= "<input onchange='toggle_checkbox(\"$id\", \"$value\")' class='$class' id='$id' type='checkbox' name='$id' value='".$value."' $checked />";
+        $html= "<input onchange='toggle_checkbox(\"$id\", \"$value\")' class='$class' id='$id' type='checkbox' name='$id' value='".$value."' $checked ";
+        
+        foreach ( $attributes as $name=>$value )
+         {
+            if ( $name = 'cols' || $name == 'rows')
+            {
+                $value = Form::text_size($value);
+            }
+            $html .= $name . "='" . $value . "' "; 
+        }
+        $html.= "/>";
 
         if ($checked)
             $html.= "<input type='hidden' id='hidden_checkbox_$id' name='".Form::fname($object, $name)."' value='".$object->$name."'/>";
