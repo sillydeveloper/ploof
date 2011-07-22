@@ -27,7 +27,7 @@ class Form
         if ($_REQUEST['ajax'])
             $html= "<form method=POST class='ajax_form' action='$action'";
         else
-            $html= "<form method=POST action='$action'";
+            $html= "<form method=POST action='$action' enctype='multipart/form-data'";
             
         $html.= ($id) ? " id='$id'>" : ">"; 
             
@@ -141,7 +141,15 @@ class Form
     public static function select($object, $name, $options, $display=null, $html_option=array(), $preamble=null)
     {
         $cname= Meta::classname_only($object::classname());
-        $html= "<select id='".$cname."_".$object->id."_$name' name='".Form::fname($object, $name)."'>";
+        $html= "<select id='".$cname."_".$object->id."_$name' name='".Form::fname($object, $name)."'";
+        if (is_array($html_option))
+        {
+            foreach($html_option as $k=>$v)
+            {
+                $html.= " ".$k.'="'.str_replace('"', '\"', $v).'"';
+            }
+        }
+        $html.= ">";
         if ($preamble)
         {
             $html.= "<option value='null'>".$preamble."</option>";
@@ -273,7 +281,7 @@ class Form
     */
     public static function fname($object, $name)
     {
-        if (!$object) throw new Exception("No object for fname");
+        if (!$object) throw new \Exception("No object for fname");
         $cname= Meta::classname_only($object::classname());
         return "data[$cname][$name][]";
     }
