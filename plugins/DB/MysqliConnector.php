@@ -46,9 +46,12 @@ class MysqliConnector implements \core\PluginInterfaceDB
         }
         $result= $this->query($sql);
         $return= array();
-        while($assoc= \mysqli_fetch_assoc($result))
+        if ($result)
         {
-            $return[]= $assoc;
+            while($assoc= \mysqli_fetch_assoc($result))
+            {
+                $return[]= $assoc;
+            }
         }
         return $return;
     }
@@ -70,9 +73,12 @@ class MysqliConnector implements \core\PluginInterfaceDB
         $result= \mysqli_query($this->conn, "show columns from ".$table);
         
         $columns= array();
-        while($col= \mysqli_fetch_assoc($result))
+        if ($result)
         {
-            $columns[$col['Field']]= $col['Type'];
+            while($col= \mysqli_fetch_assoc($result))
+            {
+                $columns[$col['Field']]= $col['Type'];
+            }
         }
         $this->data_types[$table]= $columns;
         
@@ -135,13 +141,15 @@ class MysqliConnector implements \core\PluginInterfaceDB
                     if ($k == PRIMARY_KEY) continue;
                 
                     if ($this->is_numeric_datatype($col_types[$k]) or $v === "NULL" )
-                        $field_query[]= $k."=".$v."";
+                        $field_query[]= $k."=".\mysqli_real_escape_string($this->conn, $v);
                     elseif (is_object($v))
                     {
                         // do nothing for objects
                     }
                     else
-                        $field_query[]= $k."='".$v."'";         
+                    {
+                        $field_query[]= $k.'="'.\mysqli_real_escape_string($this->conn, $v).'"';         
+                    }
                 }           
             }
             $sql.= implode(",", $field_query)." where ".PRIMARY_KEY."='".$data[PRIMARY_KEY]."'";
@@ -161,16 +169,20 @@ class MysqliConnector implements \core\PluginInterfaceDB
                     if ($this->is_numeric_datatype($col_types[$k]) or $v === "NULL" )
                         $field_query[$k]= $v;
                     else
-                        $field_query[$k]= '"'.$v.'"';
+                        $field_query[$k]= '"'.\mysqli_real_escape_string($this->conn, $v).'"';
                 }
             }
             
             $sql= 'insert into '.$table.'('.PRIMARY_KEY.', '.implode(',', array_keys($field_query)).') values(null, '.implode(',',array_values($field_query)).');';
         }
         
+        //\core\Ploof::debug(1, $sql);
+        
         $this->query($sql);
         
         $id= ($existing) ? $data[PRIMARY_KEY] : \mysqli_insert_id($this->conn);
+        //echo $id;
+        //exit;
         return $id;
     }
 }
