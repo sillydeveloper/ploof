@@ -114,7 +114,9 @@ class Controller extends Ploof
         }
         
         if ($this->id === null and $id)
+        {
             $this->id= $id;
+        }
         
         try
         {
@@ -135,10 +137,11 @@ class Controller extends Ploof
                 {
                     $this->debug(4, "Ajax detected");
                     $this->is_ajax= true;
+                    $this->use_routes= false;
                 }
                 else
                 {
-                    echo '<!-- begin '.$this->classname().'::'.$action.' -->';
+                    //echo '<!-- begin '.$this->classname().'::'.$action.' -->';
                 }
                     
                 $this->debug(4, "Calling action $action...");
@@ -200,7 +203,7 @@ class Controller extends Ploof
 
         if(!$this->is_ajax)      
         {
-            echo '<!-- end '.$this->classname().'::'.$action.' -->';            
+            //echo '<!-- end '.$this->classname().'::'.$action.' -->';            
         }
     }
     
@@ -225,7 +228,7 @@ class Controller extends Ploof
     
     function is_routable($action)
     {
-        return (array_search($action, $this->routable_actions) !== false);
+        return (array_search($action, $this->routable_actions) !== false and !$this->is_ajax);
     }
     
     function get_routable_message($action)
@@ -239,13 +242,20 @@ class Controller extends Ploof
     public static function render($url, $assigns=null)
     {
         $split= URL::get_url_parts($url);
-        if (count($split) > 3)
+        if (count($split) == 5)
         {
             $_REQUEST['parent']= $split[0];
             $_REQUEST['parentid']= $split[1];
             $controller= $split[2];
             $action= $split[3];
             $id= $split[4];
+        }
+        elseif (count($split) == 4)
+        {
+            $_REQUEST['parent']= $split[0];
+            $_REQUEST['parentid']= $split[1];
+            $controller= $split[2];
+            $action= $split[3];
         }
         else
         {
@@ -254,8 +264,9 @@ class Controller extends Ploof
             $id= $split[2];
         }
         
-        if (!$id)
-            $id= $_REQUEST["id"];
+        // not sure why this was here...
+        //if (!$id)
+        //    $id= $_REQUEST["id"];
         
         $controller_object= new $controller();
         $controller_object->call($action, $assigns, $id);
