@@ -22,13 +22,21 @@ namespace core;
 
 class Form
 {
-    public static function start($action, $id=null)
+    public static function start($action, $id=null, $html_option=null)
     {
         if ($_REQUEST['ajax'])
             $html= "<form method=POST class='ajax_form' action='$action'";
         else
             $html= "<form method=POST action='$action' enctype='multipart/form-data'";
-            
+        
+        if ($html_option)
+        {
+            foreach($html_option as $k=>$v)
+            {
+                $html.= " ".$k."='".$v."'";
+            }
+        }
+        
         $html.= ($id) ? " id='$id'>" : ">"; 
             
         $html.= "<input type='hidden' name='form_content' value='1'/>";
@@ -103,7 +111,7 @@ class Form
         else
             $value= htmlentities($object->$name);
                 
-        $html = "<input type='text' name='". Form::fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name  . "' value='" . $value. "' "; 
+        $html = "<input type='text' name='". Form::fname($object, $name) . "' id='" . $cname . "_" . $object->id . "_" . $name  . "' value='" . \htmlspecialchars($value, ENT_QUOTES). "' "; 
         foreach ( $attributes as $name=>$value )
          {
             if ( $name == 'size')
