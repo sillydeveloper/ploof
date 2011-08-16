@@ -27,7 +27,7 @@ class Format
     public function date($d)
     {
         if (!$d or strtotime($d) == 0) return "";
-        return date("m/d/Y", strtotime($d));
+        return date("m/d/Y h:ia", strtotime($d));
     }
 
     public function date_sql($d)
@@ -44,6 +44,11 @@ class Format
             $f = sprintf('%F', $f);
         }
         return $f;
+    }
+    
+    public function text_to_html($some_text)
+    {
+        return str_replace('\n', '<br/>', $some_text);
     }
 
 
