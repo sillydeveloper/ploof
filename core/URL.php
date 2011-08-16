@@ -72,7 +72,7 @@ class URL {
         list($uri_con, $uri_act, $uri_id) = URL::get_url_parts($uri);
             
         if ($url_con and $url_act and $url_id)
-            return $this->get_url_parts($url) == URL::get_url_parts($uri);
+            return URL::get_url_parts($url) == URL::get_url_parts($uri);
         if ($url_con and $url_act)
             return ($url_con == $uri_con and $url_act == $uri_act);
         if ($url_con)
