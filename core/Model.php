@@ -91,6 +91,7 @@ class Model extends Ploof
         if ($id > 0 and static::$repository)
         {
             $data= static::$repository->load_row(static::cname(), $id);
+            if (!is_array($data)) throw new \Exception('Couldn\'t load row!');
             foreach($data as $key=>$value)
             {   
                 $this->fields[$key] = stripslashes($value);
@@ -109,7 +110,6 @@ class Model extends Ploof
         if (static::$repository)
         {
             $columns= static::$repository->get_table_columns(Meta::classname_only(static::classname()));
-            
             foreach($columns as $col_name=>$col_type)
             {
                 static::$field_types[$col_name]= preg_replace("/\(([0-9])*\)/", "", $col_type);
@@ -124,7 +124,7 @@ class Model extends Ploof
     
     static public function has_field($var)
     {
-        return array_key_exists($var, static::$fields_types);
+        return array_key_exists($var, static::$field_types);
     }
     
     /**
@@ -132,7 +132,7 @@ class Model extends Ploof
      */
     static public function is_numeric($field)
     {
-        $type = static::$get_field_type($field);
+        $type = static::get_field_type($field);
         return static::$repository->is_numeric($type);
     }
     
